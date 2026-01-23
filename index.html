@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaNotes | Sistema de Notas Inteligente</title>
+    <meta name="description"
+        content="NovaNotes: La aplicación de notas premium con diseño minimalista y organización fluida para potenciar tu productividad.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Fira+Code:wght@400;500&family=Montserrat:wght@400;700&family=Lora:ital,wght@0,400;1,400;1,700&family=Poppins:wght@300;400;600&family=Merriweather:wght@400;700&family=Ubuntu:wght@400;500&family=Dancing+Script:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dark-theme">
+    <div id="app" class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <h1>NovaNotes</h1>
+                </div>
+                <button id="new-note-btn" class="btn-primary" title="Nueva Nota">
+                    <span class="icon">+</span> Nueva Nota
+                </button>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Buscar notas...">
+            </div>
+
+            <nav class="notes-list-container">
+                <ul id="notes-list" class="notes-list">
+                    <!-- Las notas se cargarán aquí dinámicamente -->
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="stats">
+                    <span id="note-count">0 notas</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content / Editor -->
+        <main class="editor-container">
+            <div class="editor-header">
+                <div class="editor-meta">
+                    <span id="last-edited" class="last-edited">Selecciona una nota para comenzar</span>
+                </div>
+                <div class="editor-actions">
+                    <div class="format-toolbar" id="format-toolbar" hidden>
+                        <select id="title-font-select" class="select-premium" title="Fuente del Título">
+                            <option value="Outfit, sans-serif">Outfit (Moderno)</option>
+                            <option value="Inter, sans-serif">Inter (Limpio)</option>
+                            <option value="Playfair Display, serif">Playfair (Elegante)</option>
+                            <option value="Montserrat, sans-serif">Montserrat (Geométrico)</option>
+                            <option value="Poppins, sans-serif">Poppins (Suave)</option>
+                            <option value="Lora, serif">Lora (Clásico)</option>
+                            <option value="Merriweather, serif">Merriweather (Lectura)</option>
+                            <option value="Ubuntu, sans-serif">Ubuntu (Humanista)</option>
+                            <option value="Fira Code, monospace">Fira Code (Tech)</option>
+                            <option value="Dancing Script, cursive">Cursiva (Elegante)</option>
+                        </select>
+                        <select id="title-size-select" class="select-premium" title="Tamaño Título">
+                            <option value="1.5rem">Título: Pequeño</option>
+                            <option value="2rem">Título: Normal</option>
+                            <option value="2.5rem" selected>Título: Grande</option>
+                            <option value="3.5rem">Título: Gigante</option>
+                        </select>
+                        <input type="color" id="title-color-picker" class="color-picker-premium"
+                            title="Color del Título" value="#f8fafc">
+                        <div class="divider"></div>
+                        <select id="content-font-select" class="select-premium" title="Tipo de Letra del Cuerpo">
+                            <option value="Inter, sans-serif">Text Type: Inter</option>
+                            <option value="Poppins, sans-serif">Text Type: Poppins</option>
+                            <option value="Lora, serif">Text Type: Lora</option>
+                            <option value="Merriweather, serif">Text Type: Merriweather</option>
+                            <option value="Ubuntu, sans-serif">Text Type: Ubuntu</option>
+                            <option value="Dancing Script, cursive">Text Type: Cursiva</option>
+                        </select>
+                        <select id="content-size-select" class="select-premium" title="Tamaño Contenido">
+                            <option value="0.9rem">Text Size: Pequeño</option>
+                            <option value="1.15rem" selected>Text Size: Normal</option>
+                            <option value="1.4rem">Text Size: Grande</option>
+                            <option value="1.7rem">Text Size: Extra</option>
+                        </select>
+                        <div class="divider"></div>
+                        <input type="color" id="text-color-picker" class="color-picker-premium" title="Color del Texto"
+                            value="#94a3b8">
+                        <button id="emoji-btn" class="btn-icon" title="Insertar Emoji">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                            </svg>
+                        </button>
+                        <div id="emoji-picker" class="emoji-picker glass" hidden>
+                            <!-- Los emojis se cargarán aquí dinámicamente -->
+                        </div>
+                        <button id="ia-btn" class="btn-ia" title="NovaVision AI">
+                            <span class="ia-pulse"></span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v8"></path>
+                                <path d="m4.93 10.93 1.41 1.41"></path>
+                                <path d="M2 18h2"></path>
+                                <path d="M20 18h2"></path>
+                                <path d="m19.07 10.93-1.41 1.41"></path>
+                                <path d="M22 22H2"></path>
+                                <path d="m8 22 4-10 4 10"></path>
+                            </svg>
+                        </button>
+                        <button id="fullscreen-btn" class="btn-icon" title="Modo Pantalla Completa">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <button id="delete-note-btn" class="btn-icon btn-delete" title="Eliminar nota" hidden>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                    <button id="save-note-btn" class="btn-secondary" title="Guardar cambios" hidden>Guardar</button>
+                </div>
+            </div>
+
+            <div id="editor-view" class="editor-view empty">
+                <div class="empty-state">
+                    <div class="empty-illustration">✍️</div>
+                    <h2>Comienza tu historia</h2>
+                    <p>Crea una nueva nota o selecciona una existente para editar.</p>
+                </div>
+
+                <div class="editor-fields" hidden>
+                    <div id="note-title" class="input-title" contenteditable="true"
+                        data-placeholder="Título de la nota..."></div>
+                    <!-- Cambiado de textarea a div para soportar colores por palabra -->
+                    <div id="note-content" class="input-content" contenteditable="true"
+                        data-placeholder="Empieza a escribir tu historia..."></div>
+
+                    <!-- Barra flotante de color para selección -->
+                    <div id="selection-toolbar" class="selection-toolbar glass" hidden>
+                        <input type="color" id="selection-color-picker" title="Color de selección">
+                        <span class="toolbar-label">Color del texto</span>
+                    </div>
+                </div>
+
+                <!-- Panel NovaVision (IA de Imágenes) -->
+                <div id="novavision-panel" class="novavision-panel glass" hidden>
+                    <div class="ia-header">
+                        <span class="ia-icon">✨</span>
+                        <h3>NovaVision AI</h3>
+                        <button id="close-ia" class="btn-close">×</button>
+                    </div>
+                    <p class="ia-prompt">Escribe el nombre del lugar que deseas visualizar...</p>
+                    <div class="ia-input-group">
+                        <input type="text" id="ia-search-input" placeholder="Ej: Kyoto, Marte, Bosque Encantado...">
+                        <button id="ia-search-btn">Generar</button>
+                    </div>
+                    <div id="ia-results" class="ia-results">
+                        <!-- Las 5 imágenes aparecerán aquí -->
+                        <div class="ia-loader" hidden>Generando visiones...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

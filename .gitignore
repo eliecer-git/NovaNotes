@@ -1,0 +1,13 @@
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Backup del agente
+.gemini/
+.agent/
+.nova/
+
+# Otras carpetas temporales
+tmp/
+dist/
+node_modules/
