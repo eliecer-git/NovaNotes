@@ -170,22 +170,29 @@ class NoteApp {
 
             loader.remove();
 
-            // Garantizar unicidad absoluta con Triple Semilla (Tiempo + Random Gigante + Índice)
-            for (let i = 0; i < 5; i++) {
-                // Generamos un ID de variación único para este request
-                const variationId = Math.random().toString(36).substring(2, 9);
-                const randomSeed = Math.floor(Math.random() * 10000000);
+            // ESTILOS ARTÍSTICOS RADICALMENTE DIFERENTES para cada imagen
+            const artStyles = [
+                "photorealistic, professional photography, natural lighting, DSLR quality",
+                "digital art, fantasy illustration, vibrant colors, artstation trending",
+                "oil painting style, renaissance art, classical composition, museum quality",
+                "anime style, studio ghibli inspired, cel shading, japanese animation",
+                "cyberpunk aesthetic, neon lights, futuristic, blade runner style"
+            ];
 
-                // Mutamos ligeramente el prompt para CADA imagen. Esto garantiza que no se repitan jamás.
-                const mutatedPrompt = `${query}${artisticModifiers}, style variation ${variationId}`;
-                const encodedMutation = encodeURIComponent(mutatedPrompt);
+            for (let i = 0; i < 5; i++) {
+                const uniqueTimestamp = Date.now() + performance.now() + i;
+                const randomSeed = Math.floor(uniqueTimestamp * Math.random() * 1000);
+
+                // Cada imagen tiene un estilo artístico COMPLETAMENTE DIFERENTE
+                const styledPrompt = `${query}, ${artStyles[i]}, masterpiece, highly detailed, 8k`;
+                const encodedPrompt = encodeURIComponent(styledPrompt);
 
                 const img = document.createElement('img');
                 img.className = 'ia-img';
                 img.loading = 'lazy';
 
-                // Añadimos un parámetro 'no-cache' y usamos la mutación en el prompt
-                const url = `https://image.pollinations.ai/prompt/${encodedMutation}?width=800&height=600&nologo=true&seed=${randomSeed}&model=flux&enhance=true&v=${variationId}`;
+                // URL con todos los parámetros anti-caché posibles
+                const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${randomSeed}&model=flux&t=${uniqueTimestamp}`;
 
                 img.src = url;
                 img.onload = () => {
@@ -195,8 +202,8 @@ class NoteApp {
                 img.onclick = () => this.insertImage(img.src);
                 img.onerror = () => { containers[i].innerHTML = '<div class="ia-error">IA Ocupada</div>'; };
 
-                // Pausa de 350ms para asegurar unicidad y evitar bloqueos
-                await new Promise(r => setTimeout(r, 350));
+                // Pausa más larga de 500ms para dar tiempo a que la IA procese cada estilo
+                await new Promise(r => setTimeout(r, 500));
             }
 
         } catch (error) {
