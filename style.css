@@ -468,8 +468,8 @@ h2,
 
 /* Global Feedback */
 .global-feedback {
-    margin: 15px 0;
-    padding: 15px;
+    margin: 10px 0;
+    padding: 12px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
     border-radius: 16px;
@@ -964,10 +964,12 @@ h2,
     .sidebar {
         width: 100%;
         height: auto;
-        max-height: 30vh;
-        /* Más compacto */
+        max-height: 45vh;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
+        overflow-y: auto;
+        /* PERMITIR SCROLL para ver los botones */
+        scroll-behavior: smooth;
     }
 
     .sidebar-header {
