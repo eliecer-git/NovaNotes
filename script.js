@@ -40,6 +40,9 @@ class NoteApp {
         this.appContainer = document.querySelector('.app-container');
         this.formatToolbar = document.getElementById('format-toolbar');
         this.installBtn = document.getElementById('pwa-install-btn');
+        this.infoBtn = document.getElementById('info-btn');
+        this.infoModal = document.getElementById('info-modal');
+        this.closeInfoBtn = document.getElementById('close-info-btn');
         this.deferredPrompt = null;
 
         // Optimized Debouncing
@@ -90,6 +93,13 @@ class NoteApp {
             this.installBtn.style.display = 'none';
             this.deferredPrompt = null;
         });
+
+        // Info Modal Logic
+        this.infoBtn.onclick = () => this.infoModal.hidden = false;
+        this.closeInfoBtn.onclick = () => this.infoModal.hidden = true;
+        this.infoModal.onclick = (e) => {
+            if (e.target === this.infoModal) this.infoModal.hidden = true;
+        };
 
         this.emojiBtn.onclick = (e) => { e.stopPropagation(); this.toggleEmojiPicker(); };
 

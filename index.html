@@ -55,9 +55,19 @@
                     </div>
                     <h1>novaStarPro</h1>
                 </div>
-                <button id="new-note-btn" class="btn-primary" title="Nueva Nota">
-                    <span class="icon">+</span> Nueva Nota
-                </button>
+                <div class="header-btns">
+                    <button id="new-note-btn" class="btn-primary" title="Nueva Nota">
+                        <span class="icon">+</span> Nueva Nota
+                    </button>
+                    <button id="info-btn" class="btn-icon-info" title="Información y Guía">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <div class="search-box">
@@ -181,6 +191,53 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Modal de Información -->
+    <div id="info-modal" class="modal-overlay" hidden>
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>🚀 Guía de novaStarPro</h2>
+                <button id="close-info-btn" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-item">
+                    <span class="info-icon">➕</span>
+                    <p><strong>Nueva Nota:</strong> Crea un lienzo en blanco para tus ideas.</p>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">🔍</span>
+                    <p><strong>Buscador:</strong> Encuentra cualquier nota escribiendo parte de su título o contenido.
+                    </p>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">🎨</span>
+                    <p><strong>Estilo Global:</strong> Cambia fuentes y colores para toda la nota en la barra superior.
+                    </p>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">✍️</span>
+                    <p><strong>Color por Selección:</strong> Selecciona un texto para que aparezca el selector flotante
+                        y dale color a palabras específicas.</p>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">😊</span>
+                    <p><strong>Emojis:</strong> Dale vida a tus notas con el selector de iconos.</p>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">🔳</span>
+                    <p><strong>Pantalla Completa:</strong> Elimina distracciones para concentrarte en escribir.</p>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">📥</span>
+                    <p><strong>Instalar App:</strong> Úsalo para tener novaStarPro en tu escritorio o celular sin usar
+                        el navegador.</p>
+                </div>
+                <div class="developer-info">
+                    <p>Potenciado por la tecnología de Daniel Eliecer Orduz Baron</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
