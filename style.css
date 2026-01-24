@@ -111,6 +111,7 @@ h2,
     letter-spacing: -0.8px;
     background: linear-gradient(135deg, #f8fafc, #94a3b8);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -187,7 +188,33 @@ h2,
     font-size: 1.5rem;
     background: linear-gradient(to right, #818cf8, #ec4899);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.btn-close {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    line-height: 1;
+    padding-bottom: 2px;
+    /* Alineación óptica de la X */
+}
+
+.btn-close:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: rotate(90deg);
 }
 
 .info-item {
@@ -241,32 +268,33 @@ h2,
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    color: white;
-    border: none;
+    background: linear-gradient(135deg, #312e81, #4f46e5, #312e81);
+    background-size: 200% auto;
+    color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 10px 24px;
-    border-radius: 14px;
+    border-radius: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     font-size: 0.95rem;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .btn-secondary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
-    filter: brightness(1.1);
+    transform: translateY(-1px);
+    background-position: right center;
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn-secondary:active {
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
 }
 
 /* Modal Styling */
@@ -277,13 +305,19 @@ h2,
     width: 100vw;
     height: 100vh;
     background: rgba(10, 11, 16, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 99999;
+    z-index: 100000;
+    /* Prioridad absoluta */
     animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay.hidden,
+.modal-overlay[hidden] {
+    display: none !important;
 }
 
 /* Botón de Instalación Especial (PWA) */
