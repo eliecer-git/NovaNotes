@@ -357,6 +357,8 @@ class NoteApp {
         this.saveToStorage();
         this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
 
+        // Optimizamos: solo re-renderizar la lista si es necesario (ej: mover al tope)
+        // pero lo hacemos con un debounce mayor o solo si ha pasado tiempo
         if (shouldRefreshList && index > 0) {
             const [movedNote] = this.notes.splice(index, 1);
             this.notes.unshift(movedNote);
@@ -408,10 +410,12 @@ class NoteApp {
         this.notesList.innerHTML = html;
     }
 
+    // Versión optimizada de extracción de texto sin crear elementos DOM pesados
     getRawText(html) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.innerText.substring(0, 45) || 'Sin contenido...';
+        if (!html) return 'Sin contenido...';
+        // Regex simple para quitar etiquetas HTML rápidamente
+        const text = html.replace(/<[^>]*>?/gm, ' ');
+        return text.substring(0, 45).trim() || 'Sin contenido...';
     }
 
     escapeHTML(str) {
