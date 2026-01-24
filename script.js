@@ -171,15 +171,21 @@ class NoteApp {
             loader.remove();
 
             // Garantizar unicidad absoluta con Triple Semilla (Tiempo + Random Gigante + Índice)
-            const baseTimestamp = Date.now();
-
             for (let i = 0; i < 5; i++) {
-                const randomSeed = baseTimestamp + Math.floor(Math.random() * 1000000) + i;
+                // Generamos un ID de variación único para este request
+                const variationId = Math.random().toString(36).substring(2, 9);
+                const randomSeed = Math.floor(Math.random() * 10000000);
+
+                // Mutamos ligeramente el prompt para CADA imagen. Esto garantiza que no se repitan jamás.
+                const mutatedPrompt = `${query}${artisticModifiers}, style variation ${variationId}`;
+                const encodedMutation = encodeURIComponent(mutatedPrompt);
+
                 const img = document.createElement('img');
                 img.className = 'ia-img';
                 img.loading = 'lazy';
-                // Modelo Flux para máxima calidad
-                const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${randomSeed}&model=flux&enhance=true`;
+
+                // Añadimos un parámetro 'no-cache' y usamos la mutación en el prompt
+                const url = `https://image.pollinations.ai/prompt/${encodedMutation}?width=800&height=600&nologo=true&seed=${randomSeed}&model=flux&enhance=true&v=${variationId}`;
 
                 img.src = url;
                 img.onload = () => {
