@@ -148,6 +148,64 @@ class NoteApp {
         this.contentFontSelect.onchange = (e) => this.updateFormat('contentFont', e.target.value);
         this.contentSizeSelect.onchange = (e) => this.updateFormat('contentSize', e.target.value);
         this.textColorPicker.oninput = (e) => this.updateFormat('textColor', e.target.value);
+
+        // Feedback Listeners
+        this.initFeedback();
+    }
+
+    async initFeedback() {
+        const likeBtn = document.getElementById('like-btn');
+        const dislikeBtn = document.getElementById('dislike-btn');
+        const likeCount = document.getElementById('like-count');
+        const dislikeCount = document.getElementById('dislike-count');
+
+        // Cargar conteos iniciales
+        this.refreshCounts();
+
+        const hasVoted = localStorage.getItem('novanotes_voted');
+        if (hasVoted) {
+            if (hasVoted === 'like') likeBtn.classList.add('voted');
+            else dislikeBtn.classList.add('voted');
+        }
+
+        likeBtn.onclick = () => this.handleVote('likes', likeBtn);
+        dislikeBtn.onclick = () => this.handleVote('dislikes', dislikeBtn);
+    }
+
+    async refreshCounts() {
+        try {
+            const lRes = await fetch('https://api.counterapi.dev/v1/novastarpro/likes');
+            const lData = await lRes.json();
+            document.getElementById('like-count').textContent = lData.count || 0;
+
+            const dRes = await fetch('https://api.counterapi.dev/v1/novastarpro/dislikes');
+            const dData = await dRes.json();
+            document.getElementById('dislike-count').textContent = dData.count || 0;
+        } catch (e) {
+            console.log('Error cargando conteos comunidad');
+        }
+    }
+
+    async handleVote(type, btn) {
+        if (localStorage.getItem('novanotes_voted')) return;
+
+        try {
+            btn.classList.add('voted');
+            localStorage.setItem('novanotes_voted', type === 'likes' ? 'like' : 'dislike');
+
+            const res = await fetch(`https://api.counterapi.dev/v1/novastarpro/${type}/up`);
+            const data = await res.json();
+
+            btn.querySelector('span[id$="-count"]').textContent = data.count;
+
+            // Animación de éxito
+            btn.style.transform = 'scale(1.2) rotate(10deg)';
+            setTimeout(() => btn.style.transform = '', 500);
+        } catch (e) {
+            console.log('Error al votar');
+            btn.classList.remove('voted');
+            localStorage.removeItem('novanotes_voted');
+        }
     }
 
     handleSelection() {

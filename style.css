@@ -466,6 +466,72 @@ h2,
     overflow: hidden;
 }
 
+/* Global Feedback */
+.global-feedback {
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    text-align: center;
+}
+
+.feedback-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.feedback-btns {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.btn-feedback {
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    min-width: 80px;
+    justify-content: center;
+}
+
+.btn-feedback:hover {
+    transform: translateY(-3px) scale(1.05);
+    background: var(--card-bg);
+    border-color: var(--accent);
+}
+
+.btn-feedback:active {
+    transform: scale(0.95);
+}
+
+.btn-feedback.voted {
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.1);
+    cursor: default;
+    pointer-events: none;
+}
+
+#like-btn:hover .icon {
+    filter: drop-shadow(0 0 5px #fbbf24);
+}
+
+#dislike-btn:hover .icon {
+    filter: drop-shadow(0 0 5px #60a5fa);
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 16px 24px;
