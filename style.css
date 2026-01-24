@@ -241,10 +241,10 @@ h2,
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 10px 22px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white;
+    border: none;
+    padding: 10px 24px;
     border-radius: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -254,16 +254,19 @@ h2,
     justify-content: center;
     gap: 10px;
     font-size: 0.95rem;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+    filter: brightness(1.1);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
 }
 
 /* Modal Styling */
