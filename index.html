@@ -120,19 +120,6 @@
                         <div id="emoji-picker" class="emoji-picker glass" hidden>
                             <!-- Los emojis se cargarán aquí dinámicamente -->
                         </div>
-                        <button id="ia-btn" class="btn-ia" title="NovaVision AI">
-                            <span class="ia-pulse"></span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 2v8"></path>
-                                <path d="m4.93 10.93 1.41 1.41"></path>
-                                <path d="M2 18h2"></path>
-                                <path d="M20 18h2"></path>
-                                <path d="m19.07 10.93-1.41 1.41"></path>
-                                <path d="M22 22H2"></path>
-                                <path d="m8 22 4-10 4 10"></path>
-                            </svg>
-                        </button>
                         <button id="fullscreen-btn" class="btn-icon" title="Modo Pantalla Completa">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -172,24 +159,6 @@
                     <div id="selection-toolbar" class="selection-toolbar glass" hidden>
                         <input type="color" id="selection-color-picker" title="Color de selección">
                         <span class="toolbar-label">Color del texto</span>
-                    </div>
-                </div>
-
-                <!-- Panel NovaVision (IA de Imágenes) -->
-                <div id="novavision-panel" class="novavision-panel glass" hidden>
-                    <div class="ia-header">
-                        <span class="ia-icon">✨</span>
-                        <h3>NovaVision AI</h3>
-                        <button id="close-ia" class="btn-close">×</button>
-                    </div>
-                    <p class="ia-prompt">Escribe el nombre del lugar que deseas visualizar...</p>
-                    <div class="ia-input-group">
-                        <input type="text" id="ia-search-input" placeholder="Ej: Kyoto, Marte, Bosque Encantado...">
-                        <button id="ia-search-btn">Generar</button>
-                    </div>
-                    <div id="ia-results" class="ia-results">
-                        <!-- Las 5 imágenes aparecerán aquí -->
-                        <div class="ia-loader" hidden>Generando visiones...</div>
                     </div>
                 </div>
             </div>

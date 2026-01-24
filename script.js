@@ -35,12 +35,6 @@ class NoteApp {
         this.fullscreenBtn = document.getElementById('fullscreen-btn');
         this.emojiBtn = document.getElementById('emoji-btn');
         this.emojiPicker = document.getElementById('emoji-picker');
-        this.iaBtn = document.getElementById('ia-btn');
-        this.iaPanel = document.getElementById('novavision-panel');
-        this.iaSearchInput = document.getElementById('ia-search-input');
-        this.iaSearchBtn = document.getElementById('ia-search-btn');
-        this.iaResults = document.getElementById('ia-results');
-        this.closeIaBtn = document.getElementById('close-ia');
         this.selectionToolbar = document.getElementById('selection-toolbar');
         this.selectionColorPicker = document.getElementById('selection-color-picker');
         this.appContainer = document.querySelector('.app-container');
@@ -73,16 +67,9 @@ class NoteApp {
         this.fullscreenBtn.onclick = () => this.toggleFullscreen();
 
         this.emojiBtn.onclick = (e) => { e.stopPropagation(); this.toggleEmojiPicker(); };
-        this.iaBtn.onclick = (e) => { e.stopPropagation(); this.toggleIaPanel(); };
-        this.closeIaBtn.onclick = () => this.iaPanel.hidden = true;
-        this.iaSearchBtn.onclick = () => this.searchImages();
-        this.iaSearchInput.onkeypress = (e) => { if (e.key === 'Enter') this.searchImages(); };
 
         document.addEventListener('click', (e) => {
             if (this.emojiPicker) this.emojiPicker.hidden = true;
-            if (this.iaPanel && !this.iaPanel.contains(e.target) && e.target !== this.iaBtn) {
-                this.iaPanel.hidden = true;
-            }
         });
 
         // Content Editable Events
@@ -141,78 +128,6 @@ class NoteApp {
     applySelectionColor(color) {
         document.execCommand('foreColor', false, color);
         this.debouncedSaveAndRender();
-    }
-
-    toggleIaPanel() {
-        this.iaPanel.hidden = !this.iaPanel.hidden;
-        if (!this.iaPanel.hidden) this.iaSearchInput.focus();
-    }
-
-    async searchImages() {
-        const query = this.iaSearchInput.value.trim();
-        if (!query) return;
-
-        this.iaResults.innerHTML = '';
-        const loader = document.createElement('div');
-        loader.className = 'ia-loader';
-        loader.textContent = 'Invocando al motor de visiones...';
-        this.iaResults.appendChild(loader);
-
-        try {
-            // Añadir modificadores de calidad automáticos para mejores resultados
-            const artisticModifiers = ", photorealistic, masterpiece, highly detailed, cinematic lighting, ultra-vivid, 8k";
-            const encodedPrompt = encodeURIComponent(query + artisticModifiers);
-
-            const containers = [];
-            for (let i = 0; i < 5; i++) {
-                const div = document.createElement('div');
-                div.className = 'ia-img-container';
-                div.innerHTML = '<div class="ia-loader-mini"></div>';
-                this.iaResults.appendChild(div);
-                containers.push(div);
-            }
-
-            loader.remove();
-
-            // ESTILOS ARTÍSTICOS RADICALMENTE DIFERENTES para cada imagen
-            const artStyles = [
-                "photorealistic, professional photography, natural lighting, DSLR quality",
-                "digital art, fantasy illustration, vibrant colors, artstation trending",
-                "oil painting style, renaissance art, classical composition, museum quality",
-                "anime style, studio ghibli inspired, cel shading, japanese animation",
-                "cyberpunk aesthetic, neon lights, futuristic, blade runner style"
-            ];
-
-            for (let i = 0; i < 5; i++) {
-                const uniqueTimestamp = Date.now() + performance.now() + i;
-                const randomSeed = Math.floor(uniqueTimestamp * Math.random() * 1000);
-
-                // Cada imagen tiene un estilo artístico COMPLETAMENTE DIFERENTE
-                const styledPrompt = `${query}, ${artStyles[i]}, masterpiece, highly detailed, 8k`;
-                const encodedPrompt = encodeURIComponent(styledPrompt);
-
-                const img = document.createElement('img');
-                img.className = 'ia-img';
-                img.loading = 'lazy';
-
-                // URL con todos los parámetros anti-caché posibles
-                const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${randomSeed}&model=flux&t=${uniqueTimestamp}`;
-
-                img.src = url;
-                img.onload = () => {
-                    containers[i].innerHTML = '';
-                    containers[i].appendChild(img);
-                };
-                img.onclick = () => this.insertImage(img.src);
-                img.onerror = () => { containers[i].innerHTML = '<div class="ia-error">IA Ocupada</div>'; };
-
-                // Pausa más larga de 500ms para dar tiempo a que la IA procese cada estilo
-                await new Promise(r => setTimeout(r, 500));
-            }
-
-        } catch (error) {
-            this.iaResults.innerHTML = '<p style="color:var(--accent)">La red de visiones está saturada. Intenta de nuevo.</p>';
-        }
     }
 
     insertImage(src) {
