@@ -964,17 +964,32 @@ h2,
     .sidebar {
         width: 100%;
         height: auto;
-        max-height: 45vh;
+        max-height: 50vh;
+        /* Un poco más de aire */
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        overflow-y: auto;
-        /* PERMITIR SCROLL para ver los botones */
-        scroll-behavior: smooth;
+        overflow-y: scroll !important;
+        /* Forzar barra de scroll */
+        -webkit-overflow-scrolling: touch;
+        display: block;
+        /* Importante para que el scroll fluya bien */
     }
 
     .sidebar-header {
         padding: 16px;
         gap: 12px;
+    }
+
+    .notes-list-container {
+        flex: none;
+        overflow-y: visible;
+        /* Dejar que el padre (sidebar) maneje el scroll */
+        max-height: none;
+    }
+
+    .sidebar-footer {
+        padding-bottom: 40px;
+        /* Para que los botones no queden al ras */
     }
 
     .editor-view {
