@@ -95,10 +95,19 @@ class NoteApp {
         });
 
         // Info Modal Logic
-        this.infoBtn.onclick = () => this.infoModal.hidden = false;
-        this.closeInfoBtn.onclick = () => this.infoModal.hidden = true;
+        this.infoBtn.onclick = () => {
+            this.infoModal.hidden = false;
+            this.infoModal.classList.remove('hidden');
+        };
+        this.closeInfoBtn.onclick = () => {
+            this.infoModal.hidden = true;
+            this.infoModal.classList.add('hidden');
+        };
         this.infoModal.onclick = (e) => {
-            if (e.target === this.infoModal) this.infoModal.hidden = true;
+            if (e.target === this.infoModal) {
+                this.infoModal.hidden = true;
+                this.infoModal.classList.add('hidden');
+            }
         };
 
         this.emojiBtn.onclick = (e) => { e.stopPropagation(); this.toggleEmojiPicker(); };
