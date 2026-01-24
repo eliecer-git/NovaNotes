@@ -431,13 +431,28 @@ h2,
     transform: scale(1.1);
 }
 
-/* contenteditable Placeholder Support */
+/* contenteditable Placeholder Support - Mejorado */
 .input-title:empty:before,
-.input-content:empty:before {
+.input-content:empty:before,
+.input-title:not(:focus):empty:before,
+.input-content:not(:focus):empty:before {
     content: attr(data-placeholder);
     color: var(--text-muted);
     pointer-events: none;
     display: block;
+    font-style: italic;
+    opacity: 0.6;
+}
+
+/* Fallback para cuando el contenido tiene solo un BR */
+.input-title:has(br:only-child):before,
+.input-content:has(br:only-child):before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: block;
+    font-style: italic;
+    opacity: 0.6;
 }
 
 .input-title {
@@ -450,7 +465,6 @@ h2,
     outline: none;
     transition: font-size 0.2s ease, font-family 0.2s ease;
     min-height: 1.2em;
-    /* Asegura espacio si está vacío */
 }
 
 .input-content {
