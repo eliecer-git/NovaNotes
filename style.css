@@ -590,15 +590,16 @@ h2,
 }
 
 .color-picker-premium {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     padding: 0;
-    border: 2px solid var(--glass-border);
+    border: 2px solid var(--accent);
     border-radius: 50%;
     cursor: pointer;
     background: none;
     align-self: center;
     overflow: hidden;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
 }
 
 .color-picker-premium::-webkit-color-swatch-wrapper {
@@ -888,33 +889,50 @@ h2,
     .sidebar {
         width: 100%;
         height: auto;
-        max-height: 40vh;
+        max-height: 30vh;
+        /* Más compacto */
         border-right: none;
         border-bottom: 1px solid var(--border-color);
     }
 
+    .sidebar-header {
+        padding: 16px;
+        gap: 12px;
+    }
+
     .editor-view {
-        padding: 24px;
+        padding: 20px 16px;
     }
 
     .format-toolbar {
         overflow-x: auto;
         max-width: 100%;
-        padding: 8px;
+        padding: 10px;
         margin-right: 0;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid var(--accent);
+        /* Resaltar para que se vea */
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Asegurar que el color picker se vea */
+    .color-picker-premium {
+        min-width: 28px;
+        min-height: 28px;
     }
 
     .editor-header {
         height: auto;
-        padding: 16px;
+        padding: 12px;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
         align-items: stretch;
     }
 
     .editor-actions {
-        justify-content: space-between;
-        align-items: center;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .input-title {

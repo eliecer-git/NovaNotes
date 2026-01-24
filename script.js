@@ -159,10 +159,14 @@ class NoteApp {
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
 
+            // Ajuste para móviles: si el rect está muy arriba, mostrar abajo
+            let top = rect.top + window.scrollY - 70;
+            if (top < 10) top = rect.bottom + window.scrollY + 20;
+
             requestAnimationFrame(() => {
                 this.selectionToolbar.hidden = false;
-                this.selectionToolbar.style.top = `${rect.top + window.scrollY - 60}px`;
-                this.selectionToolbar.style.left = `${rect.left + window.scrollX}px`;
+                this.selectionToolbar.style.top = `${top}px`;
+                this.selectionToolbar.style.left = `${Math.max(10, Math.min(window.innerWidth - 180, rect.left + window.scrollX))}px`;
             });
         } else {
             this.selectionToolbar.hidden = true;
