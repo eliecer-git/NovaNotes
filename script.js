@@ -173,38 +173,55 @@ class NoteApp {
     }
 
     async refreshCounts() {
+        // Namespace único para evitar colisiones con otros proyectos
+        const NS = 'novastarpro_official_v1';
         try {
-            const lRes = await fetch('https://api.counterapi.dev/v1/novastarpro/likes');
-            const lData = await lRes.json();
-            document.getElementById('like-count').textContent = lData.count || 0;
+            const [lRes, dRes] = await Promise.all([
+                fetch(`https://api.counterapi.dev/v1/${NS}/likes`),
+                fetch(`https://api.counterapi.dev/v1/${NS}/dislikes`)
+            ]);
 
-            const dRes = await fetch('https://api.counterapi.dev/v1/novastarpro/dislikes');
-            const dData = await dRes.json();
-            document.getElementById('dislike-count').textContent = dData.count || 0;
+            if (lRes.ok) {
+                const lData = await lRes.json();
+                document.getElementById('like-count').textContent = lData.count || 0;
+            }
+            if (dRes.ok) {
+                const dData = await dRes.json();
+                document.getElementById('dislike-count').textContent = dData.count || 0;
+            }
         } catch (e) {
-            console.log('Error cargando conteos comunidad');
+            console.log('Error de conexión con la comunidad');
         }
     }
 
     async handleVote(type, btn) {
         if (localStorage.getItem('novanotes_voted')) return;
+        const NS = 'novastarpro_official_v1';
 
         try {
+            // Bloqueo inmediato UI
+            document.getElementById('like-btn').classList.add('voting-locked');
+            document.getElementById('dislike-btn').classList.add('voting-locked');
+
             btn.classList.add('voted');
             localStorage.setItem('novanotes_voted', type === 'likes' ? 'like' : 'dislike');
 
-            const res = await fetch(`https://api.counterapi.dev/v1/novastarpro/${type}/up`);
-            const data = await res.json();
+            const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+            if (!res.ok) throw new Error('API Error');
 
+            const data = await res.json();
             btn.querySelector('span[id$="-count"]').textContent = data.count;
 
             // Animación de éxito
-            btn.style.transform = 'scale(1.2) rotate(10deg)';
-            setTimeout(() => btn.style.transform = '', 500);
+            btn.classList.add('vote-success');
+            setTimeout(() => btn.classList.remove('vote-success'), 1000);
         } catch (e) {
-            console.log('Error al votar');
+            console.log('Error al procesar voto');
             btn.classList.remove('voted');
+            document.getElementById('like-btn').classList.remove('voting-locked');
+            document.getElementById('dislike-btn').classList.remove('voting-locked');
             localStorage.removeItem('novanotes_voted');
+            alert('Ups, hubo un problema de conexión. Inténtalo de nuevo.');
         }
     }
 
