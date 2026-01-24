@@ -151,44 +151,50 @@ class NoteApp {
         this.iaResults.innerHTML = '';
         const loader = document.createElement('div');
         loader.className = 'ia-loader';
-        loader.textContent = 'Enviando petición a la nube...';
+        loader.textContent = 'Invocando al motor de visiones...';
         this.iaResults.appendChild(loader);
 
         try {
-            const encodedPrompt = encodeURIComponent(query);
+            // Añadir modificadores de calidad automáticos para mejores resultados
+            const artisticModifiers = ", photorealistic, masterpiece, highly detailed, cinematic lighting, ultra-vivid, 8k";
+            const encodedPrompt = encodeURIComponent(query + artisticModifiers);
 
-            // Creamos los contenedores vacíos primero
             const containers = [];
             for (let i = 0; i < 5; i++) {
                 const div = document.createElement('div');
                 div.className = 'ia-img-container';
-                div.style.minHeight = '100px';
+                div.innerHTML = '<div class="ia-loader-mini"></div>';
                 this.iaResults.appendChild(div);
                 containers.push(div);
             }
 
             loader.remove();
 
-            // Cargamos las imágenes una por una con un ligero retraso para no saturar los límites de la IA
+            // Garantizar unicidad absoluta con Triple Semilla (Tiempo + Random Gigante + Índice)
+            const baseTimestamp = Date.now();
+
             for (let i = 0; i < 5; i++) {
-                const randomSeed = Math.floor(Math.random() * 1000000);
+                const randomSeed = baseTimestamp + Math.floor(Math.random() * 1000000) + i;
                 const img = document.createElement('img');
                 img.className = 'ia-img';
                 img.loading = 'lazy';
-                // Usamos un modelo más optimizado (Turbo) para evitar el error de "limits"
-                const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${randomSeed}`;
+                // Modelo Flux para máxima calidad
+                const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${randomSeed}&model=flux&enhance=true`;
 
                 img.src = url;
+                img.onload = () => {
+                    containers[i].innerHTML = '';
+                    containers[i].appendChild(img);
+                };
                 img.onclick = () => this.insertImage(img.src);
-                img.onerror = () => { img.src = 'https://via.placeholder.com/400x300/1e293b/f8fafc?text=IA+Ocupada'; };
+                img.onerror = () => { containers[i].innerHTML = '<div class="ia-error">IA Ocupada</div>'; };
 
-                containers[i].appendChild(img);
-                // Pausa de 250ms para ser gentiles con el servidor
-                await new Promise(r => setTimeout(r, 250));
+                // Pausa de 350ms para asegurar unicidad y evitar bloqueos
+                await new Promise(r => setTimeout(r, 350));
             }
 
         } catch (error) {
-            this.iaResults.innerHTML = '<p style="color:var(--accent)">La IA está procesando demasiadas visiones. Espera un momento.</p>';
+            this.iaResults.innerHTML = '<p style="color:var(--accent)">La red de visiones está saturada. Intenta de nuevo.</p>';
         }
     }
 
