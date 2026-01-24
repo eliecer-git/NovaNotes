@@ -200,44 +200,43 @@ class NoteApp {
         const voteType = type === 'likes' ? 'like' : 'dislike';
         const otherType = type === 'likes' ? 'dislikes' : 'likes';
 
-        // Bloqueo anti-spam
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
         try {
-            // Caso 1: Quitar el voto actual (Toggle off)
+            // Caso 1: Quitar mi voto actual (Toggle OFF)
             if (currentVote === voteType) {
-                const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
-                const data = await res.json();
-                btn.querySelector('span[id$="-count"]').textContent = data.count || 0;
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
                 localStorage.removeItem('novanotes_voted');
                 btn.classList.remove('voted');
             }
-            // Caso 2: Switch de voto o Primer voto
+            // Caso 2: Cambiar mi voto o votar por primera vez (Switch o Nuevo)
             else {
-                // Si ya había votado por el otro botón, restamos ese primero
                 if (currentVote) {
-                    await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
+                    // Es un cambio: Restar el otro y sumar este de forma ordenada
                     const otherBtn = document.getElementById(otherType === 'likes' ? 'like-btn' : 'dislike-btn');
                     otherBtn.classList.remove('voted');
-                    // Refrescar conteos visuales
-                    setTimeout(() => this.refreshCounts(), 100);
-                }
 
-                // Sumar el nuevo voto
-                const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
-                const data = await res.json();
-                btn.querySelector('span[id$="-count"]').textContent = data.count || 0;
+                    await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
+                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+                } else {
+                    // Es un voto nuevo: Solo sumar este
+                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+                }
 
                 localStorage.setItem('novanotes_voted', voteType);
                 btn.classList.add('voted');
                 btn.classList.add('vote-success');
                 setTimeout(() => btn.classList.remove('vote-success'), 1000);
             }
+
+            // Sincronización final: Refrescar ambos números desde el servidor
+            await this.refreshCounts();
+
         } catch (e) {
-            console.log('Error en votación:', e);
+            console.log('Error de conexión:', e);
         } finally {
-            setTimeout(() => btn.classList.remove('voting-locked'), 400);
+            setTimeout(() => btn.classList.remove('voting-locked'), 800);
         }
     }
 
