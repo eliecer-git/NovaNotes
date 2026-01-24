@@ -455,6 +455,17 @@ h2,
     opacity: 0.6;
 }
 
+/* Placeholder usando clase JS (más confiable) */
+.input-title.is-empty:before,
+.input-content.is-empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: block;
+    font-style: italic;
+    opacity: 0.6;
+}
+
 .input-title {
     background: none;
     border: none;

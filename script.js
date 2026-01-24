@@ -96,8 +96,12 @@ class NoteApp {
         this.noteContentInput.oninput = () => {
             this.updateSidebarCardPreview();
             this.debouncedSaveAndRender();
+            this.updatePlaceholderState();
         };
         this.noteContentInput.onpaste = (e) => this.handlePaste(e);
+
+        this.noteTitleInput.onblur = () => this.updatePlaceholderState();
+        this.noteContentInput.onblur = () => this.updatePlaceholderState();
 
         document.addEventListener('selectionchange', () => this.debouncedSelection());
         this.selectionColorPicker.oninput = (e) => this.applySelectionColor(e.target.value);
@@ -300,6 +304,9 @@ class NoteApp {
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
             this.applyFormat(note.styles);
 
+            // Gestionar placeholders
+            this.updatePlaceholderState();
+
             this.editorView.classList.remove('empty');
             this.editorFields.hidden = false;
             this.emptyState.hidden = true;
@@ -438,6 +445,16 @@ class NoteApp {
                 reader.readAsDataURL(blob);
             }
         }
+    }
+
+    updatePlaceholderState() {
+        // Verificar si el título está vacío
+        const titleEmpty = !this.noteTitleInput.innerText.trim();
+        this.noteTitleInput.classList.toggle('is-empty', titleEmpty);
+
+        // Verificar si el contenido está vacío
+        const contentEmpty = !this.noteContentInput.innerText.trim();
+        this.noteContentInput.classList.toggle('is-empty', contentEmpty);
     }
 }
 
