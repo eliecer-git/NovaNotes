@@ -528,8 +528,8 @@ h2,
 .btn-feedback.voted {
     border-color: var(--accent);
     background: rgba(99, 102, 241, 0.2);
-    cursor: default;
-    pointer-events: none;
+    cursor: pointer;
+    /* Cambiado de default a pointer */
     box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
 }
 

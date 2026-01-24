@@ -195,33 +195,45 @@ class NoteApp {
     }
 
     async handleVote(type, btn) {
-        if (localStorage.getItem('novanotes_voted')) return;
         const NS = 'novastarpro_official_v1';
+        const currentVote = localStorage.getItem('novanotes_voted');
+        const voteType = type === 'likes' ? 'like' : 'dislike';
+
+        // Si intenta votar por el otro sin quitar el primero, le avisamos
+        if (currentVote && currentVote !== voteType) {
+            alert('Para cambiar tu voto, primero haz clic de nuevo en tu opción anterior para quitarla.');
+            return;
+        }
+
+        const isRemoving = currentVote === voteType;
+        const action = isRemoving ? 'down' : 'up';
 
         try {
-            // Bloqueo inmediato UI
-            document.getElementById('like-btn').classList.add('voting-locked');
-            document.getElementById('dislike-btn').classList.add('voting-locked');
+            // Protección contra clics repetidos rápidos
+            if (btn.classList.contains('voting-locked')) return;
+            btn.classList.add('voting-locked');
 
-            btn.classList.add('voted');
-            localStorage.setItem('novanotes_voted', type === 'likes' ? 'like' : 'dislike');
-
-            const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+            const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/${action}`);
             if (!res.ok) throw new Error('API Error');
 
             const data = await res.json();
             btn.querySelector('span[id$="-count"]').textContent = data.count;
 
-            // Animación de éxito
-            btn.classList.add('vote-success');
-            setTimeout(() => btn.classList.remove('vote-success'), 1000);
+            if (isRemoving) {
+                localStorage.removeItem('novanotes_voted');
+                btn.classList.remove('voted');
+            } else {
+                localStorage.setItem('novanotes_voted', voteType);
+                btn.classList.add('voted');
+                btn.classList.add('vote-success');
+                setTimeout(() => btn.classList.remove('vote-success'), 1000);
+            }
         } catch (e) {
-            console.log('Error al procesar voto');
-            btn.classList.remove('voted');
-            document.getElementById('like-btn').classList.remove('voting-locked');
-            document.getElementById('dislike-btn').classList.remove('voting-locked');
-            localStorage.removeItem('novanotes_voted');
-            alert('Ups, hubo un problema de conexión. Inténtalo de nuevo.');
+            console.log('Error de red:', e);
+            alert('Sin conexión. Inténtalo de nuevo.');
+        } finally {
+            // Liberar después de medio segundo
+            setTimeout(() => btn.classList.remove('voting-locked'), 500);
         }
     }
 
