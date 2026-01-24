@@ -151,6 +151,74 @@ h2,
     background: rgba(255, 255, 255, 0.1);
 }
 
+/* Botón de Instalación Especial (PWA) */
+.btn-install {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 14px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899, #8b5cf6);
+    background-size: 200% auto;
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: flowGradient 3s linear infinite, bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.btn-install:hover {
+    transform: scale(1.03) translateY(-3px);
+    background-position: right center;
+    box-shadow: 0 15px 30px rgba(236, 72, 153, 0.4);
+}
+
+.btn-install:active {
+    transform: scale(0.95);
+}
+
+@keyframes flowGradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+
+    70% {
+        transform: scale(0.9);
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 .btn-icon {
     background: none;
     border: none;

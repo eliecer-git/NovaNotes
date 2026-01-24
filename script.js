@@ -39,6 +39,8 @@ class NoteApp {
         this.selectionColorPicker = document.getElementById('selection-color-picker');
         this.appContainer = document.querySelector('.app-container');
         this.formatToolbar = document.getElementById('format-toolbar');
+        this.installBtn = document.getElementById('pwa-install-btn');
+        this.deferredPrompt = null;
 
         // Optimized Debouncing
         this.debouncedSaveAndRender = this.debounce(() => this.autoSave(true), 1500);
@@ -65,6 +67,29 @@ class NoteApp {
         this.saveNoteBtn.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
         this.fullscreenBtn.onclick = () => this.toggleFullscreen();
+
+        // PWA Install Logic
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            this.installBtn.style.display = 'flex';
+        });
+
+        this.installBtn.addEventListener('click', async () => {
+            if (this.deferredPrompt) {
+                this.deferredPrompt.prompt();
+                const { outcome } = await this.deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    this.installBtn.style.display = 'none';
+                }
+                this.deferredPrompt = null;
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            this.installBtn.style.display = 'none';
+            this.deferredPrompt = null;
+        });
 
         this.emojiBtn.onclick = (e) => { e.stopPropagation(); this.toggleEmojiPicker(); };
 
