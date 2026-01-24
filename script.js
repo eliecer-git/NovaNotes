@@ -379,3 +379,12 @@ class NoteApp {
 
 const app = new NoteApp();
 window.app = app;
+
+// Registrar el motor de la App para Google (PWA)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('NovaNotes lista para instalar'))
+            .catch(err => console.log('Error al registrar App:', err));
+    });
+}
