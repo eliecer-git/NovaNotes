@@ -384,7 +384,7 @@ window.app = app;
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('NovaNotes lista para instalar'))
+            .then(reg => console.log('novaStarPro lista para instalar'))
             .catch(err => console.log('Error al registrar App:', err));
     });
 }

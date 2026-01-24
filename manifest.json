@@ -1,6 +1,6 @@
 {
-  "name": "NovaNotes - Sistema de Notas Pro",
-  "short_name": "NovaNotes",
+  "name": "novaStarPro - Sistema de Notas Pro",
+  "short_name": "novaStarPro",
   "description": "Aplicación de notas premium con diseño minimalista y organización inteligente.",
   "start_url": "./index.html",
   "display": "standalone",
