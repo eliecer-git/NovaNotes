@@ -156,16 +156,22 @@ class NoteApp {
     async initFeedback() {
         const likeBtn = document.getElementById('like-btn');
         const dislikeBtn = document.getElementById('dislike-btn');
-        const likeCount = document.getElementById('like-count');
-        const dislikeCount = document.getElementById('dislike-count');
 
-        // Cargar conteos iniciales
+        // 1. Limpiar estados visuales por defecto (aseguramos que empiece limpio)
+        likeBtn.classList.remove('voted');
+        dislikeBtn.classList.remove('voted');
+
+        // 2. Cargar conteos globales del servidor
         this.refreshCounts();
 
+        // 3. Restaurar selección SOLO si el usuario ya votó de verdad
         const hasVoted = localStorage.getItem('novanotes_voted');
         if (hasVoted) {
-            if (hasVoted === 'like') likeBtn.classList.add('voted');
-            else dislikeBtn.classList.add('voted');
+            if (hasVoted === 'like') {
+                likeBtn.classList.add('voted');
+            } else if (hasVoted === 'dislike') {
+                dislikeBtn.classList.add('voted');
+            }
         }
 
         likeBtn.onclick = () => this.handleVote('likes', likeBtn);
