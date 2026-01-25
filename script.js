@@ -40,6 +40,13 @@ class NoteApp {
         this.appContainer = document.querySelector('.app-container');
         this.formatToolbar = document.getElementById('format-toolbar');
         this.categorySelect = document.getElementById('category-select');
+        this.themeSelect = document.getElementById('theme-select');
+        this.lockNoteBtn = document.getElementById('lock-note-btn');
+        this.passwordModal = document.getElementById('password-modal');
+        this.pwdInput = document.getElementById('note-password-input');
+        this.confirmPwdBtn = document.getElementById('confirm-password-btn');
+        this.closePwdBtn = document.getElementById('close-pwd-btn');
+        this.pwdError = document.getElementById('pwd-error');
         this.installBtn = document.getElementById('pwa-install-btn');
         this.infoBtn = document.getElementById('info-btn');
         this.infoModal = document.getElementById('info-modal');
@@ -158,6 +165,20 @@ class NoteApp {
                 this.renderNotesList();
             }
         };
+
+        this.themeSelect.onchange = (e) => {
+            if (!this.activeNoteId) return;
+            const note = this.notes.find(n => n.id === this.activeNoteId);
+            if (note) {
+                note.theme = e.target.value;
+                this.applyTheme(note.theme);
+                this.saveToStorage();
+            }
+        };
+
+        this.lockNoteBtn.onclick = () => this.handleLockClick();
+        this.confirmPwdBtn.onclick = () => this.verifyPassword();
+        this.closePwdBtn.onclick = () => this.passwordModal.hidden = true;
 
         // Feedback Listeners
         this.initFeedback();
@@ -402,9 +423,23 @@ class NoteApp {
         const note = this.notes.find(n => n.id === id);
 
         if (note) {
+            // Si la nota está protegida y no ha sido desbloqueada en esta sesión
+            if (note.password && !note.isUnlocked) {
+                this.pendingNoteId = id;
+                this.passwordModal.hidden = false;
+                this.pwdInput.value = '';
+                this.pwdError.style.display = 'none';
+                return;
+            }
+
+            this.activeNoteId = id;
             this.noteTitleInput.innerHTML = note.title;
             this.noteContentInput.innerHTML = note.content;
             this.categorySelect.value = note.category || 'personal';
+            this.themeSelect.value = note.theme || 'none';
+            this.applyTheme(note.theme || 'none');
+            this.lockNoteBtn.classList.toggle('locked-active', !!note.password);
+
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
             this.applyFormat(note.styles);
 
@@ -575,6 +610,60 @@ class NoteApp {
         // Verificar si el contenido está vacío
         const contentEmpty = !this.noteContentInput.innerText.trim();
         this.noteContentInput.classList.toggle('is-empty', contentEmpty);
+    }
+
+    applyTheme(theme) {
+        // Remover todos los temas previos
+        this.editorView.classList.forEach(cls => {
+            if (cls.startsWith('theme-')) this.editorView.classList.remove(cls);
+        });
+        if (theme && theme !== 'none') {
+            this.editorView.classList.add(`theme-${theme}`);
+        }
+    }
+
+    handleLockClick() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note.password) {
+            if (confirm('¿Quieres quitar la protección de esta nota?')) {
+                note.password = null;
+                note.isUnlocked = false;
+                this.lockNoteBtn.classList.remove('locked-active');
+                this.saveToStorage();
+            }
+        } else {
+            this.pendingNoteId = this.activeNoteId;
+            this.passwordModal.hidden = false;
+            this.pwdInput.value = '';
+            this.pwdError.style.display = 'none';
+        }
+    }
+
+    verifyPassword() {
+        const password = this.pwdInput.value;
+        if (!password) return;
+
+        const note = this.notes.find(n => n.id === this.pendingNoteId);
+
+        if (note.password) {
+            // Verificando contraseña para abrir
+            if (password === note.password) {
+                note.isUnlocked = true;
+                this.passwordModal.hidden = true;
+                this.setActiveNote(this.pendingNoteId);
+            } else {
+                this.pwdError.style.display = 'block';
+            }
+        } else {
+            // Creando nueva contraseña
+            note.password = password;
+            note.isUnlocked = true;
+            this.passwordModal.hidden = true;
+            this.lockNoteBtn.classList.add('locked-active');
+            this.saveToStorage();
+            this.setActiveNote(this.pendingNoteId);
+        }
     }
 }
 

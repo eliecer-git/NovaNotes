@@ -212,6 +212,22 @@
                                 </path>
                             </svg>
                         </button>
+                        <div class="divider"></div>
+                        <select id="theme-select" class="select-premium" title="Fondo del Editor (Estilo Canva)">
+                            <option value="none">Fondo: Default</option>
+                            <option value="sunset">🌅 Sunset Rose</option>
+                            <option value="ocean">🌊 Deep Ocean</option>
+                            <option value="emerald">🍃 Emerald Forest</option>
+                            <option value="royal">👑 Royal Purple</option>
+                            <option value="midnight">🌑 Midnight Aura</option>
+                        </select>
+                        <button id="lock-note-btn" class="btn-icon" title="Proteger Nota con Contraseña">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </button>
                     </div>
                     <button id="delete-note-btn" class="btn-icon btn-delete" title="Eliminar nota" hidden>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -296,7 +312,24 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.0"></script>
+    <!-- Modal de Contraseña para Notas Protegidas -->
+    <div id="password-modal" class="modal-overlay" hidden>
+        <div class="modal-content glass" style="max-width: 350px;">
+            <div class="modal-header">
+                <h2 id="pwd-modal-title">Contraseña de Nota</h2>
+                <button id="close-pwd-btn" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="note-password-input" class="input-premium"
+                    placeholder="Introduce la contraseña..." style="width: 100%; margin-bottom: 20px;">
+                <button id="confirm-password-btn" class="btn-primary" style="width: 100%;">Acceder / Proteger</button>
+                <p id="pwd-error" style="color: #ef4444; font-size: 0.8rem; margin-top: 10px; display: none;">Contraseña
+                    incorrecta</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=5.1"></script>
 </body>
 
 </html>
