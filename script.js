@@ -173,12 +173,18 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const NS = 'starpro';
+        const NS = 'novastar_global_v5';
         try {
+            // Intentar recuperar los datos con un pequeño timeout para no bloquear
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+
             const [lRes, dRes] = await Promise.all([
-                fetch(`https://api.counterapi.dev/v1/${NS}/likes`),
-                fetch(`https://api.counterapi.dev/v1/${NS}/dislikes`)
+                fetch(`https://api.counterapi.dev/v1/${NS}/likes`, { signal: controller.signal }),
+                fetch(`https://api.counterapi.dev/v1/${NS}/dislikes`, { signal: controller.signal })
             ]);
+
+            clearTimeout(timeoutId);
 
             if (lRes.ok) {
                 const lData = await lRes.json();
@@ -189,19 +195,18 @@ class NoteApp {
                 document.getElementById('dislike-count').textContent = dData.count || 0;
             }
         } catch (e) {
-            console.warn('Sync Error');
+            console.warn('Sincronización global en espera...');
         }
     }
 
     async handleVote(type, btn) {
-        const NS = 'starpro';
+        const NS = 'novastar_global_v5';
         const currentVote = localStorage.getItem('novanotes_voted');
         const voteType = type === 'likes' ? 'like' : 'dislike';
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
-        // LÓGICA OPTIMISTA: Cambiar el número YA en la pantalla
         const currentSpan = document.getElementById(type === 'likes' ? 'like-count' : 'dislike-count');
         const otherBtn = document.getElementById(type === 'likes' ? 'dislike-btn' : 'like-btn');
         const otherSpan = document.getElementById(type === 'likes' ? 'dislike-count' : 'like-count');
@@ -210,30 +215,33 @@ class NoteApp {
         let otherVal = parseInt(otherSpan.textContent) || 0;
 
         try {
-            // Caso 1: Quitar voto actual
             if (currentVote === voteType) {
+                // Quitar voto actual
                 currentSpan.textContent = Math.max(0, currentVal - 1);
                 btn.classList.remove('voted');
                 localStorage.removeItem('novanotes_voted');
-                fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
-            }
-            // Caso 2: Nuevo voto o Cambio
-            else {
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
+            } else {
+                // Nuevo voto o cambiar
                 if (currentVote) {
                     otherSpan.textContent = Math.max(0, otherVal - 1);
                     otherBtn.classList.remove('voted');
-                    fetch(`https://api.counterapi.dev/v1/${NS}/${currentVote === 'like' ? 'likes' : 'dislikes'}/down`);
+                    const otherType = currentVote === 'like' ? 'likes' : 'dislikes';
+                    await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
                 }
+
                 currentSpan.textContent = currentVal + 1;
                 btn.classList.add('voted');
                 btn.classList.add('vote-success');
                 setTimeout(() => btn.classList.remove('vote-success'), 1000);
                 localStorage.setItem('novanotes_voted', voteType);
-                fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
             }
         } catch (e) {
-            console.warn('Sync delayed');
+            console.error('Error al sincronizar voto global');
         } finally {
+            // Refrescar conteos reales tras la operación
+            this.refreshCounts();
             setTimeout(() => btn.classList.remove('voting-locked'), 400);
         }
     }
