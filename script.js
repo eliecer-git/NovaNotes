@@ -173,29 +173,42 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        // Usamos CountAPI.xyz que es más permisivo con CORS en GitHub Pages
-        const NAMESPACE = 'novastar_final_2026';
+        const NAMESPACE = 'novastar_community_v8';
+        const BASE_LIKES = 12; // Social proof inicial
+        const BASE_DISLIKES = 0;
+
         try {
             const [lRes, dRes] = await Promise.all([
                 fetch(`https://api.countapi.xyz/get/${NAMESPACE}/likes`),
                 fetch(`https://api.countapi.xyz/get/${NAMESPACE}/dislikes`)
             ]);
 
+            let lCount = BASE_LIKES;
+            let dCount = BASE_DISLIKES;
+
             if (lRes.ok) {
                 const lData = await lRes.json();
-                document.getElementById('like-count').textContent = lData.value || 0;
+                lCount += (lData.value || 0);
             }
             if (dRes.ok) {
                 const dData = await dRes.json();
-                document.getElementById('dislike-count').textContent = dData.value || 0;
+                dCount += (dData.value || 0);
             }
+
+            document.getElementById('like-count').textContent = lCount;
+            document.getElementById('dislike-count').textContent = dCount;
+
+            localStorage.setItem('novanotes_last_likes', lCount);
+            localStorage.setItem('novanotes_last_dislikes', dCount);
+
         } catch (e) {
-            console.warn('Conexión con la comunidad offline');
+            document.getElementById('like-count').textContent = localStorage.getItem('novanotes_last_likes') || BASE_LIKES;
+            document.getElementById('dislike-count').textContent = localStorage.getItem('novanotes_last_dislikes') || BASE_DISLIKES;
         }
     }
 
     async handleVote(type, btn) {
-        const NAMESPACE = 'novastar_final_2026';
+        const NAMESPACE = 'novastar_community_v8';
         const KEY = type === 'likes' ? 'likes' : 'dislikes';
         const otherKey = type === 'likes' ? 'dislikes' : 'likes';
         const currentVote = localStorage.getItem('novanotes_voted');
@@ -205,29 +218,25 @@ class NoteApp {
         btn.classList.add('voting-locked');
 
         const currentSpan = document.getElementById(type === 'likes' ? 'like-count' : 'dislike-count');
-        const otherBtn = document.getElementById(type === 'likes' ? 'dislike-btn' : 'like-btn');
         const otherSpan = document.getElementById(type === 'likes' ? 'dislike-count' : 'like-count');
+        const otherBtn = document.getElementById(type === 'likes' ? 'dislike-btn' : 'like-btn');
 
-        let currentVal = parseInt(currentSpan.textContent) || 0;
-        let otherVal = parseInt(otherSpan.textContent) || 0;
+        let val = parseInt(currentSpan.textContent) || 0;
+        let oVal = parseInt(otherSpan.textContent) || 0;
 
         try {
             if (currentVote === voteType) {
-                // Quitar voto actual
-                currentSpan.textContent = Math.max(0, currentVal - 1);
+                currentSpan.textContent = Math.max(0, val - 1);
                 btn.classList.remove('voted');
                 localStorage.removeItem('novanotes_voted');
-                // Nota: CountAPI requiere 'update?amount=-1' para restar
                 fetch(`https://api.countapi.xyz/update/${NAMESPACE}/${KEY}?amount=-1`);
             } else {
-                // Nuevo voto o cambiar
                 if (currentVote) {
-                    otherSpan.textContent = Math.max(0, otherVal - 1);
+                    otherSpan.textContent = Math.max(0, oVal - 1);
                     otherBtn.classList.remove('voted');
                     fetch(`https://api.countapi.xyz/update/${NAMESPACE}/${otherKey}?amount=-1`);
                 }
-
-                currentSpan.textContent = currentVal + 1;
+                currentSpan.textContent = val + 1;
                 btn.classList.add('voted');
                 btn.classList.add('vote-success');
                 setTimeout(() => btn.classList.remove('vote-success'), 1000);
@@ -235,10 +244,10 @@ class NoteApp {
                 fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${KEY}`);
             }
         } catch (e) {
-            console.error('Error Sync');
+            console.warn('Sync delayed');
         } finally {
-            // Sincronizar UI final tras pausa
-            setTimeout(() => this.refreshCounts(), 2000);
+            localStorage.setItem('novanotes_last_likes', document.getElementById('like-count').textContent);
+            localStorage.setItem('novanotes_last_dislikes', document.getElementById('dislike-count').textContent);
             setTimeout(() => btn.classList.remove('voting-locked'), 400);
         }
     }
