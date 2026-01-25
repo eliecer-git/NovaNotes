@@ -182,25 +182,17 @@ class NoteApp {
         const NS = 'novastar_final_resilient_v5';
         const ts = Date.now();
 
-        const fetchWithProxy = async (url) => {
-            try {
-                // Intento directo
-                const res = await fetch(url);
-                if (res.ok) return await res.json();
-                throw new Error('Direct fetch failed');
-            } catch (e) {
-                // Respaldo con Proxy de CORS
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url + '?t=' + ts)}`;
-                const res = await fetch(proxyUrl);
-                const data = await res.json();
-                return JSON.parse(data.contents);
-            }
+        const fetchViaProxy = async (url) => {
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url + '?t=' + ts)}`;
+            const res = await fetch(proxyUrl);
+            const data = await res.json();
+            return JSON.parse(data.contents);
         };
 
         try {
             const [lData, dData] = await Promise.all([
-                fetchWithProxy(`https://api.counterapi.dev/v1/${NS}/likes`),
-                fetchWithProxy(`https://api.counterapi.dev/v1/${NS}/dislikes`)
+                fetchViaProxy(`https://api.counterapi.dev/v1/${NS}/likes`),
+                fetchViaProxy(`https://api.counterapi.dev/v1/${NS}/dislikes`)
             ]);
 
             let lCount = lData.count || 0;
@@ -243,21 +235,22 @@ class NoteApp {
                     dislikeSpan.textContent = Math.max(0, dislikes - 1);
                     dislikeBtn.classList.remove('voted');
                 }
-                localStorage.removeItem('nv_v');
-                // Sincronizar quitada de voto
-                fetch(`https://api.counterapi.dev/v1/${UID}/${type}/down`, { mode: 'no-cors' });
+                // Sincronizar quitada de voto vía Proxy (Inmune a bloqueos)
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/${type}/down?t=${Date.now()}`)}`;
+                fetch(proxyUrl, { mode: 'cors' });
             } else {
                 // SELECT O CHANGE: El usuario vota por primera vez o cambia su voto
                 if (currentSelection) {
-                    // Si ya tenía el OTRO seleccionado, lo quitamos (Efecto YouTube)
                     if (currentSelection === 'l') {
                         likeSpan.textContent = Math.max(0, likes - 1);
                         likeBtn.classList.remove('voted');
-                        fetch(`https://api.counterapi.dev/v1/${UID}/likes/down`, { mode: 'no-cors' });
+                        const pUrlL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/likes/down?t=${Date.now()}`)}`;
+                        fetch(pUrlL, { mode: 'cors' });
                     } else {
                         dislikeSpan.textContent = Math.max(0, dislikes - 1);
                         dislikeBtn.classList.remove('voted');
-                        fetch(`https://api.counterapi.dev/v1/${UID}/dislikes/down`, { mode: 'no-cors' });
+                        const pUrlD = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/dislikes/down?t=${Date.now()}`)}`;
+                        fetch(pUrlD, { mode: 'cors' });
                     }
                 }
 
@@ -274,8 +267,9 @@ class NoteApp {
                     setTimeout(() => dislikeBtn.classList.remove('vote-success'), 1000);
                 }
                 localStorage.setItem('nv_v', vType);
-                // Sincronizar subida de voto
-                fetch(`https://api.counterapi.dev/v1/${UID}/${type}/up`, { mode: 'no-cors' });
+                // Sincronizar subida de voto vía Proxy
+                const pUrlUp = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/${type}/up?t=${Date.now()}`)}`;
+                fetch(pUrlUp, { mode: 'cors' });
             }
         } catch (e) {
             console.log('Update local only');

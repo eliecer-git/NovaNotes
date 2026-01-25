@@ -1,4 +1,4 @@
-const CACHE_NAME = 'novastarpro-v12';
+const CACHE_NAME = 'novastarpro-v13';
 const ASSETS = [
     './',
     './index.html',
@@ -27,16 +27,5 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// Peticiones (Estrategia: Primero Red, luego Caché)
-self.addEventListener('fetch', (e) => {
-    // Ignorar peticiones de API externas para evitar problemas de CORS/Network
-    if (e.request.url.includes('api.counterapi.dev') || e.request.url.includes('countapi')) {
-        return;
-    }
-
-    e.respondWith(
-        fetch(e.request).catch(() => {
-            return caches.match(e.request);
-        })
-    );
-});
+// El SW ahora solo maneja la instalación y activación para caché de archivos estáticos.
+// Las peticiones de red para votos se delegan al navegador para evitar conflictos de CORS en el SW.
