@@ -179,12 +179,11 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const NAMESPACE = 'novastar_official_zero';
-
+        const NS = 'novastar_final_official_v1';
         try {
             const [lRes, dRes] = await Promise.all([
-                fetch(`https://api.countapi.xyz/get/${NAMESPACE}/likes`),
-                fetch(`https://api.countapi.xyz/get/${NAMESPACE}/dislikes`)
+                fetch(`https://api.counterapi.dev/v1/${NS}/likes`),
+                fetch(`https://api.counterapi.dev/v1/${NS}/dislikes`)
             ]);
 
             let lCount = 0;
@@ -192,11 +191,11 @@ class NoteApp {
 
             if (lRes.ok) {
                 const lData = await lRes.json();
-                lCount = lData.value || 0;
+                lCount = lData.count || 0;
             }
             if (dRes.ok) {
                 const dData = await dRes.json();
-                dCount = dData.value || 0;
+                dCount = dData.count || 0;
             }
 
             document.getElementById('like-count').textContent = lCount;
@@ -212,11 +211,10 @@ class NoteApp {
     }
 
     async handleVote(type, btn) {
-        const NAMESPACE = 'novastar_official_zero';
-        const KEY = type === 'likes' ? 'likes' : 'dislikes';
-        const otherKey = type === 'likes' ? 'dislikes' : 'likes';
+        const NS = 'novastar_final_official_v1';
         const currentVote = localStorage.getItem('novanotes_voted');
         const voteType = type === 'likes' ? 'like' : 'dislike';
+        const otherType = type === 'likes' ? 'dislikes' : 'likes';
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
@@ -230,22 +228,24 @@ class NoteApp {
 
         try {
             if (currentVote === voteType) {
+                // Quitar voto actual
                 currentSpan.textContent = Math.max(0, val - 1);
                 btn.classList.remove('voted');
                 localStorage.removeItem('novanotes_voted');
-                fetch(`https://api.countapi.xyz/update/${NAMESPACE}/${KEY}?amount=-1`);
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
             } else {
+                // Nuevo o cambio
                 if (currentVote) {
                     otherSpan.textContent = Math.max(0, oVal - 1);
                     otherBtn.classList.remove('voted');
-                    fetch(`https://api.countapi.xyz/update/${NAMESPACE}/${otherKey}?amount=-1`);
+                    await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
                 }
                 currentSpan.textContent = val + 1;
                 btn.classList.add('voted');
                 btn.classList.add('vote-success');
                 setTimeout(() => btn.classList.remove('vote-success'), 1000);
                 localStorage.setItem('novanotes_voted', voteType);
-                fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${KEY}`);
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
             }
         } catch (e) {
             console.warn('Sync delayed');
