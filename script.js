@@ -174,7 +174,7 @@ class NoteApp {
 
     async refreshCounts() {
         // Namespace único para evitar colisiones con otros proyectos
-        const NS = 'novastarpro_official_v1';
+        const NS = 'novastar_community_final';
         try {
             const [lRes, dRes] = await Promise.all([
                 fetch(`https://api.counterapi.dev/v1/${NS}/likes`),
@@ -195,59 +195,53 @@ class NoteApp {
     }
 
     async handleVote(type, btn) {
-        const NS = 'novastarpro_official_v1';
+        const NS = 'novastar_community_final';
         const currentVote = localStorage.getItem('novanotes_voted');
         const voteType = type === 'likes' ? 'like' : 'dislike';
-        const otherType = type === 'likes' ? 'dislikes' : 'likes';
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
-        try {
-            // CASO 1: Ya votaste por este y quieres QUITARLO
-            if (currentVote === voteType) {
-                if (confirm('¿Quieres quitar tu voto actual?')) {
-                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
-                    localStorage.removeItem('novanotes_voted');
-                    btn.classList.remove('voted');
-                    alert('Voto retirado con éxito.');
-                }
-            }
-            // CASO 2: Eres nuevo o quieres CAMBIAR el voto
-            else {
-                // Si ya había otro voto, PRIMERO mandamos señal de RESTAR
-                if (currentVote) {
-                    if (confirm('Ya has votado. ¿Quieres ELIMINAR tu voto anterior antes de cambiar?')) {
-                        await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
-                        const otherBtn = document.getElementById(otherType === 'likes' ? 'like-btn' : 'dislike-btn');
-                        if (otherBtn) otherBtn.classList.remove('voted');
-                        localStorage.removeItem('novanotes_voted');
-                        alert('Voto anterior eliminado. Ahora procedamos a sumar tu nuevo voto.');
-                    } else {
-                        btn.classList.remove('voting-locked');
-                        return;
-                    }
-                }
+        // UN SOLO MENSAJE para todo
+        const msg = currentVote === voteType
+            ? '¿Quieres retirar tu voto?'
+            : (currentVote ? '¿Quieres cambiar tu voto?' : '¿Confirmas tu voto?');
 
-                // SUMAR el nuevo
-                if (confirm(`¿Confirmas que quieres sumar un ${type === 'likes' ? 'Me gusta' : 'No me gusta'}?`)) {
-                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+        if (!confirm(msg)) {
+            btn.classList.remove('voting-locked');
+            return;
+        }
+
+        try {
+            // 1. Quitar el voto anterior si existe (SEÑAL DE RESTA)
+            if (currentVote) {
+                const typeToDown = currentVote === 'like' ? 'likes' : 'dislikes';
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${typeToDown}/down`);
+
+                const otherBtn = document.getElementById(typeToDown === 'likes' ? 'like-btn' : 'dislike-btn');
+                if (otherBtn) otherBtn.classList.remove('voted');
+            }
+
+            // 2. Si es un cambio o voto nuevo, SUMAR (SEÑAL DE SUMA)
+            if (currentVote !== voteType) {
+                const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+                if (res.ok) {
                     localStorage.setItem('novanotes_voted', voteType);
                     btn.classList.add('voted');
                     btn.classList.add('vote-success');
                     setTimeout(() => btn.classList.remove('vote-success'), 1000);
-                    alert('¡Voto sumado correctamente!');
                 }
+            } else {
+                localStorage.removeItem('novanotes_voted');
             }
 
-            // Sincronizar números finales
+            // 3. Sincronizar UI final
             await this.refreshCounts();
 
         } catch (e) {
-            console.log('Error en el proceso de señales:', e);
-            alert('Error de conexión. Por favor reintenta.');
+            console.log('Error en votación:', e);
         } finally {
-            setTimeout(() => btn.classList.remove('voting-locked'), 500);
+            setTimeout(() => btn.classList.remove('voting-locked'), 600);
         }
     }
 
