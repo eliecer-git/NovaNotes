@@ -515,10 +515,10 @@ class NoteApp {
                     data-id="${note.id}" 
                     onclick="app.setActiveNote('${note.id}')">
                     <div class="note-item-header">
-                        <h3>${this.getRawText(note.title) || 'Nota sin título'}</h3>
+                        <h3>${this.getRawText(note.title, 25) || 'Nota sin título'}</h3>
                         <span class="category-badge cat-${cat}">${catLabels[cat]}</span>
                     </div>
-                    <p>${this.getRawText(note.content)}</p>
+                    <p>${this.getRawText(note.content, 45)}</p>
                     <small>${this.formatDate(note.updatedAt)}</small>
                 </li>
             `;
@@ -527,11 +527,11 @@ class NoteApp {
     }
 
     // Versión optimizada de extracción de texto sin crear elementos DOM pesados
-    getRawText(html) {
-        if (!html) return 'Sin contenido...';
+    getRawText(html, limit = 45) {
+        if (!html) return '';
         // Regex simple para quitar etiquetas HTML rápidamente
         const text = html.replace(/<[^>]*>?/gm, ' ');
-        return text.substring(0, 45).trim() || 'Sin contenido...';
+        return text.substring(0, limit).trim();
     }
 
     escapeHTML(str) {
