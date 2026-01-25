@@ -29,6 +29,11 @@ self.addEventListener('activate', (e) => {
 
 // Peticiones (Estrategia: Primero Red, luego Caché)
 self.addEventListener('fetch', (e) => {
+    // Ignorar peticiones de API externas para evitar problemas de CORS/Network
+    if (e.request.url.includes('api.counterapi.dev') || e.request.url.includes('countapi')) {
+        return;
+    }
+
     e.respondWith(
         fetch(e.request).catch(() => {
             return caches.match(e.request);

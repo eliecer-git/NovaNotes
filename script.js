@@ -179,25 +179,32 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const UID = 'novastar_final_resilient_v5';
+        const NS = 'novastar_final_resilient_v5';
+        const ts = Date.now();
+
+        const fetchWithProxy = async (url) => {
+            try {
+                // Intento directo
+                const res = await fetch(url);
+                if (res.ok) return await res.json();
+                throw new Error('Direct fetch failed');
+            } catch (e) {
+                // Respaldo con Proxy de CORS
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url + '?t=' + ts)}`;
+                const res = await fetch(proxyUrl);
+                const data = await res.json();
+                return JSON.parse(data.contents);
+            }
+        };
+
         try {
-            // Intentamos bajar ambos conteos de forma independiente
-            const [lRes, dRes] = await Promise.all([
-                fetch(`https://api.counterapi.dev/v1/${UID}/likes`),
-                fetch(`https://api.counterapi.dev/v1/${UID}/dislikes`)
+            const [lData, dData] = await Promise.all([
+                fetchWithProxy(`https://api.counterapi.dev/v1/${NS}/likes`),
+                fetchWithProxy(`https://api.counterapi.dev/v1/${NS}/dislikes`)
             ]);
 
-            let lCount = localStorage.getItem('nstar_l') || 0;
-            let dCount = localStorage.getItem('nstar_d') || 0;
-
-            if (lRes.ok) {
-                const lData = await lRes.json();
-                lCount = lData.count || 0;
-            }
-            if (dRes.ok) {
-                const dData = await dRes.json();
-                dCount = dData.count || 0;
-            }
+            let lCount = lData.count || 0;
+            let dCount = dData.count || 0;
 
             document.getElementById('like-count').textContent = lCount;
             document.getElementById('dislike-count').textContent = dCount;
@@ -205,7 +212,6 @@ class NoteApp {
             localStorage.setItem('nstar_l', lCount);
             localStorage.setItem('nstar_d', dCount);
         } catch (e) {
-            // Fallback total a memoria local
             document.getElementById('like-count').textContent = localStorage.getItem('nstar_l') || 0;
             document.getElementById('dislike-count').textContent = localStorage.getItem('nstar_d') || 0;
         }
