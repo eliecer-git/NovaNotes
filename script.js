@@ -173,11 +173,12 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const NS = 'novastar_pro_final_v2';
+        const NS = 'danielnstar';
         try {
+            const ts = Date.now();
             const [lRes, dRes] = await Promise.all([
-                fetch(`https://api.counterapi.dev/v1/${NS}/likes`),
-                fetch(`https://api.counterapi.dev/v1/${NS}/dislikes`)
+                fetch(`https://api.counterapi.dev/v1/${NS}/likes?t=${ts}`, { mode: 'cors' }),
+                fetch(`https://api.counterapi.dev/v1/${NS}/dislikes?t=${ts}`, { mode: 'cors' })
             ]);
 
             if (lRes.ok) {
@@ -189,47 +190,38 @@ class NoteApp {
                 document.getElementById('dislike-count').textContent = dData.count || 0;
             }
         } catch (e) {
-            console.error('API Error:', e);
+            console.warn('Sync Error');
         }
     }
 
     async handleVote(type, btn) {
-        const NS = 'novastar_pro_final_v2';
+        const NS = 'danielnstar';
         const currentVote = localStorage.getItem('novanotes_voted');
         const voteType = type === 'likes' ? 'like' : 'dislike';
-        const otherType = type === 'likes' ? 'dislikes' : 'likes';
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
-        // VERSIÓN PRO: Cambio instantáneo y silencioso
         try {
-            // 1. Quitar voto actual si existe (SEÑAL DE RESTA)
             if (currentVote) {
                 const typeToDown = currentVote === 'like' ? 'likes' : 'dislikes';
-                await fetch(`https://api.counterapi.dev/v1/${NS}/${typeToDown}/down`);
-
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${typeToDown}/down`, { mode: 'cors' });
                 const otherBtn = document.getElementById(typeToDown === 'likes' ? 'like-btn' : 'dislike-btn');
                 if (otherBtn) otherBtn.classList.remove('voted');
                 localStorage.removeItem('novanotes_voted');
             }
 
-            // 2. Si el clic fue para cambiar o nuevo, SUMAR (SEÑAL DE SUMA)
             if (currentVote !== voteType) {
-                const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
-                if (res.ok) {
-                    localStorage.setItem('novanotes_voted', voteType);
-                    btn.classList.add('voted');
-                    btn.classList.add('vote-success');
-                    setTimeout(() => btn.classList.remove('vote-success'), 1000);
-                }
+                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`, { mode: 'cors' });
+                localStorage.setItem('novanotes_voted', voteType);
+                btn.classList.add('voted');
+                btn.classList.add('vote-success');
+                setTimeout(() => btn.classList.remove('vote-success'), 1000);
             }
 
-            // 3. Sincronizar UI final
             await this.refreshCounts();
-
         } catch (e) {
-            console.log('Error de red silencioso');
+            console.warn('Vote error');
         } finally {
             setTimeout(() => btn.classList.remove('voting-locked'), 400);
         }
