@@ -179,61 +179,105 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const UID = 'novastar_official_2026_final';
-        const URL = `https://hits.seeyoufarm.com/api/count/incr/novastar_pro_${UID}.json`;
-
+        const UID = 'novastar_final_resilient_v5';
         try {
-            // Intentamos obtener el conteo de una API más amigable con GitHub
-            const response = await fetch(URL);
-            if (response.ok) {
-                const data = await response.json();
-                // HITS devuelve el total de visitas, lo usaremos como base de likes
-                const count = Math.max(0, data.value - 1); // -1 para ajustar el inicio real
-                document.getElementById('like-count').textContent = count;
-                localStorage.setItem('nstar_l', count);
+            // Intentamos bajar ambos conteos de forma independiente
+            const [lRes, dRes] = await Promise.all([
+                fetch(`https://api.counterapi.dev/v1/${UID}/likes`),
+                fetch(`https://api.counterapi.dev/v1/${UID}/dislikes`)
+            ]);
+
+            let lCount = localStorage.getItem('nstar_l') || 0;
+            let dCount = localStorage.getItem('nstar_d') || 0;
+
+            if (lRes.ok) {
+                const lData = await lRes.json();
+                lCount = lData.count || 0;
             }
+            if (dRes.ok) {
+                const dData = await dRes.json();
+                dCount = dData.count || 0;
+            }
+
+            document.getElementById('like-count').textContent = lCount;
+            document.getElementById('dislike-count').textContent = dCount;
+
+            localStorage.setItem('nstar_l', lCount);
+            localStorage.setItem('nstar_d', dCount);
         } catch (e) {
-            // Si hay CORS, usamos la memoria local para que no salga 0
+            // Fallback total a memoria local
             document.getElementById('like-count').textContent = localStorage.getItem('nstar_l') || 0;
+            document.getElementById('dislike-count').textContent = localStorage.getItem('nstar_d') || 0;
         }
     }
 
     async handleVote(type, btn) {
-        // En esta versión simplificamos para asegurar sincronización
-        const UID = 'novastar_official_2026_final';
-        const current = localStorage.getItem('nv_v');
+        const UID = 'novastar_final_resilient_v5';
+        const currentSelection = localStorage.getItem('nv_v'); // 'l' o 'd'
         const vType = type === 'likes' ? 'l' : 'd';
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
-        const span = document.getElementById(type === 'likes' ? 'like-count' : 'dislike-count');
-        let val = parseInt(span.textContent) || 0;
+        const likeSpan = document.getElementById('like-count');
+        const dislikeSpan = document.getElementById('dislike-count');
+        const likeBtn = document.getElementById('like-btn');
+        const dislikeBtn = document.getElementById('dislike-btn');
+
+        let likes = parseInt(likeSpan.textContent) || 0;
+        let dislikes = parseInt(dislikeSpan.textContent) || 0;
 
         try {
-            if (current === vType) {
-                span.textContent = Math.max(0, val - 1);
-                btn.classList.remove('voted');
-                localStorage.removeItem('nv_v');
-            } else {
-                if (current) {
-                    // Si ya votó al otro, lo ignoramos para simplificar el motor de HITS
-                    return;
+            if (currentSelection === vType) {
+                // DESELECT: El usuario hace clic en el botón que ya tenía activo
+                if (vType === 'l') {
+                    likeSpan.textContent = Math.max(0, likes - 1);
+                    likeBtn.classList.remove('voted');
+                } else {
+                    dislikeSpan.textContent = Math.max(0, dislikes - 1);
+                    dislikeBtn.classList.remove('voted');
                 }
-                span.textContent = val + 1;
-                btn.classList.add('voted');
-                btn.classList.add('vote-success');
-                setTimeout(() => btn.classList.remove('vote-success'), 1000);
-                localStorage.setItem('nv_v', vType);
+                localStorage.removeItem('nv_v');
+                // Sincronizar quitada de voto
+                fetch(`https://api.counterapi.dev/v1/${UID}/${type}/down`, { mode: 'no-cors' });
+            } else {
+                // SELECT O CHANGE: El usuario vota por primera vez o cambia su voto
+                if (currentSelection) {
+                    // Si ya tenía el OTRO seleccionado, lo quitamos (Efecto YouTube)
+                    if (currentSelection === 'l') {
+                        likeSpan.textContent = Math.max(0, likes - 1);
+                        likeBtn.classList.remove('voted');
+                        fetch(`https://api.counterapi.dev/v1/${UID}/likes/down`, { mode: 'no-cors' });
+                    } else {
+                        dislikeSpan.textContent = Math.max(0, dislikes - 1);
+                        dislikeBtn.classList.remove('voted');
+                        fetch(`https://api.counterapi.dev/v1/${UID}/dislikes/down`, { mode: 'no-cors' });
+                    }
+                }
 
-                // Registro silencioso en el servidor (HITS cuenta hits)
-                fetch(`https://hits.seeyoufarm.com/api/count/incr/novastar_voted_${UID}.json`, { mode: 'no-cors' });
+                // Aplicar el nuevo voto
+                if (vType === 'l') {
+                    likeSpan.textContent = (parseInt(likeSpan.textContent) || 0) + 1;
+                    likeBtn.classList.add('voted');
+                    likeBtn.classList.add('vote-success');
+                    setTimeout(() => likeBtn.classList.remove('vote-success'), 1000);
+                } else {
+                    dislikeSpan.textContent = (parseInt(dislikeSpan.textContent) || 0) + 1;
+                    dislikeBtn.classList.add('voted');
+                    dislikeBtn.classList.add('vote-success');
+                    setTimeout(() => dislikeBtn.classList.remove('vote-success'), 1000);
+                }
+                localStorage.setItem('nv_v', vType);
+                // Sincronizar subida de voto
+                fetch(`https://api.counterapi.dev/v1/${UID}/${type}/up`, { mode: 'no-cors' });
             }
         } catch (e) {
-            console.log('Sync offline');
+            console.log('Update local only');
         } finally {
             setTimeout(() => btn.classList.remove('voting-locked'), 400);
-            localStorage.setItem('nstar_l', document.getElementById('like-count').textContent);
+            // Guardar en respaldo local lo que quedó en pantalla
+            localStorage.setItem('nstar_l', likeSpan.textContent);
+            localStorage.setItem('nstar_d', dislikeSpan.textContent);
         }
     }
 
