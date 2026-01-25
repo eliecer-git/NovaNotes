@@ -173,34 +173,31 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const NS = 'novastar_global_v5';
+        // Usamos CountAPI.xyz que es más permisivo con CORS en GitHub Pages
+        const NAMESPACE = 'novastar_final_2026';
         try {
-            // Intentar recuperar los datos con un pequeño timeout para no bloquear
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
-
             const [lRes, dRes] = await Promise.all([
-                fetch(`https://api.counterapi.dev/v1/${NS}/likes`, { signal: controller.signal }),
-                fetch(`https://api.counterapi.dev/v1/${NS}/dislikes`, { signal: controller.signal })
+                fetch(`https://api.countapi.xyz/get/${NAMESPACE}/likes`),
+                fetch(`https://api.countapi.xyz/get/${NAMESPACE}/dislikes`)
             ]);
-
-            clearTimeout(timeoutId);
 
             if (lRes.ok) {
                 const lData = await lRes.json();
-                document.getElementById('like-count').textContent = lData.count || 0;
+                document.getElementById('like-count').textContent = lData.value || 0;
             }
             if (dRes.ok) {
                 const dData = await dRes.json();
-                document.getElementById('dislike-count').textContent = dData.count || 0;
+                document.getElementById('dislike-count').textContent = dData.value || 0;
             }
         } catch (e) {
-            console.warn('Sincronización global en espera...');
+            console.warn('Conexión con la comunidad offline');
         }
     }
 
     async handleVote(type, btn) {
-        const NS = 'novastar_global_v5';
+        const NAMESPACE = 'novastar_final_2026';
+        const KEY = type === 'likes' ? 'likes' : 'dislikes';
+        const otherKey = type === 'likes' ? 'dislikes' : 'likes';
         const currentVote = localStorage.getItem('novanotes_voted');
         const voteType = type === 'likes' ? 'like' : 'dislike';
 
@@ -220,14 +217,14 @@ class NoteApp {
                 currentSpan.textContent = Math.max(0, currentVal - 1);
                 btn.classList.remove('voted');
                 localStorage.removeItem('novanotes_voted');
-                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
+                // Nota: CountAPI requiere 'update?amount=-1' para restar
+                fetch(`https://api.countapi.xyz/update/${NAMESPACE}/${KEY}?amount=-1`);
             } else {
                 // Nuevo voto o cambiar
                 if (currentVote) {
                     otherSpan.textContent = Math.max(0, otherVal - 1);
                     otherBtn.classList.remove('voted');
-                    const otherType = currentVote === 'like' ? 'likes' : 'dislikes';
-                    await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
+                    fetch(`https://api.countapi.xyz/update/${NAMESPACE}/${otherKey}?amount=-1`);
                 }
 
                 currentSpan.textContent = currentVal + 1;
@@ -235,13 +232,13 @@ class NoteApp {
                 btn.classList.add('vote-success');
                 setTimeout(() => btn.classList.remove('vote-success'), 1000);
                 localStorage.setItem('novanotes_voted', voteType);
-                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+                fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${KEY}`);
             }
         } catch (e) {
-            console.error('Error al sincronizar voto global');
+            console.error('Error Sync');
         } finally {
-            // Refrescar conteos reales tras la operación
-            this.refreshCounts();
+            // Sincronizar UI final tras pausa
+            setTimeout(() => this.refreshCounts(), 2000);
             setTimeout(() => btn.classList.remove('voting-locked'), 400);
         }
     }
