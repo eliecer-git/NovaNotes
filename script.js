@@ -173,9 +173,7 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const NAMESPACE = 'novastar_community_v8';
-        const BASE_LIKES = 12; // Social proof inicial
-        const BASE_DISLIKES = 0;
+        const NAMESPACE = 'novastar_official_zero';
 
         try {
             const [lRes, dRes] = await Promise.all([
@@ -183,16 +181,16 @@ class NoteApp {
                 fetch(`https://api.countapi.xyz/get/${NAMESPACE}/dislikes`)
             ]);
 
-            let lCount = BASE_LIKES;
-            let dCount = BASE_DISLIKES;
+            let lCount = 0;
+            let dCount = 0;
 
             if (lRes.ok) {
                 const lData = await lRes.json();
-                lCount += (lData.value || 0);
+                lCount = lData.value || 0;
             }
             if (dRes.ok) {
                 const dData = await dRes.json();
-                dCount += (dData.value || 0);
+                dCount = dData.value || 0;
             }
 
             document.getElementById('like-count').textContent = lCount;
@@ -202,13 +200,13 @@ class NoteApp {
             localStorage.setItem('novanotes_last_dislikes', dCount);
 
         } catch (e) {
-            document.getElementById('like-count').textContent = localStorage.getItem('novanotes_last_likes') || BASE_LIKES;
-            document.getElementById('dislike-count').textContent = localStorage.getItem('novanotes_last_dislikes') || BASE_DISLIKES;
+            document.getElementById('like-count').textContent = localStorage.getItem('novanotes_last_likes') || 0;
+            document.getElementById('dislike-count').textContent = localStorage.getItem('novanotes_last_dislikes') || 0;
         }
     }
 
     async handleVote(type, btn) {
-        const NAMESPACE = 'novastar_community_v8';
+        const NAMESPACE = 'novastar_official_zero';
         const KEY = type === 'likes' ? 'likes' : 'dislikes';
         const otherKey = type === 'likes' ? 'dislikes' : 'likes';
         const currentVote = localStorage.getItem('novanotes_voted');
