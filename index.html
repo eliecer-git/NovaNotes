@@ -101,16 +101,34 @@
                 <button id="pwa-install-btn" class="btn-install" style="display: none;">
                     <span class="icon">📥</span> Instalar App
                 </button>
+
+                <div class="vote-stats-container">
+                    <div class="vote-stat-card like-stats">
+                        <span class="stat-icon">✨</span>
+                        <div class="stat-info">
+                            <h4 id="stat-likes-count">0 votos</h4>
+                            <p>¡Tu apoyo sumado a nuestra comunidad impulsa novaStarPro!</p>
+                        </div>
+                    </div>
+                    <div class="vote-stat-card dislike-stats">
+                        <span class="stat-icon">🛠️</span>
+                        <div class="stat-info">
+                            <h4 id="stat-dislikes-count">0 reportes</h4>
+                            <p>Tus sugerencias nos ayudan a mejorar cada detalle.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="global-feedback">
                     <p class="feedback-label">¿Te gusta novaStarPro?</p>
                     <div class="feedback-btns">
                         <button id="like-btn" class="btn-feedback" title="¡Me encanta!">
                             <span class="icon">✨</span>
-                            <span id="like-count">0</span>
+                            <span id="like-count" hidden>0</span>
                         </button>
                         <button id="dislike-btn" class="btn-feedback" title="Puede mejorar">
                             <span class="icon">✖️</span>
-                            <span id="dislike-count">0</span>
+                            <span id="dislike-count" hidden>0</span>
                         </button>
                     </div>
                 </div>
@@ -270,7 +288,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=4.3"></script>
+    <script src="script.js?v=4.8"></script>
 </body>
 
 </html>

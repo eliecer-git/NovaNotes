@@ -165,13 +165,12 @@ class NoteApp {
         this.refreshCounts();
 
         // 3. Restaurar selección SOLO si el usuario ya votó de verdad
+        localStorage.removeItem('nv_v'); // Limpiar clave antigua que causaba conflictos
         const hasVoted = localStorage.getItem('novanotes_voted');
-        if (hasVoted) {
-            if (hasVoted === 'like') {
-                likeBtn.classList.add('voted');
-            } else if (hasVoted === 'dislike') {
-                dislikeBtn.classList.add('voted');
-            }
+        if (hasVoted === 'likes') {
+            likeBtn.classList.add('voted');
+        } else if (hasVoted === 'dislikes') {
+            dislikeBtn.classList.add('voted');
         }
 
         likeBtn.onclick = () => this.handleVote('likes', likeBtn);
@@ -180,104 +179,103 @@ class NoteApp {
 
     async refreshCounts() {
         const NS = 'novastar_final_resilient_v5';
-        const ts = Date.now();
 
-        const fetchViaProxy = async (url) => {
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url + '?t=' + ts)}`;
-            const res = await fetch(proxyUrl);
-            const data = await res.json();
-            return JSON.parse(data.contents);
+        const tryFetch = async (url) => {
+            const turl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+            // Cadena de proxies resiliente
+            const proxies = [
+                turl, // Directo
+                `https://api.codetabs.com/v1/proxy?url=${encodeURIComponent(turl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(turl)}`,
+                `https://api.allorigins.win/get?url=${encodeURIComponent(turl)}`
+            ];
+
+            for (const p of proxies) {
+                try {
+                    const res = await fetch(p);
+                    if (!res.ok) continue;
+                    let data = await res.json();
+                    if (p.includes('allorigins')) data = JSON.parse(data.contents);
+                    if (data && data.count !== undefined) return data;
+                } catch (e) { }
+            }
+            throw new Error('Sync failed after all attempts');
         };
 
         try {
             const [lData, dData] = await Promise.all([
-                fetchViaProxy(`https://api.counterapi.dev/v1/${NS}/likes`),
-                fetchViaProxy(`https://api.counterapi.dev/v1/${NS}/dislikes`)
+                tryFetch(`https://api.counterapi.dev/v1/${NS}/likes`),
+                tryFetch(`https://api.counterapi.dev/v1/${NS}/dislikes`)
             ]);
 
-            let lCount = lData.count || 0;
-            let dCount = dData.count || 0;
+            const lCount = parseInt(lData.count) || 0;
+            const dCount = parseInt(dData.count) || 0;
 
             document.getElementById('like-count').textContent = lCount;
             document.getElementById('dislike-count').textContent = dCount;
+            document.getElementById('stat-likes-count').textContent = `${lCount} votos`;
+            document.getElementById('stat-dislikes-count').textContent = `${dCount} reportes`;
 
             localStorage.setItem('nstar_l', lCount);
             localStorage.setItem('nstar_d', dCount);
+            console.log(`✅ Sincronizado: L:${lCount} D:${dCount}`);
         } catch (e) {
-            document.getElementById('like-count').textContent = localStorage.getItem('nstar_l') || 0;
-            document.getElementById('dislike-count').textContent = localStorage.getItem('nstar_d') || 0;
+            console.warn('Backup local:', e);
+            const l = localStorage.getItem('nstar_l') || 0;
+            const d = localStorage.getItem('nstar_d') || 0;
+            document.getElementById('like-count').textContent = l;
+            document.getElementById('dislike-count').textContent = d;
+            document.getElementById('stat-likes-count').textContent = `${l} votos`;
+            document.getElementById('stat-dislikes-count').textContent = `${d} reportes`;
         }
     }
 
     async handleVote(type, btn) {
         const UID = 'novastar_final_resilient_v5';
-        const currentSelection = localStorage.getItem('nv_v'); // 'l' o 'd'
-        const vType = type === 'likes' ? 'l' : 'd';
+        const currentSelection = localStorage.getItem('novanotes_voted');
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
-        const likeSpan = document.getElementById('like-count');
-        const dislikeSpan = document.getElementById('dislike-count');
-        const likeBtn = document.getElementById('like-btn');
-        const dislikeBtn = document.getElementById('dislike-btn');
-
-        let likes = parseInt(likeSpan.textContent) || 0;
-        let dislikes = parseInt(dislikeSpan.textContent) || 0;
+        const execVote = async (action, voteType) => {
+            const url = `https://api.counterapi.dev/v1/${UID}/${voteType}/${action}?t=${Date.now()}`;
+            const proxies = [
+                url,
+                `https://api.codetabs.com/v1/proxy?url=${encodeURIComponent(url)}`,
+                `https://corsproxy.io/?${encodeURIComponent(url)}`
+            ];
+            for (const p of proxies) {
+                try {
+                    const r = await fetch(p);
+                    if (r.ok) return true;
+                } catch (e) { }
+            }
+            return false;
+        };
 
         try {
-            if (currentSelection === vType) {
-                // DESELECT: El usuario hace clic en el botón que ya tenía activo
-                if (vType === 'l') {
-                    likeSpan.textContent = Math.max(0, likes - 1);
-                    likeBtn.classList.remove('voted');
-                } else {
-                    dislikeSpan.textContent = Math.max(0, dislikes - 1);
-                    dislikeBtn.classList.remove('voted');
-                }
-                // Sincronizar quitada de voto vía Proxy (Inmune a bloqueos)
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/${type}/down?t=${Date.now()}`)}`;
-                fetch(proxyUrl, { mode: 'cors' });
+            if (currentSelection === type) {
+                // DESELECT
+                localStorage.removeItem('novanotes_voted');
+                await execVote('down', type);
             } else {
-                // SELECT O CHANGE: El usuario vota por primera vez o cambia su voto
+                // CHANGE OR NEW
                 if (currentSelection) {
-                    if (currentSelection === 'l') {
-                        likeSpan.textContent = Math.max(0, likes - 1);
-                        likeBtn.classList.remove('voted');
-                        const pUrlL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/likes/down?t=${Date.now()}`)}`;
-                        fetch(pUrlL, { mode: 'cors' });
-                    } else {
-                        dislikeSpan.textContent = Math.max(0, dislikes - 1);
-                        dislikeBtn.classList.remove('voted');
-                        const pUrlD = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/dislikes/down?t=${Date.now()}`)}`;
-                        fetch(pUrlD, { mode: 'cors' });
-                    }
+                    await execVote('down', currentSelection);
                 }
-
-                // Aplicar el nuevo voto
-                if (vType === 'l') {
-                    likeSpan.textContent = (parseInt(likeSpan.textContent) || 0) + 1;
-                    likeBtn.classList.add('voted');
-                    likeBtn.classList.add('vote-success');
-                    setTimeout(() => likeBtn.classList.remove('vote-success'), 1000);
-                } else {
-                    dislikeSpan.textContent = (parseInt(dislikeSpan.textContent) || 0) + 1;
-                    dislikeBtn.classList.add('voted');
-                    dislikeBtn.classList.add('vote-success');
-                    setTimeout(() => dislikeBtn.classList.remove('vote-success'), 1000);
-                }
-                localStorage.setItem('nv_v', vType);
-                // Sincronizar subida de voto vía Proxy
-                const pUrlUp = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.counterapi.dev/v1/${UID}/${type}/up?t=${Date.now()}`)}`;
-                fetch(pUrlUp, { mode: 'cors' });
+                await execVote('up', type);
+                localStorage.setItem('novanotes_voted', type);
+                btn.classList.add('vote-success');
+                setTimeout(() => btn.classList.remove('vote-success'), 1000);
             }
         } catch (e) {
-            console.log('Update local only');
+            console.log('Error al votar');
         } finally {
+            await this.refreshCounts();
+            const finalSelection = localStorage.getItem('novanotes_voted');
+            document.getElementById('like-btn').classList.toggle('voted', finalSelection === 'likes');
+            document.getElementById('dislike-btn').classList.toggle('voted', finalSelection === 'dislikes');
             setTimeout(() => btn.classList.remove('voting-locked'), 400);
-            // Guardar en respaldo local lo que quedó en pantalla
-            localStorage.setItem('nstar_l', likeSpan.textContent);
-            localStorage.setItem('nstar_d', dislikeSpan.textContent);
         }
     }
 

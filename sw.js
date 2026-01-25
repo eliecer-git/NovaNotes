@@ -1,4 +1,4 @@
-const CACHE_NAME = 'novastarpro-v13';
+const CACHE_NAME = 'novastarpro-v14';
 const ASSETS = [
     './',
     './index.html',
@@ -7,8 +7,8 @@ const ASSETS = [
     './manifest.json'
 ];
 
-// Instalación
 self.addEventListener('install', (e) => {
+    self.skipWaiting(); // Forzar a que el nuevo SW tome el control
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS);
@@ -16,16 +16,17 @@ self.addEventListener('install', (e) => {
     );
 });
 
-// Activación
 self.addEventListener('activate', (e) => {
     e.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-            );
-        })
+        Promise.all([
+            self.clients.claim(), // Tomar control de las pestañas inmediatamente
+            caches.keys().then((keys) => {
+                return Promise.all(
+                    keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+                );
+            })
+        ])
     );
 });
 
 // El SW ahora solo maneja la instalación y activación para caché de archivos estáticos.
-// Las peticiones de red para votos se delegan al navegador para evitar conflictos de CORS en el SW.
