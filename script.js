@@ -173,8 +173,7 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        // Namespace único para evitar colisiones con otros proyectos
-        const NS = 'novastar_community_final';
+        const NS = 'novastarcommunity';
         try {
             const [lRes, dRes] = await Promise.all([
                 fetch(`https://api.counterapi.dev/v1/${NS}/likes`),
@@ -190,19 +189,18 @@ class NoteApp {
                 document.getElementById('dislike-count').textContent = dData.count || 0;
             }
         } catch (e) {
-            console.log('Error de conexión con la comunidad');
+            console.error('API Error:', e);
         }
     }
 
     async handleVote(type, btn) {
-        const NS = 'novastar_community_final';
+        const NS = 'novastarcommunity';
         const currentVote = localStorage.getItem('novanotes_voted');
         const voteType = type === 'likes' ? 'like' : 'dislike';
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
-        // UN SOLO MENSAJE para todo
         const msg = currentVote === voteType
             ? '¿Quieres retirar tu voto?'
             : (currentVote ? '¿Quieres cambiar tu voto?' : '¿Confirmas tu voto?');
@@ -213,16 +211,17 @@ class NoteApp {
         }
 
         try {
-            // 1. Quitar el voto anterior si existe (SEÑAL DE RESTA)
+            // 1. Si ya tenías un voto, lo restamos PRIMERO (siempre)
             if (currentVote) {
                 const typeToDown = currentVote === 'like' ? 'likes' : 'dislikes';
                 await fetch(`https://api.counterapi.dev/v1/${NS}/${typeToDown}/down`);
 
                 const otherBtn = document.getElementById(typeToDown === 'likes' ? 'like-btn' : 'dislike-btn');
                 if (otherBtn) otherBtn.classList.remove('voted');
+                localStorage.removeItem('novanotes_voted');
             }
 
-            // 2. Si es un cambio o voto nuevo, SUMAR (SEÑAL DE SUMA)
+            // 2. Si el clic NO fue para quitar el voto que ya tenías (o si no tenías ninguno), SUMAMOS
             if (currentVote !== voteType) {
                 const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
                 if (res.ok) {
@@ -231,15 +230,14 @@ class NoteApp {
                     btn.classList.add('vote-success');
                     setTimeout(() => btn.classList.remove('vote-success'), 1000);
                 }
-            } else {
-                localStorage.removeItem('novanotes_voted');
             }
 
             // 3. Sincronizar UI final
             await this.refreshCounts();
 
         } catch (e) {
-            console.log('Error en votación:', e);
+            console.error('Vote Error:', e);
+            alert('Error al procesar el voto. Reintenta.');
         } finally {
             setTimeout(() => btn.classList.remove('voting-locked'), 600);
         }
