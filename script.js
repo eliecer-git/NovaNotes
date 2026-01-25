@@ -204,39 +204,50 @@ class NoteApp {
         btn.classList.add('voting-locked');
 
         try {
-            // Caso 1: Quitar mi voto actual (Toggle OFF)
+            // CASO 1: Ya votaste por este y quieres QUITARLO
             if (currentVote === voteType) {
-                await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
-                localStorage.removeItem('novanotes_voted');
-                btn.classList.remove('voted');
+                if (confirm('¿Quieres quitar tu voto actual?')) {
+                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/down`);
+                    localStorage.removeItem('novanotes_voted');
+                    btn.classList.remove('voted');
+                    alert('Voto retirado con éxito.');
+                }
             }
-            // Caso 2: Cambiar mi voto o votar por primera vez (Switch o Nuevo)
+            // CASO 2: Eres nuevo o quieres CAMBIAR el voto
             else {
+                // Si ya había otro voto, PRIMERO mandamos señal de RESTAR
                 if (currentVote) {
-                    // Es un cambio: Restar el otro y sumar este de forma ordenada
-                    const otherBtn = document.getElementById(otherType === 'likes' ? 'like-btn' : 'dislike-btn');
-                    otherBtn.classList.remove('voted');
-
-                    await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
-                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
-                } else {
-                    // Es un voto nuevo: Solo sumar este
-                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+                    if (confirm('Ya has votado. ¿Quieres ELIMINAR tu voto anterior antes de cambiar?')) {
+                        await fetch(`https://api.counterapi.dev/v1/${NS}/${otherType}/down`);
+                        const otherBtn = document.getElementById(otherType === 'likes' ? 'like-btn' : 'dislike-btn');
+                        if (otherBtn) otherBtn.classList.remove('voted');
+                        localStorage.removeItem('novanotes_voted');
+                        alert('Voto anterior eliminado. Ahora procedamos a sumar tu nuevo voto.');
+                    } else {
+                        btn.classList.remove('voting-locked');
+                        return;
+                    }
                 }
 
-                localStorage.setItem('novanotes_voted', voteType);
-                btn.classList.add('voted');
-                btn.classList.add('vote-success');
-                setTimeout(() => btn.classList.remove('vote-success'), 1000);
+                // SUMAR el nuevo
+                if (confirm(`¿Confirmas que quieres sumar un ${type === 'likes' ? 'Me gusta' : 'No me gusta'}?`)) {
+                    await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
+                    localStorage.setItem('novanotes_voted', voteType);
+                    btn.classList.add('voted');
+                    btn.classList.add('vote-success');
+                    setTimeout(() => btn.classList.remove('vote-success'), 1000);
+                    alert('¡Voto sumado correctamente!');
+                }
             }
 
-            // Sincronización final: Refrescar ambos números desde el servidor
+            // Sincronizar números finales
             await this.refreshCounts();
 
         } catch (e) {
-            console.log('Error de conexión:', e);
+            console.log('Error en el proceso de señales:', e);
+            alert('Error de conexión. Por favor reintenta.');
         } finally {
-            setTimeout(() => btn.classList.remove('voting-locked'), 800);
+            setTimeout(() => btn.classList.remove('voting-locked'), 500);
         }
     }
 
