@@ -39,6 +39,7 @@ class NoteApp {
         this.selectionColorPicker = document.getElementById('selection-color-picker');
         this.appContainer = document.querySelector('.app-container');
         this.formatToolbar = document.getElementById('format-toolbar');
+        this.categorySelect = document.getElementById('category-select');
         this.installBtn = document.getElementById('pwa-install-btn');
         this.infoBtn = document.getElementById('info-btn');
         this.infoModal = document.getElementById('info-modal');
@@ -148,6 +149,15 @@ class NoteApp {
         this.contentFontSelect.onchange = (e) => this.updateFormat('contentFont', e.target.value);
         this.contentSizeSelect.onchange = (e) => this.updateFormat('contentSize', e.target.value);
         this.textColorPicker.oninput = (e) => this.updateFormat('textColor', e.target.value);
+        this.categorySelect.onchange = (e) => {
+            if (!this.activeNoteId) return;
+            const note = this.notes.find(n => n.id === this.activeNoteId);
+            if (note) {
+                note.category = e.target.value;
+                this.saveToStorage();
+                this.renderNotesList();
+            }
+        };
 
         // Feedback Listeners
         this.initFeedback();
@@ -375,6 +385,7 @@ class NoteApp {
             title: '',
             content: '',
             updatedAt: new Date().toISOString(),
+            category: 'personal',
             styles: { ...this.DEFAULT_STYLES }
         };
         this.notes.unshift(newNote);
@@ -393,6 +404,7 @@ class NoteApp {
         if (note) {
             this.noteTitleInput.innerHTML = note.title;
             this.noteContentInput.innerHTML = note.content;
+            this.categorySelect.value = note.category || 'personal';
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
             this.applyFormat(note.styles);
 
@@ -444,6 +456,7 @@ class NoteApp {
         const note = this.notes[index];
         note.title = this.noteTitleInput.innerHTML;
         note.content = this.noteContentInput.innerHTML;
+        note.category = this.categorySelect.value;
         note.updatedAt = new Date().toISOString();
 
         this.saveToStorage();
@@ -489,11 +502,22 @@ class NoteApp {
 
         let html = '';
         filtered.forEach(note => {
+            const cat = note.category || 'personal';
+            const catLabels = {
+                personal: '📝 Personal',
+                ideas: '💡 Idea',
+                proyectos: '🚀 Proyecto',
+                tareas: '✅ Tarea'
+            };
+
             html += `
                 <li class="note-item ${note.id === this.activeNoteId ? 'active' : ''}" 
                     data-id="${note.id}" 
                     onclick="app.setActiveNote('${note.id}')">
-                    <h3>${this.getRawText(note.title) || 'Nota sin título'}</h3>
+                    <div class="note-item-header">
+                        <h3>${this.getRawText(note.title) || 'Nota sin título'}</h3>
+                        <span class="category-badge cat-${cat}">${catLabels[cat]}</span>
+                    </div>
                     <p>${this.getRawText(note.content)}</p>
                     <small>${this.formatDate(note.updatedAt)}</small>
                 </li>

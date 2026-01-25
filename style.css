@@ -448,6 +448,14 @@ h2,
     border-color: rgba(99, 102, 241, 0.3);
 }
 
+.note-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
 .note-item h3 {
     font-size: 1rem;
     margin-bottom: 4px;
@@ -516,13 +524,50 @@ h2,
     background: #ef4444;
 }
 
-.vote-stat-card:hover {
-    transform: translateX(5px) scale(1.02);
-    border-color: rgba(255, 255, 255, 0.15);
-    background: linear-gradient(145deg, #1e2430, #0d0f16);
+/* Category Picker & Badges */
+.category-picker {
+    font-weight: 600 !important;
+    background: rgba(255, 255, 255, 0.05) !important;
 }
 
-.stat-icon {
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+}
+
+.cat-personal {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.cat-ideas {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.cat-proyectos {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.cat-tareas {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.note-item {
     font-size: 1.4rem;
     background: rgba(255, 255, 255, 0.03);
     width: 40px;
