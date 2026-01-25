@@ -173,7 +173,7 @@ class NoteApp {
     }
 
     async refreshCounts() {
-        const NS = 'novastarcommunity';
+        const NS = 'novastar_pro_final_v2';
         try {
             const [lRes, dRes] = await Promise.all([
                 fetch(`https://api.counterapi.dev/v1/${NS}/likes`),
@@ -194,24 +194,17 @@ class NoteApp {
     }
 
     async handleVote(type, btn) {
-        const NS = 'novastarcommunity';
+        const NS = 'novastar_pro_final_v2';
         const currentVote = localStorage.getItem('novanotes_voted');
         const voteType = type === 'likes' ? 'like' : 'dislike';
+        const otherType = type === 'likes' ? 'dislikes' : 'likes';
 
         if (btn.classList.contains('voting-locked')) return;
         btn.classList.add('voting-locked');
 
-        const msg = currentVote === voteType
-            ? '¿Quieres retirar tu voto?'
-            : (currentVote ? '¿Quieres cambiar tu voto?' : '¿Confirmas tu voto?');
-
-        if (!confirm(msg)) {
-            btn.classList.remove('voting-locked');
-            return;
-        }
-
+        // VERSIÓN PRO: Cambio instantáneo y silencioso
         try {
-            // 1. Si ya tenías un voto, lo restamos PRIMERO (siempre)
+            // 1. Quitar voto actual si existe (SEÑAL DE RESTA)
             if (currentVote) {
                 const typeToDown = currentVote === 'like' ? 'likes' : 'dislikes';
                 await fetch(`https://api.counterapi.dev/v1/${NS}/${typeToDown}/down`);
@@ -221,7 +214,7 @@ class NoteApp {
                 localStorage.removeItem('novanotes_voted');
             }
 
-            // 2. Si el clic NO fue para quitar el voto que ya tenías (o si no tenías ninguno), SUMAMOS
+            // 2. Si el clic fue para cambiar o nuevo, SUMAR (SEÑAL DE SUMA)
             if (currentVote !== voteType) {
                 const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${type}/up`);
                 if (res.ok) {
@@ -236,10 +229,9 @@ class NoteApp {
             await this.refreshCounts();
 
         } catch (e) {
-            console.error('Vote Error:', e);
-            alert('Error al procesar el voto. Reintenta.');
+            console.log('Error de red silencioso');
         } finally {
-            setTimeout(() => btn.classList.remove('voting-locked'), 600);
+            setTimeout(() => btn.classList.remove('voting-locked'), 400);
         }
     }
 
