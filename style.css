@@ -1133,6 +1133,37 @@ h2,
     .empty-illustration {
         font-size: 4rem;
     }
+
+    /* Mejora de tarjetas de votos en móvil */
+    .vote-stats-container {
+        gap: 10px;
+        padding: 0 16px;
+        /* Más margen lateral en móvil */
+    }
+
+    .vote-stat-card {
+        padding: 16px;
+        border-radius: 18px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        /* Iconos más grandes para fácil lectura */
+        height: 48px;
+        font-size: 1.6rem;
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-info h4 {
+        font-size: 1.1rem;
+        /* Números más destacados */
+    }
+
+    .stat-info p {
+        font-size: 0.8rem;
+        line-height: 1.2;
+    }
 }
 
 /* Tablet / Large Phone Horizontal Scroll Fix */
