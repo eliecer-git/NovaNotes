@@ -153,6 +153,7 @@
             <div class="editor-header">
                 <div class="editor-meta">
                     <span id="last-edited" class="last-edited">Selecciona una nota para comenzar</span>
+                    <span id="save-status" class="save-status"></span>
                 </div>
                 <div class="editor-actions">
                     <div class="format-toolbar" id="format-toolbar" hidden>
@@ -240,6 +241,12 @@
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </button>
+                        <button id="focus-mode-btn" class="btn-icon" title="Modo Enfoque (Zen)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
                             </svg>
                         </button>
                     </div>
@@ -378,7 +385,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.5"></script>
+    <script src="script.js?v=5.6"></script>
 </body>
 
 </html>

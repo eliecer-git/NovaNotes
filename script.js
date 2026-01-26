@@ -1,9 +1,18 @@
+/**
+ * @class NoteApp
+ * @description Core engine for novaStarPro. Handles note management, state, UI rendering, and security.
+ */
 class NoteApp {
+    /**
+     * @constructor
+     * Initializes the application state, DOM references, and event listeners.
+     */
     constructor() {
         this.notes = JSON.parse(localStorage.getItem('novanotes_data')) || [];
         this.activeNoteId = null;
         this.searchTerm = '';
 
+        /** @type {Object} Default typography and color settings */
         this.DEFAULT_STYLES = {
             titleFont: "Outfit, sans-serif",
             titleSize: "2.5rem",
@@ -65,6 +74,8 @@ class NoteApp {
         this.masterPwdError = document.getElementById('master-pwd-error');
         this.masterLockText = document.getElementById('master-lock-text');
         this.toggleVaultPwdBtn = document.getElementById('toggle-vault-pwd');
+        this.focusModeBtn = document.getElementById('focus-mode-btn');
+        this.saveStatus = document.getElementById('save-status');
 
         this.currentNoteFilter = 'public'; // 'public' o 'private'
         this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
@@ -95,6 +106,7 @@ class NoteApp {
         this.saveNoteBtn.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
         this.fullscreenBtn.onclick = () => this.toggleFullscreen();
+        this.focusModeBtn.onclick = () => this.toggleFocusMode();
 
         // PWA Install Logic
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -467,6 +479,10 @@ class NoteApp {
         this.fullscreenBtn.classList.toggle('fullscreen-active');
     }
 
+    /**
+     * Creates a new note with default styles and pushes it to the stack.
+     * @returns {void}
+     */
     createNewNote() {
         const newNote = {
             id: Date.now().toString(),
@@ -484,6 +500,10 @@ class NoteApp {
         this.noteTitleInput.focus();
     }
 
+    /**
+     * Loads a specific note into the editor and applies its custom styles.
+     * @param {string|null} id - The ID of the note to load.
+     */
     setActiveNote(id) {
         if (!id) {
             this.activeNoteId = null;
@@ -549,6 +569,11 @@ class NoteApp {
 
     autoSave(shouldRefreshList = false) {
         if (!this.activeNoteId) return;
+
+        // Mostrar estado de guardando
+        this.saveStatus.textContent = 'Guardando...';
+        this.saveStatus.className = 'save-status saving';
+
         const index = this.notes.findIndex(n => n.id === this.activeNoteId);
         if (index === -1) return;
 
@@ -561,8 +586,12 @@ class NoteApp {
         this.saveToStorage();
         this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
 
-        // Optimizamos: solo re-renderizar la lista si es necesario (ej: mover al tope)
-        // pero lo hacemos con un debounce mayor o solo si ha pasado tiempo
+        // Mostrar estado de salvado
+        setTimeout(() => {
+            this.saveStatus.textContent = '✓ Guardado';
+            this.saveStatus.className = 'save-status saved';
+        }, 500);
+
         if (shouldRefreshList && index > 0) {
             const [movedNote] = this.notes.splice(index, 1);
             this.notes.unshift(movedNote);
@@ -593,6 +622,9 @@ class NoteApp {
         this.renderNotesList();
     }
 
+    /**
+     * Renders the note list based on current filters and search terms.
+     */
     renderNotesList() {
         const query = this.searchTerm.toLowerCase();
         const filteredBySearch = this.notes.filter(n =>
@@ -815,8 +847,18 @@ class NoteApp {
             }
         }
     }
+    /**
+     * Alterna el Modo Enfoque (Zen) para una escritura sin distracciones.
+     */
+    toggleFocusMode() {
+        const isActive = this.appContainer.classList.toggle('focus-active');
+        this.focusModeBtn.classList.toggle('active-zen', isActive);
+    }
 }
 
+/**
+ * Inicialización global del motor de novaStarPro
+ */
 const app = new NoteApp();
 window.app = app;
 
