@@ -801,36 +801,7 @@ h2,
     }
 }
 
-/* Focus Mode (Zen) */
-.app-container.focus-active .sidebar {
-    transform: translateX(-100%);
-    opacity: 0;
-    pointer-events: none;
-}
 
-.app-container.focus-active .editor-header,
-.app-container.focus-active .format-toolbar {
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: auto;
-    /* IMPORTANTE: Permitir que el mouse lo detecte aunque sea invisible */
-}
-
-.app-container.focus-active .editor-container {
-    margin-left: 0;
-    max-width: 900px !important;
-    margin: 0 auto;
-}
-
-/* El botón de salir del modo enfoque se muestra al mover el mouse arriba */
-.app-container.focus-active .editor-header:hover,
-.app-container.focus-active .format-toolbar:hover,
-.app-container.focus-active .editor-header:focus-within,
-.app-container.focus-active .format-toolbar:focus-within {
-    opacity: 1;
-    transform: translateY(0);
-}
 
 /* Save Status Indicator */
 .save-status {
@@ -865,10 +836,7 @@ h2,
     }
 }
 
-.btn-icon.active-zen {
-    color: var(--accent);
-    background: rgba(99, 102, 241, 0.15);
-}
+
 
 .feedback-label {
     font-size: 0.75rem;

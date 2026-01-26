@@ -74,7 +74,7 @@ class NoteApp {
         this.masterPwdError = document.getElementById('master-pwd-error');
         this.masterLockText = document.getElementById('master-lock-text');
         this.toggleVaultPwdBtn = document.getElementById('toggle-vault-pwd');
-        this.focusModeBtn = document.getElementById('focus-mode-btn');
+
         this.saveStatus = document.getElementById('save-status');
 
         this.currentNoteFilter = 'public'; // 'public' o 'private'
@@ -106,7 +106,7 @@ class NoteApp {
         this.saveNoteBtn.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
         this.fullscreenBtn.onclick = () => this.toggleFullscreen();
-        this.focusModeBtn.onclick = () => this.toggleFocusMode();
+
 
         // PWA Install Logic
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -177,6 +177,9 @@ class NoteApp {
         this.renderNotesList();
         this.updateStats();
         this.initEmojiPicker();
+
+        // Establecer estado vacío inicial (oculta toolbar, muestra emoji de bienvenida)
+        this.setActiveNote(null);
 
         // Format listeners
         this.titleFontSelect.onchange = (e) => this.updateFormat('titleFont', e.target.value);
@@ -847,13 +850,7 @@ class NoteApp {
             }
         }
     }
-    /**
-     * Alterna el Modo Enfoque (Zen) para una escritura sin distracciones.
-     */
-    toggleFocusMode() {
-        const isActive = this.appContainer.classList.toggle('focus-active');
-        this.focusModeBtn.classList.toggle('active-zen', isActive);
-    }
+
 }
 
 /**
