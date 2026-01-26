@@ -191,7 +191,12 @@ class NoteApp {
             const note = this.notes.find(n => n.id === this.activeNoteId);
             if (note) {
                 note.theme = e.target.value;
-                this.bgColorPicker.style.display = e.target.value === 'custom' ? 'block' : 'none';
+                if (e.target.value === 'custom') {
+                    this.bgColorPicker.style.display = 'block';
+                    this.bgColorPicker.click();
+                } else {
+                    this.bgColorPicker.style.display = 'none';
+                }
                 this.applyTheme(note.theme, note.customBgColor);
                 this.saveToStorage();
             }
