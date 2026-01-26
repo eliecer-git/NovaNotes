@@ -1511,16 +1511,20 @@ h2,
     background-size: 200% 200%;
     border: none;
     color: #1a1a2e;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 180px;
+    height: 40px;
+    border-radius: 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
     transition: all 0.4s ease;
     box-shadow: 0 4px 12px rgba(168, 230, 207, 0.3);
     animation: gradientShift 3s ease infinite;
+    margin-bottom: 15px;
 }
 
 @keyframes gradientShift {
