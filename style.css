@@ -1507,24 +1507,43 @@ h2,
 }
 
 .btn-change-pwd {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    background: linear-gradient(135deg, #a8e6cf, #dcedc1, #ffd3a5);
+    background-size: 200% 200%;
+    border: none;
+    color: #1a1a2e;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition);
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 12px rgba(168, 230, 207, 0.3);
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .btn-change-pwd:hover {
-    background: rgba(139, 92, 246, 0.15);
-    color: var(--accent);
-    border-color: var(--accent);
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(168, 230, 207, 0.5);
+}
+
+.btn-change-pwd:active {
+    transform: scale(0.95);
 }
 
 /* Form Group Styles */
