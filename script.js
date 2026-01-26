@@ -47,6 +47,11 @@ class NoteApp {
         this.confirmPwdBtn = document.getElementById('confirm-password-btn');
         this.closePwdBtn = document.getElementById('close-pwd-btn');
         this.pwdError = document.getElementById('pwd-error');
+        this.bgColorPicker = document.getElementById('bg-color-picker');
+        this.categoryModal = document.getElementById('category-modal');
+        this.customCategoryInput = document.getElementById('custom-category-input');
+        this.saveCustomCatBtn = document.getElementById('save-custom-cat-btn');
+        this.closeCatBtn = document.getElementById('close-cat-btn');
         this.installBtn = document.getElementById('pwa-install-btn');
         this.infoBtn = document.getElementById('info-btn');
         this.infoModal = document.getElementById('info-modal');
@@ -158,12 +163,27 @@ class NoteApp {
         this.textColorPicker.oninput = (e) => this.updateFormat('textColor', e.target.value);
         this.categorySelect.onchange = (e) => {
             if (!this.activeNoteId) return;
+            if (e.target.value === 'custom') {
+                this.categoryModal.hidden = false;
+                this.customCategoryInput.value = '';
+                this.customCategoryInput.focus();
+                return;
+            }
             const note = this.notes.find(n => n.id === this.activeNoteId);
             if (note) {
                 note.category = e.target.value;
+                note.customCategory = null;
                 this.saveToStorage();
                 this.renderNotesList();
             }
+        };
+
+        this.saveCustomCatBtn.onclick = () => this.saveCustomCategory();
+        this.closeCatBtn.onclick = () => {
+            this.categoryModal.hidden = true;
+            // Restaurar valor previo si cancela
+            const note = this.notes.find(n => n.id === this.activeNoteId);
+            this.categorySelect.value = note.category || 'personal';
         };
 
         this.themeSelect.onchange = (e) => {
@@ -171,7 +191,18 @@ class NoteApp {
             const note = this.notes.find(n => n.id === this.activeNoteId);
             if (note) {
                 note.theme = e.target.value;
-                this.applyTheme(note.theme);
+                this.bgColorPicker.style.display = e.target.value === 'custom' ? 'block' : 'none';
+                this.applyTheme(note.theme, note.customBgColor);
+                this.saveToStorage();
+            }
+        };
+
+        this.bgColorPicker.oninput = (e) => {
+            if (!this.activeNoteId) return;
+            const note = this.notes.find(n => n.id === this.activeNoteId);
+            if (note) {
+                note.customBgColor = e.target.value;
+                this.applyTheme('custom', note.customBgColor);
                 this.saveToStorage();
             }
         };
@@ -437,7 +468,10 @@ class NoteApp {
             this.noteContentInput.innerHTML = note.content;
             this.categorySelect.value = note.category || 'personal';
             this.themeSelect.value = note.theme || 'none';
-            this.applyTheme(note.theme || 'none');
+            this.bgColorPicker.style.display = note.theme === 'custom' ? 'block' : 'none';
+            if (note.customBgColor) this.bgColorPicker.value = note.customBgColor;
+
+            this.applyTheme(note.theme || 'none', note.customBgColor);
             this.lockNoteBtn.classList.toggle('locked-active', !!note.password);
 
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
@@ -542,7 +576,8 @@ class NoteApp {
                 personal: '📝 Personal',
                 ideas: '💡 Idea',
                 proyectos: '🚀 Proyecto',
-                tareas: '✅ Tarea'
+                tareas: '✅ Tarea',
+                custom: `✨ ${note.customCategory || 'Otro'}`
             };
 
             html += `
@@ -612,13 +647,34 @@ class NoteApp {
         this.noteContentInput.classList.toggle('is-empty', contentEmpty);
     }
 
-    applyTheme(theme) {
+    applyTheme(theme, customColor) {
         // Remover todos los temas previos
         this.editorView.classList.forEach(cls => {
             if (cls.startsWith('theme-')) this.editorView.classList.remove(cls);
         });
         if (theme && theme !== 'none') {
             this.editorView.classList.add(`theme-${theme}`);
+            if (theme === 'custom' && customColor) {
+                this.editorView.style.setProperty('--custom-bg-color', customColor);
+            } else {
+                this.editorView.style.removeProperty('--custom-bg-color');
+            }
+        } else {
+            this.editorView.style.removeProperty('--custom-bg-color');
+        }
+    }
+
+    saveCustomCategory() {
+        const value = this.customCategoryInput.value.trim();
+        if (!value || !this.activeNoteId) return;
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.category = 'custom';
+            note.customCategory = value;
+            this.categoryModal.hidden = true;
+            this.saveToStorage();
+            this.renderNotesList();
         }
     }
 

@@ -571,6 +571,12 @@ h2,
     border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
+.cat-custom {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .stat-icon {
     font-size: 1.4rem;
     background: rgba(255, 255, 255, 0.03);
@@ -615,6 +621,11 @@ h2,
 
 .editor-view.theme-midnight {
     background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+}
+
+.editor-view.theme-custom {
+    background-color: var(--custom-bg-color, #0d0f16);
+    background-image: none !important;
 }
 
 /* Adjust readability for themes */

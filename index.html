@@ -152,6 +152,7 @@
                             <option value="ideas">💡 Ideas</option>
                             <option value="proyectos">🚀 Proyectos</option>
                             <option value="tareas">✅ Tareas</option>
+                            <option value="custom">➕ Otro...</option>
                         </select>
                         <div class="divider"></div>
                         <select id="title-font-select" class="select-premium" title="Fuente del Título">
@@ -220,7 +221,10 @@
                             <option value="emerald">🍃 Emerald Forest</option>
                             <option value="royal">👑 Royal Purple</option>
                             <option value="midnight">🌑 Midnight Aura</option>
+                            <option value="custom">🎨 Color Sólido...</option>
                         </select>
+                        <input type="color" id="bg-color-picker" class="color-picker-premium"
+                            title="Seleccionar Color de Fondo" value="#0d0f16" style="display: none;">
                         <button id="lock-note-btn" class="btn-icon" title="Proteger Nota con Contraseña">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -329,7 +333,22 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.1"></script>
+    <!-- Modal para Nueva Categoría -->
+    <div id="category-modal" class="modal-overlay" hidden>
+        <div class="modal-content glass" style="max-width: 350px;">
+            <div class="modal-header">
+                <h2>Nueva Categoría</h2>
+                <button id="close-cat-btn" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="custom-category-input" class="input-premium"
+                    placeholder="Nombre de la categoría..." style="width: 100%; margin-bottom: 20px;">
+                <button id="save-custom-cat-btn" class="btn-primary" style="width: 100%;">Crear Categoría</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=5.2"></script>
 </body>
 
 </html>
