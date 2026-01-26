@@ -811,21 +811,25 @@ h2,
 .app-container.focus-active .editor-header,
 .app-container.focus-active .format-toolbar {
     opacity: 0;
-    pointer-events: none;
-    transition: 0.3s ease;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    /* IMPORTANTE: Permitir que el mouse lo detecte aunque sea invisible */
 }
 
 .app-container.focus-active .editor-container {
     margin-left: 0;
-    max-width: 900px;
+    max-width: 900px !important;
     margin: 0 auto;
 }
 
 /* El botón de salir del modo enfoque se muestra al mover el mouse arriba */
 .app-container.focus-active .editor-header:hover,
-.app-container.focus-active .format-toolbar:hover {
+.app-container.focus-active .format-toolbar:hover,
+.app-container.focus-active .editor-header:focus-within,
+.app-container.focus-active .format-toolbar:focus-within {
     opacity: 1;
-    pointer-events: auto;
+    transform: translateY(0);
 }
 
 /* Save Status Indicator */
