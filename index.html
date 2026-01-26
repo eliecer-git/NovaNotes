@@ -225,17 +225,19 @@
                             </svg>
                         </button>
                         <div class="divider"></div>
-                        <select id="theme-select" class="select-premium" title="Fondo del Editor (Estilo Canva)">
-                            <option value="none">Fondo: Default</option>
-                            <option value="sunset">🌅 Sunset Rose</option>
-                            <option value="ocean">🌊 Deep Ocean</option>
-                            <option value="emerald">🍃 Emerald Forest</option>
-                            <option value="royal">👑 Royal Purple</option>
-                            <option value="midnight">🌑 Midnight Aura</option>
-                            <option value="custom">🎨 Color Sólido...</option>
-                        </select>
-                        <input type="color" id="bg-color-picker" class="color-picker-premium"
-                            title="Seleccionar Color de Fondo" value="#0d0f16" style="display: none;">
+                        <div class="theme-picker-group">
+                            <select id="theme-select" class="select-premium" title="Fondo del Editor (Estilo Canva)">
+                                <option value="none">Fondo: Default</option>
+                                <option value="sunset">🌅 Sunset Rose</option>
+                                <option value="ocean">🌊 Deep Ocean</option>
+                                <option value="emerald">🍃 Emerald Forest</option>
+                                <option value="royal">👑 Royal Purple</option>
+                                <option value="midnight">🌑 Midnight Aura</option>
+                                <option value="custom">🎨 Color Sólido...</option>
+                            </select>
+                            <input type="color" id="bg-color-picker" class="color-picker-premium"
+                                title="Seleccionar Color de Fondo" value="#0d0f16" style="display: none;">
+                        </div>
                         <button id="lock-note-btn" class="btn-icon" title="Proteger Nota con Contraseña">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -385,7 +387,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.6"></script>
+    <script src="script.js?v=5.7"></script>
 </body>
 
 </html>
