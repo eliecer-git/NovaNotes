@@ -313,24 +313,23 @@ class NoteApp {
 
         const tryFetch = async (url) => {
             const turl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
-            // Cadena de proxies resiliente
+            // Cadena de proxies resiliente actualizada
             const proxies = [
-                turl, // Directo
-                `https://api.codetabs.com/v1/proxy?url=${encodeURIComponent(turl)}`,
                 `https://corsproxy.io/?${encodeURIComponent(turl)}`,
-                `https://api.allorigins.win/get?url=${encodeURIComponent(turl)}`
+                `https://api.allorigins.win/get?url=${encodeURIComponent(turl)}`,
+                `https://thingproxy.freeboard.io/fetch/${turl}`
             ];
 
             for (const p of proxies) {
                 try {
-                    const res = await fetch(p);
+                    const res = await fetch(p, { signal: AbortSignal.timeout(5000) });
                     if (!res.ok) continue;
                     let data = await res.json();
                     if (p.includes('allorigins')) data = JSON.parse(data.contents);
                     if (data && data.count !== undefined) return data;
-                } catch (e) { }
+                } catch (e) { /* Silencioso */ }
             }
-            throw new Error('Sync failed after all attempts');
+            return null; // Retornar null en lugar de lanzar error
         };
 
         try {
@@ -339,19 +338,19 @@ class NoteApp {
                 tryFetch(`https://api.counterapi.dev/v1/${NS}/dislikes`)
             ]);
 
-            const lCount = parseInt(lData.count) || 0;
-            const dCount = parseInt(dData.count) || 0;
+            // Usar datos de API si están disponibles, sino usar localStorage
+            const lCount = lData?.count !== undefined ? parseInt(lData.count) : (parseInt(localStorage.getItem('nstar_l')) || 0);
+            const dCount = dData?.count !== undefined ? parseInt(dData.count) : (parseInt(localStorage.getItem('nstar_d')) || 0);
 
             document.getElementById('like-count').textContent = lCount;
             document.getElementById('dislike-count').textContent = dCount;
             document.getElementById('stat-likes-count').textContent = `${lCount} votos`;
             document.getElementById('stat-dislikes-count').textContent = `${dCount} reportes`;
 
-            localStorage.setItem('nstar_l', lCount);
-            localStorage.setItem('nstar_d', dCount);
-            console.log(`✅ Sincronizado: L:${lCount} D:${dCount}`);
+            if (lData?.count !== undefined) localStorage.setItem('nstar_l', lCount);
+            if (dData?.count !== undefined) localStorage.setItem('nstar_d', dCount);
         } catch (e) {
-            console.warn('Backup local:', e);
+            // Silencioso - usar datos locales
             const l = localStorage.getItem('nstar_l') || 0;
             const d = localStorage.getItem('nstar_d') || 0;
             document.getElementById('like-count').textContent = l;
