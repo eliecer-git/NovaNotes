@@ -74,6 +74,16 @@ class NoteApp {
         this.masterPwdError = document.getElementById('master-pwd-error');
         this.masterLockText = document.getElementById('master-lock-text');
         this.toggleVaultPwdBtn = document.getElementById('toggle-vault-pwd');
+        // Cambio de contraseña
+        this.changePwdBtn = document.getElementById('change-pwd-btn');
+        this.changePwdModal = document.getElementById('change-pwd-modal');
+        this.closeChangePwdBtn = document.getElementById('close-change-pwd-btn');
+        this.currentPwdInput = document.getElementById('current-pwd-input');
+        this.newPwdInput = document.getElementById('new-pwd-input');
+        this.confirmPwdInput = document.getElementById('confirm-pwd-input');
+        this.saveNewPwdBtn = document.getElementById('save-new-pwd-btn');
+        this.changePwdError = document.getElementById('change-pwd-error');
+        this.changePwdSuccess = document.getElementById('change-pwd-success');
 
         this.saveStatus = document.getElementById('save-status');
 
@@ -261,6 +271,14 @@ class NoteApp {
 
         // Bloqueo de Enter en password maestro
         this.masterPwdInput.onkeydown = (e) => { if (e.key === 'Enter') this.verifyMasterPassword(); };
+
+        // Cambio de Contraseña Listeners
+        this.changePwdBtn.onclick = () => this.openChangePwdModal();
+        this.closeChangePwdBtn.onclick = () => this.closeChangePwdModal();
+        this.saveNewPwdBtn.onclick = () => this.saveNewPassword();
+        this.changePwdModal.onclick = (e) => {
+            if (e.target === this.changePwdModal) this.closeChangePwdModal();
+        };
 
         // Feedback Listeners
         this.initFeedback();
@@ -849,21 +867,104 @@ class NoteApp {
                 this.masterPwdError.style.display = 'block';
             }
         }
+
+        /**
+         * Abre el modal de cambio de contraseña
+         */
+        openChangePwdModal() {
+            const masterSaved = localStorage.getItem('nova_master_pwd');
+            if (!masterSaved) {
+                alert('No tienes una contraseña maestra configurada. Crea una nota privada primero.');
+                return;
+            }
+            this.changePwdModal.hidden = false;
+            this.currentPwdInput.value = '';
+            this.newPwdInput.value = '';
+            this.confirmPwdInput.value = '';
+            this.changePwdError.style.display = 'none';
+            this.changePwdSuccess.style.display = 'none';
+            this.currentPwdInput.focus();
+        }
+
+        /**
+         * Cierra el modal de cambio de contraseña
+         */
+        closeChangePwdModal() {
+            this.changePwdModal.hidden = true;
+            this.currentPwdInput.value = '';
+            this.newPwdInput.value = '';
+            this.confirmPwdInput.value = '';
+            this.changePwdError.style.display = 'none';
+            this.changePwdSuccess.style.display = 'none';
+        }
+
+        /**
+         * Guarda la nueva contraseña maestra después de verificar la actual
+         */
+        saveNewPassword() {
+            const masterSaved = localStorage.getItem('nova_master_pwd');
+            const currentPwd = this.currentPwdInput.value;
+            const newPwd = this.newPwdInput.value;
+            const confirmPwd = this.confirmPwdInput.value;
+
+            this.changePwdError.style.display = 'none';
+            this.changePwdSuccess.style.display = 'none';
+
+            // Validar contraseña actual
+            if (currentPwd !== masterSaved) {
+                this.changePwdError.textContent = 'La contraseña actual es incorrecta.';
+                this.changePwdError.style.display = 'block';
+                return;
+            }
+
+            // Validar nueva contraseña
+            if (newPwd.length < 1) {
+                this.changePwdError.textContent = 'La nueva contraseña no puede estar vacía.';
+                this.changePwdError.style.display = 'block';
+                return;
+            }
+
+            // Validar coincidencia
+            if (newPwd !== confirmPwd) {
+                this.changePwdError.textContent = 'Las contraseñas no coinciden.';
+                this.changePwdError.style.display = 'block';
+                return;
+            }
+
+            // Actualizar contraseña maestra
+            localStorage.setItem('nova_master_pwd', newPwd);
+
+            // Actualizar contraseña en todas las notas privadas
+            this.notes.forEach(note => {
+                if (note.password) {
+                    note.password = newPwd;
+                }
+            });
+            this.saveToStorage();
+
+            // Mostrar éxito
+            this.changePwdSuccess.textContent = '¡Contraseña cambiada exitosamente!';
+            this.changePwdSuccess.style.display = 'block';
+
+            // Cerrar modal después de 1.5 segundos
+            setTimeout(() => {
+                this.closeChangePwdModal();
+            }, 1500);
+        }
+
     }
 
-}
-
-/**
- * Inicialización global del motor de novaStarPro
- */
-const app = new NoteApp();
+    /**
+     * Inicialización global del motor de novaStarPro
+     */
+    const app = new NoteApp();
 window.app = app;
 
-// Registrar el motor de la App para Google (PWA)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('novaStarPro lista para instalar'))
-            .catch(err => console.log('Error al registrar App:', err));
-    });
-}
+    // Registrar el motor de la App para Google (PWA)
+    if('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('novaStarPro lista para instalar'))
+                .catch(err => console.log('Error al registrar App:', err));
+        });
+    }

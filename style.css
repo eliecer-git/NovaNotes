@@ -1498,3 +1498,60 @@ h2,
         height: 2px;
     }
 }
+
+/* Change Password Button */
+.stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-change-pwd {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.btn-change-pwd:hover {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+/* Form Group Styles */
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.pwd-error-msg {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.pwd-success-msg {
+    color: #34d399;
+    font-size: 0.85rem;
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(52, 211, 153, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+}
