@@ -56,6 +56,17 @@ class NoteApp {
         this.infoBtn = document.getElementById('info-btn');
         this.infoModal = document.getElementById('info-modal');
         this.closeInfoBtn = document.getElementById('close-info-btn');
+        this.filterPublicBtn = document.getElementById('filter-public-btn');
+        this.filterPrivateBtn = document.getElementById('filter-private-btn');
+        this.masterLockModal = document.getElementById('master-lock-modal');
+        this.masterPwdInput = document.getElementById('master-password-input');
+        this.unlockVaultBtn = document.getElementById('unlock-vault-btn');
+        this.closeVaultViewBtn = document.getElementById('close-vault-view-btn');
+        this.masterPwdError = document.getElementById('master-pwd-error');
+        this.masterLockText = document.getElementById('master-lock-text');
+
+        this.currentNoteFilter = 'public'; // 'public' o 'private'
+        this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
         this.deferredPrompt = null;
 
         // Optimized Debouncing
@@ -215,6 +226,19 @@ class NoteApp {
         this.lockNoteBtn.onclick = () => this.handleLockClick();
         this.confirmPwdBtn.onclick = () => this.verifyPassword();
         this.closePwdBtn.onclick = () => this.passwordModal.hidden = true;
+
+        // Bóveda Maestra Listeners
+        this.unlockVaultBtn.onclick = () => this.verifyMasterPassword();
+        this.closeVaultViewBtn.onclick = () => {
+            this.masterLockModal.hidden = true;
+            this.setFilter('public');
+        };
+
+        this.filterPublicBtn.onclick = () => this.setFilter('public');
+        this.filterPrivateBtn.onclick = () => this.enterPrivateVault();
+
+        // Bloqueo de Enter en password maestro
+        this.masterPwdInput.onkeydown = (e) => { if (e.key === 'Enter') this.verifyMasterPassword(); };
 
         // Feedback Listeners
         this.initFeedback();
@@ -454,19 +478,22 @@ class NoteApp {
     }
 
     setActiveNote(id) {
-        if (this.activeNoteId === id && id !== null) return;
-        this.activeNoteId = id;
-        const note = this.notes.find(n => n.id === id);
+        if (!id) {
+            this.activeNoteId = null;
+            this.editorFields.hidden = true;
+            this.emptyState.hidden = false;
+            this.editorView.classList.add('empty');
+            this.formatToolbar.hidden = true;
+            this.deleteNoteBtn.hidden = true;
+            this.saveNoteBtn.hidden = true;
+            this.lastEditedText.textContent = 'Selecciona una nota para comenzar';
+            return;
+        }
 
+        const note = this.notes.find(n => n.id === id);
         if (note) {
-            // Si la nota está protegida y no ha sido desbloqueada en esta sesión
-            if (note.password && !note.isUnlocked) {
-                this.pendingNoteId = id;
-                this.passwordModal.hidden = false;
-                this.pwdInput.value = '';
-                this.pwdError.style.display = 'none';
-                return;
-            }
+            // No permitir abrir notas privadas si el filtro es público (Seguridad extra)
+            if (note.password && this.currentNoteFilter === 'public') return;
 
             this.activeNoteId = id;
             this.noteTitleInput.innerHTML = note.title;
@@ -492,16 +519,7 @@ class NoteApp {
             this.saveNoteBtn.hidden = false;
             this.formatToolbar.hidden = false;
         } else {
-            this.activeNoteId = null;
-            this.noteTitleInput.innerHTML = '';
-            this.noteContentInput.innerHTML = '';
-            this.editorView.classList.add('empty');
-            this.editorFields.hidden = true;
-            this.emptyState.hidden = false;
-            this.deleteNoteBtn.hidden = true;
-            this.saveNoteBtn.hidden = true;
-            this.formatToolbar.hidden = true;
-            this.lastEditedText.textContent = 'Selecciona una nota para comenzar';
+            this.setActiveNote(null);
         }
         this.updateActiveNoteInList();
     }
@@ -569,10 +587,18 @@ class NoteApp {
     }
 
     renderNotesList() {
-        const filtered = this.notes.filter(n =>
-            n.title.toLowerCase().includes(this.searchTerm) ||
-            n.content.toLowerCase().includes(this.searchTerm)
+        const query = this.searchTerm.toLowerCase();
+        const filteredBySearch = this.notes.filter(n =>
+            n.title.toLowerCase().includes(query) ||
+            n.content.toLowerCase().includes(query)
         );
+
+        // FILTRO MAESTRO: Mostrar solo lo que toca según la pestaña activa
+        const filtered = filteredBySearch.filter(n => {
+            const isLocked = !!n.password;
+            if (this.currentNoteFilter === 'private') return isLocked;
+            return !isLocked;
+        });
 
         let html = '';
         filtered.forEach(note => {
@@ -686,44 +712,99 @@ class NoteApp {
     handleLockClick() {
         if (!this.activeNoteId) return;
         const note = this.notes.find(n => n.id === this.activeNoteId);
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+
         if (note.password) {
             if (confirm('¿Quieres quitar la protección de esta nota?')) {
                 note.password = null;
-                note.isUnlocked = false;
                 this.lockNoteBtn.classList.remove('locked-active');
                 this.saveToStorage();
+                this.renderNotesList(); // Mover a pestaña pública
+                this.setActiveNote(null);
             }
         } else {
-            this.pendingNoteId = this.activeNoteId;
-            this.passwordModal.hidden = false;
-            this.pwdInput.value = '';
-            this.pwdError.style.display = 'none';
+            // Si ya existe contraseña maestra, usarla directo
+            if (masterSaved) {
+                note.password = masterSaved;
+                this.lockNoteBtn.classList.add('locked-active');
+                this.saveToStorage();
+                this.renderNotesList();
+                this.setActiveNote(null); // Desaparece porque cambia de sección
+                alert('Nota protegida y movida a la Bóveda Privada.');
+            } else {
+                // Crear contraseña maestra por primera vez
+                this.pendingNoteId = this.activeNoteId;
+                this.masterLockText.textContent = "Crea una CONTRASEÑA MAESTRA. Esta protegerá TODAS tus notas privadas.";
+                this.masterPwdInput.placeholder = "Nueva contraseña...";
+                this.masterLockModal.hidden = false;
+                this.masterPwdInput.value = '';
+                this.masterPwdInput.focus();
+                this.masterPwdError.style.display = 'none';
+            }
         }
     }
 
-    verifyPassword() {
-        const password = this.pwdInput.value;
-        if (!password) return;
+    setFilter(filter) {
+        this.currentNoteFilter = filter;
+        this.filterPublicBtn.classList.toggle('active', filter === 'public');
+        this.filterPrivateBtn.classList.toggle('active', filter === 'private');
 
-        const note = this.notes.find(n => n.id === this.pendingNoteId);
+        // Si volvemos a público, bloquear la bóveda de nuevo para seguridad
+        if (filter === 'public') this.isVaultUnlocked = false;
 
-        if (note.password) {
-            // Verificando contraseña para abrir
-            if (password === note.password) {
-                note.isUnlocked = true;
-                this.passwordModal.hidden = true;
-                this.setActiveNote(this.pendingNoteId);
-            } else {
-                this.pwdError.style.display = 'block';
-            }
+        this.setActiveNote(null);
+        this.renderNotesList();
+    }
+
+    enterPrivateVault() {
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+
+        if (!masterSaved) {
+            alert('Aún no tienes notas privadas. Ponle candado a una nota para crear tu Bóveda.');
+            return;
+        }
+
+        if (this.isVaultUnlocked) {
+            this.setFilter('private');
         } else {
-            // Creando nueva contraseña
-            note.password = password;
-            note.isUnlocked = true;
-            this.passwordModal.hidden = true;
-            this.lockNoteBtn.classList.add('locked-active');
-            this.saveToStorage();
-            this.setActiveNote(this.pendingNoteId);
+            this.masterLockText.textContent = "Introduce tu contraseña maestra para desbloquear tus notas privadas.";
+            this.masterPwdInput.placeholder = "Contraseña...";
+            this.masterLockModal.hidden = false;
+            this.masterPwdInput.value = '';
+            this.masterPwdInput.focus();
+            this.masterPwdError.style.display = 'none';
+        }
+    }
+
+    verifyMasterPassword() {
+        const pwd = this.masterPwdInput.value;
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+
+        if (!masterSaved) {
+            // CREANDO CONTRASEÑA POR PRIMERA VEZ
+            if (pwd.length < 1) return;
+            localStorage.setItem('nova_master_pwd', pwd);
+
+            // Asignar a la nota que originó la creación
+            const note = this.notes.find(n => n.id === this.pendingNoteId);
+            if (note) {
+                note.password = pwd;
+                this.saveToStorage();
+            }
+
+            this.masterLockModal.hidden = true;
+            this.setActiveNote(null);
+            this.renderNotesList();
+            alert('¡Bóveda creada con éxito!');
+        } else {
+            // VERIFICANDO PARA ENTRAR
+            if (pwd === masterSaved) {
+                this.isVaultUnlocked = true;
+                this.masterLockModal.hidden = true;
+                this.setFilter('private');
+            } else {
+                this.masterPwdError.style.display = 'block';
+            }
         }
     }
 }

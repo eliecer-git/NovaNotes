@@ -91,6 +91,15 @@
                 <input type="text" id="search-input" placeholder="Buscar notas...">
             </div>
 
+            <div class="filter-tabs">
+                <button id="filter-public-btn" class="filter-tab active">
+                    <span class="icon">🔓</span> Públicas
+                </button>
+                <button id="filter-private-btn" class="filter-tab">
+                    <span class="icon">🔒</span> Privadas
+                </button>
+            </div>
+
             <nav class="notes-list-container">
                 <ul id="notes-list" class="notes-list">
                     <!-- Las notas se cargarán aquí dinámicamente -->
@@ -348,7 +357,24 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.3"></script>
+    <!-- Modal Maestro de Bóveda (Pantalla Completa Negra) -->
+    <div id="master-lock-modal" class="master-lock-overlay" hidden>
+        <div class="master-lock-content">
+            <div class="lock-illustration">🔒</div>
+            <h2>Bóveda de Seguridad</h2>
+            <p id="master-lock-text">Introduce tu contraseña maestra para desbloquear tus notas privadas.</p>
+            <input type="password" id="master-password-input" class="input-premium master-input"
+                placeholder="Contraseña...">
+            <button id="unlock-vault-btn" class="btn-primary"
+                style="width: 200px; margin-top: 20px;">Desbloquear</button>
+            <p id="master-pwd-error" style="color: #ef4444; margin-top: 15px; display: none;">Contraseña incorrecta</p>
+            <button id="close-vault-view-btn" class="btn-text"
+                style="margin-top: 20px; color: var(--text-muted); cursor: pointer; border: none; background: none;">Volver
+                a notas públicas</button>
+        </div>
+    </div>
+
+    <script src="script.js?v=5.4"></script>
 </body>
 
 </html>
