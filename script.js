@@ -64,6 +64,7 @@ class NoteApp {
         this.closeVaultViewBtn = document.getElementById('close-vault-view-btn');
         this.masterPwdError = document.getElementById('master-pwd-error');
         this.masterLockText = document.getElementById('master-lock-text');
+        this.toggleVaultPwdBtn = document.getElementById('toggle-vault-pwd');
 
         this.currentNoteFilter = 'public'; // 'public' o 'private'
         this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
@@ -232,6 +233,12 @@ class NoteApp {
         this.closeVaultViewBtn.onclick = () => {
             this.masterLockModal.hidden = true;
             this.setFilter('public');
+        };
+
+        this.toggleVaultPwdBtn.onclick = () => {
+            const isPwd = this.masterPwdInput.type === 'password';
+            this.masterPwdInput.type = isPwd ? 'text' : 'password';
+            this.toggleVaultPwdBtn.textContent = isPwd ? '🙈' : '👁️';
         };
 
         this.filterPublicBtn.onclick = () => this.setFilter('public');
@@ -729,8 +736,7 @@ class NoteApp {
                 this.lockNoteBtn.classList.add('locked-active');
                 this.saveToStorage();
                 this.renderNotesList();
-                this.setActiveNote(null); // Desaparece porque cambia de sección
-                alert('Nota protegida y movida a la Bóveda Privada.');
+                this.setActiveNote(null);
             } else {
                 // Crear contraseña maestra por primera vez
                 this.pendingNoteId = this.activeNoteId;
@@ -760,7 +766,8 @@ class NoteApp {
         const masterSaved = localStorage.getItem('nova_master_pwd');
 
         if (!masterSaved) {
-            alert('Aún no tienes notas privadas. Ponle candado a una nota para crear tu Bóveda.');
+            // Silencioso: si no hay notas privadas, simplemente se mantiene en público
+            this.setFilter('public');
             return;
         }
 
@@ -769,6 +776,8 @@ class NoteApp {
         } else {
             this.masterLockText.textContent = "Introduce tu contraseña maestra para desbloquear tus notas privadas.";
             this.masterPwdInput.placeholder = "Contraseña...";
+            this.masterPwdInput.type = 'password';
+            this.toggleVaultPwdBtn.textContent = '👁️';
             this.masterLockModal.hidden = false;
             this.masterPwdInput.value = '';
             this.masterPwdInput.focus();
@@ -795,7 +804,6 @@ class NoteApp {
             this.masterLockModal.hidden = true;
             this.setActiveNote(null);
             this.renderNotesList();
-            alert('¡Bóveda creada con éxito!');
         } else {
             // VERIFICANDO PARA ENTRAR
             if (pwd === masterSaved) {
