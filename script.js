@@ -89,9 +89,7 @@ class NoteApp {
         this.pinNoteBtn = document.getElementById('pin-note-btn');
         // Export PDF
         this.exportPdfBtn = document.getElementById('export-pdf-btn');
-        // Markdown toggle
-        this.markdownBtn = document.getElementById('markdown-btn');
-        this.isMarkdownMode = false;
+
 
         this.saveStatus = document.getElementById('save-status');
 
@@ -260,7 +258,7 @@ class NoteApp {
         this.lockNoteBtn.onclick = () => this.handleLockClick();
         this.pinNoteBtn.onclick = () => this.togglePin();
         this.exportPdfBtn.onclick = () => this.exportToPDF();
-        this.markdownBtn.onclick = () => this.toggleMarkdown();
+
         this.confirmPwdBtn.onclick = () => this.verifyPassword();
         this.closePwdBtn.onclick = () => this.passwordModal.hidden = true;
 
@@ -1090,45 +1088,7 @@ class NoteApp {
         });
     }
 
-    /**
-     * Alterna entre modo edición y vista previa Markdown
-     */
-    toggleMarkdown() {
-        if (!this.activeNoteId) {
-            alert('Selecciona una nota para ver en Markdown');
-            return;
-        }
 
-        this.isMarkdownMode = !this.isMarkdownMode;
-        this.markdownBtn.classList.toggle('md-active', this.isMarkdownMode);
-
-        if (this.isMarkdownMode) {
-            // Guardar contenido original y mostrar Markdown renderizado
-            this._originalContent = this.noteContentInput.innerHTML;
-            const rawText = this.noteContentInput.innerText || this.noteContentInput.textContent;
-
-            // Renderizar Markdown usando marked.js
-            if (typeof marked !== 'undefined') {
-                const html = marked.parse(rawText);
-                this.noteContentInput.innerHTML = html;
-                this.noteContentInput.contentEditable = 'false';
-                this.noteContentInput.classList.add('markdown-preview');
-                this.saveStatus.textContent = '📖 Vista Markdown';
-            } else {
-                alert('Error: Librería Markdown no cargada');
-                this.isMarkdownMode = false;
-                return;
-            }
-        } else {
-            // Restaurar modo edición
-            this.noteContentInput.innerHTML = this._originalContent || this.noteContentInput.innerHTML;
-            this.noteContentInput.contentEditable = 'true';
-            this.noteContentInput.classList.remove('markdown-preview');
-            this.saveStatus.textContent = '✏️ Modo edición';
-        }
-
-        setTimeout(() => this.saveStatus.textContent = '', 2000);
-    }
 
 }
 
