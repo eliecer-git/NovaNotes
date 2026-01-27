@@ -1471,11 +1471,11 @@ h2,
 
     .sidebar {
         width: 100%;
-        height: 50vh;
+        height: 100vh;
         flex: none;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        overflow-y: auto !important;
+        overflow: hidden;
         -webkit-overflow-scrolling: touch;
         display: flex;
         flex-direction: column;
@@ -1590,6 +1590,47 @@ h2,
 
     .empty-illustration {
         font-size: 4rem;
+    }
+
+    /* Footer Optimizado para Móvil - Contra el piso */
+    .sidebar-footer {
+        padding: 8px 12px;
+        padding-bottom: env(safe-area-inset-bottom, 12px);
+        background: var(--bg-color);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .btn-install,
+    .btn-change-pwd {
+        margin-bottom: 0 !important;
+        height: 38px !important;
+        font-size: 0.8rem !important;
+        width: 100% !important;
+    }
+
+    .footer-bottom-row {
+        margin: 0 !important;
+        padding: 4px 0 0 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stats {
+        font-size: 0.75rem !important;
+    }
+
+    .global-feedback-mini {
+        gap: 6px !important;
+    }
+
+    .btn-feedback-mini {
+        padding: 4px 8px !important;
+        font-size: 0.75rem !important;
     }
 }
 
