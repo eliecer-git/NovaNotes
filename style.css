@@ -1511,8 +1511,9 @@ h2,
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        gap: 8px;
-        padding: 10px;
+        touch-action: pan-x;
+        gap: 12px;
+        padding: 12px;
         background: rgba(15, 23, 42, 0.9);
         border: 1px solid var(--accent);
         border-radius: 12px;
@@ -1534,42 +1535,38 @@ h2,
         background: var(--accent);
         border-radius: 10px;
     }
-}
-}
 
-/* Asegurar que el color picker se vea */
-.color-picker-premium {
-    min-width: 28px;
-    min-height: 28px;
-}
+    /* Asegurar que el color picker se vea */
+    .color-picker-premium {
+        min-width: 28px;
+        min-height: 28px;
+    }
 
-.editor-header {
-    height: auto;
-    padding: 12px;
-    flex-direction: column;
-    gap: 8px;
-    align-items: stretch;
-}
+    .editor-header {
+        height: auto;
+        padding: 12px;
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
 
-.editor-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+    .editor-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-.input-title {
-    font-size: 1.75rem;
-}
+    .input-title {
+        font-size: 1.75rem;
+    }
 
-.input-content {
-    font-size: 1rem;
-}
+    .input-content {
+        font-size: 1rem;
+    }
 
-.empty-illustration {
-    font-size: 4rem;
-}
-
-
+    .empty-illustration {
+        font-size: 4rem;
+    }
 }
 
 /* Tablet / Large Phone Horizontal Scroll Fix */
