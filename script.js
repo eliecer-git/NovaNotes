@@ -1,4 +1,265 @@
 /**
+ * @class AuthManager
+ * @description Handles local user authentication (registration, login, logout, session)
+ */
+class AuthManager {
+    constructor() {
+        this.USERS_KEY = 'novanotes_users';
+        this.SESSION_KEY = 'novanotes_session';
+
+        // DOM Elements
+        this.authModal = document.getElementById('auth-modal');
+        this.loginForm = document.getElementById('login-form');
+        this.registerForm = document.getElementById('register-form');
+        this.loginEmail = document.getElementById('login-email');
+        this.loginPassword = document.getElementById('login-password');
+        this.loginError = document.getElementById('login-error');
+        this.loginSubmitBtn = document.getElementById('login-submit-btn');
+        this.registerName = document.getElementById('register-name');
+        this.registerEmail = document.getElementById('register-email');
+        this.registerPassword = document.getElementById('register-password');
+        this.registerConfirm = document.getElementById('register-confirm');
+        this.registerError = document.getElementById('register-error');
+        this.registerSubmitBtn = document.getElementById('register-submit-btn');
+        this.showRegisterLink = document.getElementById('show-register');
+        this.showLoginLink = document.getElementById('show-login');
+        this.userInfoBox = document.getElementById('user-info-box');
+        this.userNameDisplay = document.getElementById('user-name-display');
+        this.userEmailDisplay = document.getElementById('user-email-display');
+        this.logoutBtn = document.getElementById('logout-btn');
+
+        this.onLoginSuccess = null; // Callback when user logs in
+        this.onLogout = null; // Callback when user logs out
+
+        this.initListeners();
+    }
+
+    initListeners() {
+        // Toggle between login and register
+        this.showRegisterLink?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showRegister();
+        });
+
+        this.showLoginLink?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showLogin();
+        });
+
+        // Submit handlers
+        this.loginSubmitBtn?.addEventListener('click', () => this.handleLogin());
+        this.registerSubmitBtn?.addEventListener('click', () => this.handleRegister());
+
+        // Enter key handlers
+        this.loginPassword?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.handleLogin();
+        });
+        this.registerConfirm?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.handleRegister();
+        });
+
+        // Logout
+        this.logoutBtn?.addEventListener('click', () => this.logout());
+    }
+
+    /**
+     * Simple hash function for passwords (not cryptographically secure, but adequate for localStorage demo)
+     */
+    hashPassword(password) {
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return 'h_' + Math.abs(hash).toString(36) + '_' + password.length;
+    }
+
+    getUsers() {
+        return JSON.parse(localStorage.getItem(this.USERS_KEY)) || [];
+    }
+
+    saveUsers(users) {
+        localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+    }
+
+    getSession() {
+        return JSON.parse(localStorage.getItem(this.SESSION_KEY));
+    }
+
+    saveSession(session) {
+        localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    }
+
+    clearSession() {
+        localStorage.removeItem(this.SESSION_KEY);
+    }
+
+    isLoggedIn() {
+        return this.getSession() !== null;
+    }
+
+    getCurrentUser() {
+        return this.getSession();
+    }
+
+    showLogin() {
+        this.loginForm.style.display = 'flex';
+        this.registerForm.style.display = 'none';
+        this.loginError.textContent = '';
+        this.loginEmail.value = '';
+        this.loginPassword.value = '';
+    }
+
+    showRegister() {
+        this.loginForm.style.display = 'none';
+        this.registerForm.style.display = 'flex';
+        this.registerError.textContent = '';
+        this.registerName.value = '';
+        this.registerEmail.value = '';
+        this.registerPassword.value = '';
+        this.registerConfirm.value = '';
+    }
+
+    showAuthModal() {
+        this.authModal.hidden = false;
+        this.showLogin();
+    }
+
+    hideAuthModal() {
+        this.authModal.hidden = true;
+    }
+
+    handleLogin() {
+        const email = this.loginEmail.value.trim().toLowerCase();
+        const password = this.loginPassword.value;
+
+        // Validations
+        if (!email || !password) {
+            this.loginError.textContent = 'Por favor, completa todos los campos.';
+            return;
+        }
+
+        const users = this.getUsers();
+        const user = users.find(u => u.email === email);
+
+        if (!user) {
+            this.loginError.textContent = 'No existe una cuenta con ese correo.';
+            return;
+        }
+
+        if (user.passwordHash !== this.hashPassword(password)) {
+            this.loginError.textContent = 'Contraseña incorrecta.';
+            return;
+        }
+
+        // Success - create session
+        const session = {
+            userId: user.id,
+            name: user.name,
+            email: user.email
+        };
+        this.saveSession(session);
+        this.hideAuthModal();
+        this.updateUserUI(session);
+
+        if (this.onLoginSuccess) this.onLoginSuccess(session);
+    }
+
+    handleRegister() {
+        const name = this.registerName.value.trim();
+        const email = this.registerEmail.value.trim().toLowerCase();
+        const password = this.registerPassword.value;
+        const confirm = this.registerConfirm.value;
+
+        // Validations
+        if (!name || !email || !password || !confirm) {
+            this.registerError.textContent = 'Por favor, completa todos los campos.';
+            return;
+        }
+
+        if (!email.includes('@') || !email.includes('.')) {
+            this.registerError.textContent = 'Ingresa un correo electrónico válido.';
+            return;
+        }
+
+        if (password.length < 6) {
+            this.registerError.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+            return;
+        }
+
+        if (password !== confirm) {
+            this.registerError.textContent = 'Las contraseñas no coinciden.';
+            return;
+        }
+
+        const users = this.getUsers();
+        if (users.find(u => u.email === email)) {
+            this.registerError.textContent = 'Ya existe una cuenta con ese correo.';
+            return;
+        }
+
+        // Create new user
+        const newUser = {
+            id: 'user_' + Date.now().toString(36),
+            name: name,
+            email: email,
+            passwordHash: this.hashPassword(password),
+            createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        this.saveUsers(users);
+
+        // Auto-login after registration
+        const session = {
+            userId: newUser.id,
+            name: newUser.name,
+            email: newUser.email
+        };
+        this.saveSession(session);
+        this.hideAuthModal();
+        this.updateUserUI(session);
+
+        if (this.onLoginSuccess) this.onLoginSuccess(session);
+    }
+
+    logout() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            this.clearSession();
+            this.userInfoBox.style.display = 'none';
+            this.showAuthModal();
+            if (this.onLogout) this.onLogout();
+        }
+    }
+
+    updateUserUI(session) {
+        if (session) {
+            this.userInfoBox.style.display = 'flex';
+            this.userNameDisplay.textContent = session.name;
+            this.userEmailDisplay.textContent = session.email;
+        } else {
+            this.userInfoBox.style.display = 'none';
+        }
+    }
+
+    /**
+     * Check auth status on app load
+     */
+    checkAuth() {
+        const session = this.getSession();
+        if (session) {
+            this.hideAuthModal();
+            this.updateUserUI(session);
+            return session;
+        } else {
+            this.showAuthModal();
+            return null;
+        }
+    }
+}
+
+/**
  * @class NoteApp
  * @description Core engine for novaStarPro. Handles note management, state, UI rendering, and security.
  */
@@ -6,9 +267,11 @@ class NoteApp {
     /**
      * @constructor
      * Initializes the application state, DOM references, and event listeners.
+     * @param {string|null} userId - The ID of the current logged-in user
      */
-    constructor() {
-        this.notes = JSON.parse(localStorage.getItem('novanotes_data')) || [];
+    constructor(userId = null) {
+        this.currentUserId = userId;
+        this.notes = this.loadUserNotes();
         this.activeNoteId = null;
         this.searchTerm = '';
 
@@ -794,7 +1057,43 @@ class NoteApp {
         this.noteCountText.textContent = `${count} ${count === 1 ? 'nota' : 'notas'}`;
     }
 
-    saveToStorage() { localStorage.setItem('novanotes_data', JSON.stringify(this.notes)); }
+    /**
+     * Get the storage key for the current user's notes
+     */
+    getNotesStorageKey() {
+        if (this.currentUserId) {
+            return `novanotes_data_${this.currentUserId}`;
+        }
+        return 'novanotes_data';
+    }
+
+    /**
+     * Load notes for the current user
+     */
+    loadUserNotes() {
+        const key = this.getNotesStorageKey();
+        return JSON.parse(localStorage.getItem(key)) || [];
+    }
+
+    /**
+     * Save notes to localStorage for the current user
+     */
+    saveToStorage() {
+        const key = this.getNotesStorageKey();
+        localStorage.setItem(key, JSON.stringify(this.notes));
+    }
+
+    /**
+     * Switch to a different user (reload notes)
+     */
+    switchUser(userId) {
+        this.currentUserId = userId;
+        this.notes = this.loadUserNotes();
+        this.activeNoteId = null;
+        this.setActiveNote(null);
+        this.renderNotesList();
+        this.updateStats();
+    }
 
     formatDate(iso) {
         const d = new Date(iso);
@@ -1138,10 +1437,34 @@ class NoteApp {
 }
 
 /**
- * Inicialización global del motor de novaStarPro
+ * Inicialización global del motor de novaStarPro con autenticación
  */
-const app = new NoteApp();
-window.app = app;
+let app = null;
+const auth = new AuthManager();
+
+// Check authentication status first
+const session = auth.checkAuth();
+
+if (session) {
+    // User is logged in - initialize app with their userId
+    app = new NoteApp(session.userId);
+    window.app = app;
+}
+
+// Handle login success - initialize app for the user
+auth.onLoginSuccess = (session) => {
+    app = new NoteApp(session.userId);
+    window.app = app;
+};
+
+// Handle logout - clear app reference
+auth.onLogout = () => {
+    app = null;
+    window.app = null;
+};
+
+// Make auth available globally
+window.auth = auth;
 
 // Registrar el motor de la App para Google (PWA)
 if ('serviceWorker' in navigator) {
