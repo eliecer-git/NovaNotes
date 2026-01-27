@@ -2268,7 +2268,14 @@ body.light-theme .user-info-box {
 
 .global-feedback-mini {
     display: flex;
+    align-items: center;
     gap: 6px;
+}
+
+.feedback-label-mini {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-right: 2px;
 }
 
 .btn-feedback-mini {
