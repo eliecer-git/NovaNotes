@@ -22,18 +22,18 @@
     --transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Light Theme */
+/* Light Theme - Pastel */
 body.light-theme {
-    --bg-dark: #f8fafc;
-    --sidebar-bg: #ffffff;
-    --editor-bg: #f1f5f9;
-    --text-primary: #1e293b;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --border-color: #e2e8f0;
-    --card-bg: rgba(255, 255, 255, 0.8);
-    --glass: rgba(0, 0, 0, 0.02);
-    --glass-border: rgba(0, 0, 0, 0.08);
+    --bg-dark: #fef7f0;
+    --sidebar-bg: #fefbf8;
+    --editor-bg: #fff9f5;
+    --text-primary: #3d3d3d;
+    --text-secondary: #6b6b6b;
+    --text-muted: #9a9a9a;
+    --border-color: #f0e6dd;
+    --card-bg: rgba(255, 250, 245, 0.9);
+    --glass: rgba(0, 0, 0, 0.01);
+    --glass-border: rgba(0, 0, 0, 0.05);
 }
 
 * {
