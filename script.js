@@ -294,9 +294,6 @@ class NoteApp {
 
         // Feedback Listeners
         this.initFeedback();
-
-        // Atajos de teclado
-        this.setupKeyboardShortcuts();
     }
 
     async initFeedback() {
@@ -1131,36 +1128,6 @@ class NoteApp {
         }
 
         setTimeout(() => this.saveStatus.textContent = '', 2000);
-    }
-
-    /**
-     * Configura atajos de teclado
-     */
-    setupKeyboardShortcuts() {
-        document.addEventListener('keydown', (e) => {
-            // Ctrl+S o Cmd+S - Guardar
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                this.saveActiveNote();
-            }
-            // Ctrl+N o Cmd+N - Nueva nota
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-                e.preventDefault();
-                this.createNewNote();
-            }
-            // Ctrl+P o Cmd+P - Fijar nota
-            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-                e.preventDefault();
-                this.togglePin();
-            }
-            // Escape - Cerrar modales
-            if (e.key === 'Escape') {
-                this.changePwdModal.hidden = true;
-                this.categoryModal.hidden = true;
-                this.masterLockModal.hidden = true;
-                this.infoModal.hidden = true;
-            }
-        });
     }
 
 }
