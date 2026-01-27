@@ -2490,3 +2490,34 @@ body.light-theme .btn-auth-secondary:hover {
     background: rgba(99, 102, 241, 0.1);
     border-color: #6366f1;
 }
+
+/* ======================== */
+/* Mobile Back Button Logic */
+/* ======================== */
+
+.btn-back-mobile {
+    display: none;
+    /* Oculto en default (Desktop) */
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px;
+    margin-right: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.btn-back-mobile:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* Mostrar solo en móvil */
+@media (max-width: 768px) {
+    .btn-back-mobile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
