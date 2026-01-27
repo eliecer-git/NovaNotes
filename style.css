@@ -119,7 +119,8 @@ body.light-theme .format-toolbar {
 }
 
 body.light-theme select,
-body.light-theme input[type="color"] {
+body.light-theme input[type="color"],
+body.light-theme .input-premium {
     background: #f5ecd0;
     border: 1px solid #c9b87a;
     color: #2d2a1f;
