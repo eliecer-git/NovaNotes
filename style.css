@@ -1462,88 +1462,112 @@ h2,
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     .app-container {
         flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
     }
 
     .sidebar {
         width: 100%;
-        height: auto;
-        max-height: 50vh;
-        /* Un poco más de aire */
+        height: 50vh;
+        flex: none;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        overflow-y: scroll !important;
-        /* Forzar barra de scroll */
+        overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
-        display: block;
-        /* Importante para que el scroll fluya bien */
+        display: flex;
+        flex-direction: column;
     }
 
     .sidebar-header {
-        padding: 16px;
-        gap: 12px;
+        padding: 12px 16px;
+        gap: 8px;
     }
 
     .notes-list-container {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .editor-container {
+        width: 100%;
+        height: 50vh;
         flex: none;
-        overflow-y: visible;
-        /* Dejar que el padre (sidebar) maneje el scroll */
-        max-height: none;
     }
 
     .sidebar-footer {
-        padding-bottom: 40px;
-        /* Para que los botones no queden al ras */
+        padding: 10px;
+        padding-bottom: 20px;
     }
 
     .editor-view {
-        padding: 20px 16px;
+        padding: 15px;
     }
 
     .format-toolbar {
-        overflow-x: auto;
-        max-width: 100%;
-        padding: 10px;
-        margin-right: 0;
-        background: rgba(30, 41, 59, 0.8);
-        border: 1px solid var(--accent);
-        /* Resaltar para que se vea */
-        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
-    }
-
-    /* Asegurar que el color picker se vea */
-    .color-picker-premium {
-        min-width: 28px;
-        min-height: 28px;
-    }
-
-    .editor-header {
-        height: auto;
-        padding: 12px;
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
-    }
-
-    .editor-actions {
         display: flex;
-        flex-direction: column;
-        gap: 10px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding: 10px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid var(--accent);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        scrollbar-width: thin;
+        min-height: 50px;
+        align-items: center;
     }
 
-    .input-title {
-        font-size: 1.75rem;
+    .format-toolbar>* {
+        flex-shrink: 0;
     }
 
-    .input-content {
-        font-size: 1rem;
+    .format-toolbar::-webkit-scrollbar {
+        height: 4px;
     }
 
-    .empty-illustration {
-        font-size: 4rem;
+    .format-toolbar::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 10px;
     }
+}
+}
+
+/* Asegurar que el color picker se vea */
+.color-picker-premium {
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.editor-header {
+    height: auto;
+    padding: 12px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.editor-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-title {
+    font-size: 1.75rem;
+}
+
+.input-content {
+    font-size: 1rem;
+}
+
+.empty-illustration {
+    font-size: 4rem;
+}
 
 
 }
