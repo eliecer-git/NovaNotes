@@ -77,6 +77,16 @@
                     <button id="new-note-btn" class="btn-primary" title="Nueva Nota">
                         <span class="icon">+</span> Nueva Nota
                     </button>
+                    <!-- Nuevo Botón Carpeta -->
+                    <button id="new-folder-btn" class="btn-icon-info" title="Nueva Carpeta">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                            </path>
+                            <line x1="12" y1="11" x2="12" y2="17"></line>
+                            <line x1="9" y1="14" x2="15" y2="14"></line>
+                        </svg>
+                    </button>
                     <button id="theme-toggle-btn" class="btn-icon-info" title="Cambiar Tema">
                         <span id="theme-icon">🌙</span>
                     </button>
@@ -89,6 +99,11 @@
                         </svg>
                     </button>
                 </div>
+            </div>
+
+            <!-- Barra de Navegación de Carpetas -->
+            <div id="folder-breadcrumb" class="folder-breadcrumb">
+                <span class="crumb-item" data-id="root">🏠 Inicio</span>
             </div>
 
             <!-- User Greeting (visible when logged in) -->
@@ -567,6 +582,20 @@
                 <p id="register-error" class="auth-error"></p>
                 <button id="register-submit-btn" class="btn-auth-primary">Crear Cuenta</button>
                 <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folder Modal -->
+    <div id="folder-modal" class="modal hidden" hidden>
+        <div class="modal-content glass">
+            <h3>Nueva Carpeta</h3>
+            <div class="input-group">
+                <input type="text" id="new-folder-input" class="bg-input" placeholder="Nombre de la carpeta...">
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-folder-btn" class="btn-text">Cancelar</button>
+                <button id="create-folder-confirm-btn" class="btn-primary">Crear Carpeta</button>
             </div>
         </div>
     </div>
