@@ -565,30 +565,7 @@ class NoteApp {
         this.contentFontSelect.onchange = (e) => this.updateFormat('contentFont', e.target.value);
         this.contentSizeSelect.onchange = (e) => this.updateFormat('contentSize', e.target.value);
         this.textColorPicker.oninput = (e) => this.updateFormat('textColor', e.target.value);
-        this.categorySelect.onchange = (e) => {
-            if (!this.activeNoteId) return;
-            if (e.target.value === 'custom') {
-                this.categoryModal.hidden = false;
-                this.customCategoryInput.value = '';
-                this.customCategoryInput.focus();
-                return;
-            }
-            const note = this.notes.find(n => n.id === this.activeNoteId);
-            if (note) {
-                note.category = e.target.value;
-                note.customCategory = null;
-                this.saveToStorage();
-                this.renderNotesList();
-            }
-        };
 
-        this.saveCustomCatBtn.onclick = () => this.saveCustomCategory();
-        this.closeCatBtn.onclick = () => {
-            this.categoryModal.hidden = true;
-            // Restaurar valor previo si cancela
-            const note = this.notes.find(n => n.id === this.activeNoteId);
-            this.categorySelect.value = note.category || 'personal';
-        };
 
         this.themeSelect.onchange = (e) => {
             if (!this.activeNoteId) return;
