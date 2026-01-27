@@ -27,6 +27,11 @@ class AuthManager {
         this.greetingName = document.getElementById('greeting-name');
         this.logoutBtn = document.getElementById('logout-btn');
 
+        this.authSelector = document.getElementById('auth-selector');
+        this.selectLoginBtn = document.getElementById('select-login-btn');
+        this.selectRegisterBtn = document.getElementById('select-register-btn');
+        this.backToSelectorBtns = document.querySelectorAll('.btn-auth-back');
+
         this.onLoginSuccess = null; // Callback when user logs in
         this.onLogout = null; // Callback when user logs out
 
@@ -59,6 +64,15 @@ class AuthManager {
 
         // Logout
         this.logoutBtn?.addEventListener('click', () => this.logout());
+
+        // Selector buttons
+        this.selectLoginBtn?.addEventListener('click', () => this.showLogin());
+        this.selectRegisterBtn?.addEventListener('click', () => this.showRegister());
+
+        // Back to selector
+        this.backToSelectorBtns.forEach(btn => {
+            btn.addEventListener('click', () => this.showAuthSelector());
+        });
 
         // Password visibility toggles
         document.querySelectorAll('.password-input-wrapper .btn-toggle-pwd').forEach(btn => {
@@ -115,7 +129,14 @@ class AuthManager {
         return this.getSession();
     }
 
+    showAuthSelector() {
+        this.authSelector.style.display = 'flex';
+        this.loginForm.style.display = 'none';
+        this.registerForm.style.display = 'none';
+    }
+
     showLogin() {
+        this.authSelector.style.display = 'none';
         this.loginForm.style.display = 'flex';
         this.registerForm.style.display = 'none';
         this.loginError.textContent = '';
@@ -124,6 +145,7 @@ class AuthManager {
     }
 
     showRegister() {
+        this.authSelector.style.display = 'none';
         this.loginForm.style.display = 'none';
         this.registerForm.style.display = 'flex';
         this.registerError.textContent = '';
@@ -135,7 +157,7 @@ class AuthManager {
 
     showAuthModal() {
         this.authModal.hidden = false;
-        this.showLogin();
+        this.showAuthSelector();
     }
 
     hideAuthModal() {

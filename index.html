@@ -462,8 +462,25 @@
                 <p class="auth-subtitle">Tu espacio personal de notas</p>
             </div>
 
+            <!-- Initial Selector -->
+            <div id="auth-selector" class="auth-selector">
+                <p class="auth-selector-text">Bienvenido a novaStarPro</p>
+                <div class="auth-selector-btns">
+                    <button id="select-login-btn" class="btn-auth-primary">Iniciar Sesión</button>
+                    <button id="select-register-btn" class="btn-auth-secondary">Regístrate</button>
+                </div>
+            </div>
+
             <!-- Login Form -->
-            <div id="login-form" class="auth-form">
+            <div id="login-form" class="auth-form" style="display: none;">
+                <button class="btn-auth-back" id="back-to-selector-login">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Volver
+                </button>
                 <div class="form-group">
                     <label for="login-email">Correo electrónico</label>
                     <input type="email" id="login-email" class="input-premium" placeholder="tu@email.com">
@@ -483,6 +500,14 @@
 
             <!-- Register Form -->
             <div id="register-form" class="auth-form" style="display: none;">
+                <button class="btn-auth-back" id="back-to-selector-register">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Volver
+                </button>
                 <div class="form-group">
                     <label for="register-name">Nombre</label>
                     <input type="text" id="register-name" class="input-premium" placeholder="Tu nombre...">
@@ -509,18 +534,17 @@
                             title="Mostrar/Ocultar">👁️</button>
                     </div>
                 </div>
+                <p id="register-error" class="auth-error"></p>
+                <button id="register-submit-btn" class="btn-auth-primary">Crear Cuenta</button>
+                <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
             </div>
-            <p id="register-error" class="auth-error"></p>
-            <button id="register-submit-btn" class="btn-auth-primary">Crear Cuenta</button>
-            <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
         </div>
-    </div>
     </div>
 
     <!-- Librería para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <script src="script.js?v=7.2"></script>
+    <script src="script.js?v=7.3"></script>
 </body>
 
 </html>
