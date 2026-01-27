@@ -1511,9 +1511,134 @@ h2,
     will-change: background-color, transform;
 }
 
-.mobile-menu-btn {
-    display: none;
+/* ======================== */
+/* FOLDER SYSTEM STYLES */
+/* ======================== */
+
+.sidebar-actions-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
 }
+
+.sidebar-actions-row .btn-primary,
+.sidebar-actions-row .btn-secondary-folder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition);
+}
+
+.btn-secondary-folder {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary-folder:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Breadcumb Home Focus */
+.crumb-item[data-id="root"] {
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 4px 10px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* Modal Creative & Centered */
+#folder-modal .modal-content {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-radius: 24px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Formatting Buttons matching Save Button (Accent) */
+.btn-icon-small {
+    background: var(--accent);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
+}
+
+.btn-icon-small:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4);
+}
+
+/* Delete Folder Button in Breadcrumb */
+.btn-delete-folder {
+    margin-left: auto;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete-folder:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* Move Note Modal List */
+.folder-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.folder-selection-item {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.folder-selection-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
 
 /* Mobile specific toolbar size */
 @media (max-width: 640px) {
