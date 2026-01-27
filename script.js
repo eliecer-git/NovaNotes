@@ -390,6 +390,7 @@ class NoteApp {
 
 
         this.saveStatus = document.getElementById('save-status');
+        this.mobileBackBtn = document.getElementById('mobile-back-btn');
 
         this.currentNoteFilter = 'public'; // 'public' o 'private'
         this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
@@ -601,6 +602,11 @@ class NoteApp {
 
         // Feedback Listeners
         this.initFeedback();
+
+        // Botón de atrás en móvil
+        if (this.mobileBackBtn) {
+            this.mobileBackBtn.onclick = () => this.setActiveNote(null);
+        }
     }
 
     async initFeedback() {
@@ -853,6 +859,7 @@ class NoteApp {
             this.deleteNoteBtn.hidden = true;
             this.saveNoteBtn.hidden = true;
             this.lastEditedText.textContent = 'Selecciona una nota para comenzar';
+            document.body.classList.remove('editor-screen-active');
             return;
         }
 
@@ -861,6 +868,7 @@ class NoteApp {
             // No permitir abrir notas privadas si el filtro es público (Seguridad extra)
             if (note.password && this.currentNoteFilter === 'public') return;
 
+            document.body.classList.add('editor-screen-active');
             this.activeNoteId = id;
             this.noteTitleInput.innerHTML = note.title;
             this.noteContentInput.innerHTML = note.content;

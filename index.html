@@ -163,6 +163,13 @@
         <main class="editor-container">
             <div class="editor-header">
                 <div class="editor-meta">
+                    <button id="mobile-back-btn" class="btn-back-mobile" title="Volver a la lista">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
                     <span id="last-edited" class="last-edited">Selecciona una nota para comenzar</span>
                     <span id="save-status" class="save-status"></span>
                 </div>
@@ -227,7 +234,7 @@
                         <div id="emoji-picker" class="emoji-picker glass" hidden>
                             <!-- Los emojis se cargarán aquí dinámicamente -->
                         </div>
-                        <button id="fullscreen-btn" class="btn-icon" title="Modo Pantalla Completa">
+                        <button id="fullscreen-btn" class="btn-icon desktop-only" title="Modo Pantalla Completa">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path
