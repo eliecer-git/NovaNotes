@@ -477,7 +477,11 @@
                 </div>
                 <div class="form-group">
                     <label for="login-password">Contraseña</label>
-                    <input type="password" id="login-password" class="input-premium" placeholder="Tu contraseña...">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="login-password" class="input-premium" placeholder="Tu contraseña...">
+                        <button type="button" class="btn-toggle-pwd" data-target="login-password"
+                            title="Mostrar/Ocultar">👁️</button>
+                    </div>
                 </div>
                 <p id="login-error" class="auth-error"></p>
                 <button id="login-submit-btn" class="btn-auth-primary">Iniciar Sesión</button>
@@ -496,25 +500,34 @@
                 </div>
                 <div class="form-group">
                     <label for="register-password">Contraseña</label>
-                    <input type="password" id="register-password" class="input-premium"
-                        placeholder="Mínimo 6 caracteres...">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="register-password" class="input-premium"
+                            placeholder="Mínimo 6 caracteres...">
+                        <button type="button" class="btn-toggle-pwd" data-target="register-password"
+                            title="Mostrar/Ocultar">👁️</button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="register-confirm">Confirmar contraseña</label>
-                    <input type="password" id="register-confirm" class="input-premium"
-                        placeholder="Repite la contraseña...">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="register-confirm" class="input-premium"
+                            placeholder="Repite la contraseña...">
+                        <button type="button" class="btn-toggle-pwd" data-target="register-confirm"
+                            title="Mostrar/Ocultar">👁️</button>
+                    </div>
                 </div>
-                <p id="register-error" class="auth-error"></p>
-                <button id="register-submit-btn" class="btn-auth-primary">Crear Cuenta</button>
-                <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
             </div>
+            <p id="register-error" class="auth-error"></p>
+            <button id="register-submit-btn" class="btn-auth-primary">Crear Cuenta</button>
+            <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
         </div>
+    </div>
     </div>
 
     <!-- Librería para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <script src="script.js?v=7.0"></script>
+    <script src="script.js?v=7.1"></script>
 </body>
 
 </html>

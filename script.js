@@ -60,6 +60,19 @@ class AuthManager {
 
         // Logout
         this.logoutBtn?.addEventListener('click', () => this.logout());
+
+        // Password visibility toggles
+        document.querySelectorAll('.password-input-wrapper .btn-toggle-pwd').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input) {
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    btn.textContent = isPassword ? '🙈' : '👁️';
+                }
+            });
+        });
     }
 
     /**
