@@ -511,7 +511,6 @@ class NoteApp {
 
         this.renderNotesList();
         this.updateStats();
-        this.initEmojiPicker();
 
         // Establecer estado vacío inicial (oculta toolbar, muestra emoji de bienvenida)
         this.setActiveNote(null);
@@ -781,22 +780,10 @@ class NoteApp {
         this.debouncedSaveAndRender();
     }
 
-    initEmojiPicker() {
-        const emojis = ['😀', '🥰', '🔥', '✨', '🚀', '💡', '🎨', '📝', '💻', '📱', '📸', '✅', '📍', '📅'];
-        this.emojiPicker.innerHTML = emojis.map(emoji => `<span class="emoji-item">${emoji}</span>`).join('');
-        this.emojiPicker.querySelectorAll('.emoji-item').forEach(item => {
-            item.onclick = (e) => { e.stopPropagation(); this.insertTextAtCursor(item.textContent); };
-        });
-    }
-
-    toggleEmojiPicker() {
-        this.emojiPicker.hidden = !this.emojiPicker.hidden;
-    }
-
+    // Emoji picker methods removed as requested
     insertTextAtCursor(text) {
         document.execCommand('insertText', false, text);
         this.debouncedSaveAndRender();
-        this.emojiPicker.hidden = true;
     }
 
     updateFormat(key, value) {
