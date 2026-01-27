@@ -23,9 +23,8 @@ class AuthManager {
         this.registerSubmitBtn = document.getElementById('register-submit-btn');
         this.showRegisterLink = document.getElementById('show-register');
         this.showLoginLink = document.getElementById('show-login');
-        this.userInfoBox = document.getElementById('user-info-box');
-        this.userNameDisplay = document.getElementById('user-name-display');
-        this.userEmailDisplay = document.getElementById('user-email-display');
+        this.userGreetingBox = document.getElementById('user-greeting-box');
+        this.greetingName = document.getElementById('greeting-name');
         this.logoutBtn = document.getElementById('logout-btn');
 
         this.onLoginSuccess = null; // Callback when user logs in
@@ -240,7 +239,7 @@ class AuthManager {
     logout() {
         if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
             this.clearSession();
-            this.userInfoBox.style.display = 'none';
+            this.userGreetingBox.style.display = 'none';
             this.showAuthModal();
             if (this.onLogout) this.onLogout();
         }
@@ -248,11 +247,10 @@ class AuthManager {
 
     updateUserUI(session) {
         if (session) {
-            this.userInfoBox.style.display = 'flex';
-            this.userNameDisplay.textContent = session.name;
-            this.userEmailDisplay.textContent = session.email;
+            this.userGreetingBox.style.display = 'flex';
+            this.greetingName.textContent = session.name;
         } else {
-            this.userInfoBox.style.display = 'none';
+            this.userGreetingBox.style.display = 'none';
         }
     }
 

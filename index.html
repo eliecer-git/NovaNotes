@@ -91,6 +91,23 @@
                 </div>
             </div>
 
+            <!-- User Greeting (visible when logged in) -->
+            <div id="user-greeting-box" class="user-greeting-box" style="display: none;">
+                <span class="greeting-wave">👋</span>
+                <div class="greeting-text">
+                    <span class="greeting-hello">Hola de nuevo,</span>
+                    <span id="greeting-name" class="greeting-name">Usuario</span>
+                </div>
+                <button id="logout-btn" class="btn-logout-small" title="Cerrar sesión">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+
             <div class="search-box">
                 <input type="text" id="search-input" placeholder="Buscar notas...">
             </div>
@@ -114,23 +131,6 @@
             </nav>
 
             <div class="sidebar-footer">
-                <!-- User Info Box -->
-                <div id="user-info-box" class="user-info-box" style="display: none;">
-                    <div class="user-avatar">👤</div>
-                    <div class="user-details">
-                        <span id="user-name-display" class="user-name">Usuario</span>
-                        <span id="user-email-display" class="user-email">email@ejemplo.com</span>
-                    </div>
-                    <button id="logout-btn" class="btn-logout" title="Cerrar sesión">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                    </button>
-                </div>
-
                 <button id="pwa-install-btn" class="btn-install" style="display: none;">
                     <span class="icon">📥</span> Instalar App
                 </button>
@@ -144,22 +144,14 @@
                     Cambiar contraseña
                 </button>
 
-
-                <div class="global-feedback">
-                    <p class="feedback-label">¿Te gusta novaStarPro?</p>
-                    <div class="feedback-btns">
-                        <button id="like-btn" class="btn-feedback" title="¡Me encanta!">
-                            <span class="icon">✨</span>
-                            <span id="like-count" hidden>0</span>
-                        </button>
-                        <button id="dislike-btn" class="btn-feedback" title="Puede mejorar">
-                            <span class="icon">✖️</span>
-                            <span id="dislike-count" hidden>0</span>
-                        </button>
+                <div class="footer-bottom-row">
+                    <div class="stats">
+                        <span id="note-count">0 notas</span>
                     </div>
-                </div>
-                <div class="stats">
-                    <span id="note-count">0 notas</span>
+                    <div class="global-feedback-mini">
+                        <button id="like-btn" class="btn-feedback-mini" title="¡Me encanta!">✨</button>
+                        <button id="dislike-btn" class="btn-feedback-mini" title="Puede mejorar">✖️</button>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -527,7 +519,7 @@
     <!-- Librería para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <script src="script.js?v=7.1"></script>
+    <script src="script.js?v=7.2"></script>
 </body>
 
 </html>
