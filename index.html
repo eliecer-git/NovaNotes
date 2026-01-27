@@ -99,6 +99,9 @@
                 <button id="filter-private-btn" class="filter-tab">
                     <span class="icon">🔒</span> Privadas
                 </button>
+                <button id="filter-trash-btn" class="filter-tab">
+                    <span class="icon">🗑️</span> Papelera
+                </button>
             </div>
 
             <nav class="notes-list-container">
@@ -252,6 +255,33 @@
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </button>
+                        <button id="pin-note-btn" class="btn-icon" title="Fijar Nota">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="17" x2="12" y2="22"></line>
+                                <path
+                                    d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z">
+                                </path>
+                            </svg>
+                        </button>
+                        <button id="export-pdf-btn" class="btn-icon" title="Exportar a PDF">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="12" y1="18" x2="12" y2="12"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                        </button>
+                        <button id="markdown-btn" class="btn-icon" title="Vista Markdown (MD)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                </path>
+                                <polyline points="7 15 10 12 7 9"></polyline>
+                                <line x1="14" y1="15" x2="17" y2="15"></line>
                             </svg>
                         </button>
 
@@ -422,7 +452,11 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.9"></script>
+    <!-- Librerías para PDF y Markdown -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script src="script.js?v=6.0"></script>
 </body>
 
 </html>

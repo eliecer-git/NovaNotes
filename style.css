@@ -1578,3 +1578,213 @@ h2,
     border-radius: 8px;
     border: 1px solid rgba(52, 211, 153, 0.2);
 }
+
+/* ======================== */
+/* Pinned Notes Styles */
+/* ======================== */
+
+.btn-pin {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-pin:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(1.05);
+}
+
+.btn-pin.pin-active {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1));
+    border-color: #fbbf24;
+    color: #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+}
+
+.btn-pin.pin-active:hover {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(245, 158, 11, 0.2));
+}
+
+/* Pinned note indicator in list */
+.note-item.pinned {
+    border-left: 3px solid #fbbf24;
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.05), transparent);
+}
+
+.note-item.pinned::before {
+    content: "📌";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* ======================== */
+/* Trash / Papelera Styles */
+/* ======================== */
+
+.note-item.trashed {
+    opacity: 0.7;
+    border-left: 3px solid #ef4444;
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.05), transparent);
+}
+
+.trash-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-restore,
+.btn-delete-permanent {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.btn-restore {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.1));
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.btn-restore:hover {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.3), rgba(16, 185, 129, 0.2));
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+}
+
+.btn-delete-permanent {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1));
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete-permanent:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2));
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+/* ======================== */
+/* PDF Export & Markdown Styles */
+/* ======================== */
+
+#export-pdf-btn:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1));
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+#markdown-btn.md-active {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.1));
+    border-color: #34d399;
+    color: #34d399;
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+}
+
+/* Markdown Preview Mode */
+.markdown-preview {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px dashed rgba(52, 211, 153, 0.3) !important;
+    border-radius: 12px;
+    padding: 25px !important;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4 {
+    color: var(--text-primary);
+    margin: 1em 0 0.5em;
+    font-weight: 600;
+}
+
+.markdown-preview h1 {
+    font-size: 2rem;
+}
+
+.markdown-preview h2 {
+    font-size: 1.6rem;
+}
+
+.markdown-preview h3 {
+    font-size: 1.3rem;
+}
+
+.markdown-preview p {
+    margin: 0.8em 0;
+    line-height: 1.7;
+}
+
+.markdown-preview code {
+    background: rgba(99, 102, 241, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9em;
+    color: #a78bfa;
+}
+
+.markdown-preview pre {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.markdown-preview pre code {
+    background: transparent;
+    padding: 0;
+}
+
+.markdown-preview blockquote {
+    border-left: 4px solid var(--accent);
+    padding-left: 15px;
+    margin: 1em 0;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+    padding-left: 25px;
+    margin: 0.8em 0;
+}
+
+.markdown-preview li {
+    margin: 0.4em 0;
+}
+
+.markdown-preview a {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.markdown-preview hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 1.5em 0;
+}

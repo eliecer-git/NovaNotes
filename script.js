@@ -67,6 +67,7 @@ class NoteApp {
         this.closeInfoBtn = document.getElementById('close-info-btn');
         this.filterPublicBtn = document.getElementById('filter-public-btn');
         this.filterPrivateBtn = document.getElementById('filter-private-btn');
+        this.filterTrashBtn = document.getElementById('filter-trash-btn');
         this.masterLockModal = document.getElementById('master-lock-modal');
         this.masterPwdInput = document.getElementById('master-password-input');
         this.unlockVaultBtn = document.getElementById('unlock-vault-btn');
@@ -84,6 +85,13 @@ class NoteApp {
         this.saveNewPwdBtn = document.getElementById('save-new-pwd-btn');
         this.changePwdError = document.getElementById('change-pwd-error');
         this.changePwdSuccess = document.getElementById('change-pwd-success');
+        // Pin note
+        this.pinNoteBtn = document.getElementById('pin-note-btn');
+        // Export PDF
+        this.exportPdfBtn = document.getElementById('export-pdf-btn');
+        // Markdown toggle
+        this.markdownBtn = document.getElementById('markdown-btn');
+        this.isMarkdownMode = false;
 
         this.saveStatus = document.getElementById('save-status');
 
@@ -250,6 +258,9 @@ class NoteApp {
         };
 
         this.lockNoteBtn.onclick = () => this.handleLockClick();
+        this.pinNoteBtn.onclick = () => this.togglePin();
+        this.exportPdfBtn.onclick = () => this.exportToPDF();
+        this.markdownBtn.onclick = () => this.toggleMarkdown();
         this.confirmPwdBtn.onclick = () => this.verifyPassword();
         this.closePwdBtn.onclick = () => this.passwordModal.hidden = true;
 
@@ -268,6 +279,7 @@ class NoteApp {
 
         this.filterPublicBtn.onclick = () => this.setFilter('public');
         this.filterPrivateBtn.onclick = () => this.enterPrivateVault();
+        this.filterTrashBtn.onclick = () => this.setFilter('trash');
 
         // Bloqueo de Enter en password maestro
         this.masterPwdInput.onkeydown = (e) => { if (e.key === 'Enter') this.verifyMasterPassword(); };
@@ -282,6 +294,9 @@ class NoteApp {
 
         // Feedback Listeners
         this.initFeedback();
+
+        // Atajos de teclado
+        this.setupKeyboardShortcuts();
     }
 
     async initFeedback() {
@@ -552,6 +567,7 @@ class NoteApp {
 
             this.applyTheme(note.theme || 'none', note.customBgColor);
             this.lockNoteBtn.classList.toggle('locked-active', !!note.password);
+            this.pinNoteBtn.classList.toggle('pin-active', !!note.pinned);
 
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
             this.applyFormat(note.styles);
@@ -628,8 +644,39 @@ class NoteApp {
 
     deleteNote() {
         if (!this.activeNoteId) return;
-        if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
-            this.notes = this.notes.filter(n => n.id !== this.activeNoteId);
+        if (confirm('¿Mover esta nota a la papelera?')) {
+            const note = this.notes.find(n => n.id === this.activeNoteId);
+            if (note) {
+                note.trashed = true;
+                note.trashedAt = new Date().toISOString();
+                this.saveToStorage();
+                this.setActiveNote(null);
+                this.renderNotesList();
+                this.updateStats();
+            }
+        }
+    }
+
+    /**
+     * Restaura una nota de la papelera
+     */
+    restoreNote(id) {
+        const note = this.notes.find(n => n.id === id);
+        if (note) {
+            note.trashed = false;
+            delete note.trashedAt;
+            this.saveToStorage();
+            this.renderNotesList();
+            this.updateStats();
+        }
+    }
+
+    /**
+     * Elimina permanentemente una nota
+     */
+    deletePermanently(id) {
+        if (confirm('¿Eliminar esta nota PERMANENTEMENTE? Esta acción no se puede deshacer.')) {
+            this.notes = this.notes.filter(n => n.id !== id);
             this.saveToStorage();
             this.setActiveNote(null);
             this.renderNotesList();
@@ -655,8 +702,23 @@ class NoteApp {
         // FILTRO MAESTRO: Mostrar solo lo que toca según la pestaña activa
         const filtered = filteredBySearch.filter(n => {
             const isLocked = !!n.password;
+            const isTrashed = !!n.trashed;
+
+            // Papelera: solo notas eliminadas
+            if (this.currentNoteFilter === 'trash') return isTrashed;
+
+            // Otras pestañas: excluir notas en papelera
+            if (isTrashed) return false;
+
             if (this.currentNoteFilter === 'private') return isLocked;
             return !isLocked;
+        });
+
+        // Ordenar: fijadas primero, luego por fecha
+        filtered.sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt) - new Date(a.updatedAt);
         });
 
         let html = '';
@@ -669,17 +731,28 @@ class NoteApp {
                 tareas: '✅ Tarea',
                 custom: `✨ ${note.customCategory || 'Otro'}`
             };
+            const pinIcon = note.pinned ? '<span class="pin-icon" title="Fijada">📌</span>' : '';
+
+            // Botones especiales para notas en papelera
+            const trashActions = note.trashed ? `
+                <div class="trash-actions">
+                    <button class="btn-restore" onclick="event.stopPropagation(); app.restoreNote('${note.id}')" title="Restaurar">♻️</button>
+                    <button class="btn-delete-permanent" onclick="event.stopPropagation(); app.deletePermanently('${note.id}')" title="Eliminar permanentemente">🗑️</button>
+                </div>
+            ` : '';
 
             html += `
-                <li class="note-item ${note.id === this.activeNoteId ? 'active' : ''}" 
+                <li class="note-item ${note.id === this.activeNoteId ? 'active' : ''} ${note.pinned ? 'pinned' : ''} ${note.trashed ? 'trashed' : ''}" 
                     data-id="${note.id}" 
                     onclick="app.setActiveNote('${note.id}')">
                     <div class="note-item-header">
+                        ${pinIcon}
                         <h3>${this.getRawText(note.title, 25) || 'Nota sin título'}</h3>
                         <span class="category-badge cat-${cat}">${catLabels[cat]}</span>
                     </div>
                     <p>${this.getRawText(note.content, 45)}</p>
                     <small>${this.formatDate(note.updatedAt)}</small>
+                    ${trashActions}
                 </li>
             `;
         });
@@ -806,6 +879,7 @@ class NoteApp {
         this.currentNoteFilter = filter;
         this.filterPublicBtn.classList.toggle('active', filter === 'public');
         this.filterPrivateBtn.classList.toggle('active', filter === 'private');
+        this.filterTrashBtn.classList.toggle('active', filter === 'trash');
 
         // Si volvemos a público, bloquear la bóveda de nuevo para seguridad
         if (filter === 'public') this.isVaultUnlocked = false;
@@ -950,6 +1024,143 @@ class NoteApp {
         setTimeout(() => {
             this.closeChangePwdModal();
         }, 1500);
+    }
+
+    /**
+     * Fija o desfija la nota activa
+     */
+    togglePin() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.pinned = !note.pinned;
+            this.pinNoteBtn.classList.toggle('pin-active', note.pinned);
+            this.saveToStorage();
+            this.renderNotesList();
+        }
+    }
+
+    /**
+     * Exporta la nota actual a PDF usando html2pdf.js
+     */
+    exportToPDF() {
+        if (!this.activeNoteId) {
+            alert('Selecciona una nota para exportar');
+            return;
+        }
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (!note) return;
+
+        // Crear elemento temporal para el PDF
+        const container = document.createElement('div');
+        container.style.cssText = `
+            font-family: 'Inter', sans-serif;
+            padding: 40px;
+            background: white;
+            color: #1a1a2e;
+            max-width: 800px;
+        `;
+
+        const title = note.title || 'Nota sin título';
+        const content = note.content || '';
+        const date = this.formatDate(note.updatedAt);
+
+        container.innerHTML = `
+            <h1 style="font-size: 28px; margin-bottom: 10px; color: #1a1a2e;">${title}</h1>
+            <p style="font-size: 12px; color: #666; margin-bottom: 30px;">Exportado: ${date}</p>
+            <div style="font-size: 14px; line-height: 1.8; color: #333;">${content}</div>
+            <hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;">
+            <p style="font-size: 10px; color: #999; margin-top: 15px;">Generado con novaStarPro</p>
+        `;
+
+        // Configuración de html2pdf
+        const opt = {
+            margin: [15, 15],
+            filename: `${this.getRawText(title, 30) || 'nota'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generar y descargar PDF
+        html2pdf().set(opt).from(container).save().then(() => {
+            this.saveStatus.textContent = '✅ PDF exportado';
+            setTimeout(() => this.saveStatus.textContent = '', 2000);
+        }).catch(err => {
+            console.error('Error exportando PDF:', err);
+            alert('Error al exportar el PDF');
+        });
+    }
+
+    /**
+     * Alterna entre modo edición y vista previa Markdown
+     */
+    toggleMarkdown() {
+        if (!this.activeNoteId) {
+            alert('Selecciona una nota para ver en Markdown');
+            return;
+        }
+
+        this.isMarkdownMode = !this.isMarkdownMode;
+        this.markdownBtn.classList.toggle('md-active', this.isMarkdownMode);
+
+        if (this.isMarkdownMode) {
+            // Guardar contenido original y mostrar Markdown renderizado
+            this._originalContent = this.noteContentInput.innerHTML;
+            const rawText = this.noteContentInput.innerText || this.noteContentInput.textContent;
+
+            // Renderizar Markdown usando marked.js
+            if (typeof marked !== 'undefined') {
+                const html = marked.parse(rawText);
+                this.noteContentInput.innerHTML = html;
+                this.noteContentInput.contentEditable = 'false';
+                this.noteContentInput.classList.add('markdown-preview');
+                this.saveStatus.textContent = '📖 Vista Markdown';
+            } else {
+                alert('Error: Librería Markdown no cargada');
+                this.isMarkdownMode = false;
+                return;
+            }
+        } else {
+            // Restaurar modo edición
+            this.noteContentInput.innerHTML = this._originalContent || this.noteContentInput.innerHTML;
+            this.noteContentInput.contentEditable = 'true';
+            this.noteContentInput.classList.remove('markdown-preview');
+            this.saveStatus.textContent = '✏️ Modo edición';
+        }
+
+        setTimeout(() => this.saveStatus.textContent = '', 2000);
+    }
+
+    /**
+     * Configura atajos de teclado
+     */
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+S o Cmd+S - Guardar
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.saveActiveNote();
+            }
+            // Ctrl+N o Cmd+N - Nueva nota
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                this.createNewNote();
+            }
+            // Ctrl+P o Cmd+P - Fijar nota
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                this.togglePin();
+            }
+            // Escape - Cerrar modales
+            if (e.key === 'Escape') {
+                this.changePwdModal.hidden = true;
+                this.categoryModal.hidden = true;
+                this.masterLockModal.hidden = true;
+                this.infoModal.hidden = true;
+            }
+        });
     }
 
 }
