@@ -65,6 +65,8 @@ class NoteApp {
         this.infoBtn = document.getElementById('info-btn');
         this.infoModal = document.getElementById('info-modal');
         this.closeInfoBtn = document.getElementById('close-info-btn');
+        this.themeToggleBtn = document.getElementById('theme-toggle-btn');
+        this.themeIcon = document.getElementById('theme-icon');
         this.filterPublicBtn = document.getElementById('filter-public-btn');
         this.filterPrivateBtn = document.getElementById('filter-private-btn');
         this.filterTrashBtn = document.getElementById('filter-trash-btn');
@@ -162,6 +164,10 @@ class NoteApp {
                 this.infoModal.classList.add('hidden');
             }
         };
+
+        // Theme Toggle
+        this.themeToggleBtn.onclick = () => this.toggleTheme();
+        this.initTheme();
 
         this.emojiBtn.onclick = (e) => { e.stopPropagation(); this.toggleEmojiPicker(); };
 
@@ -739,16 +745,22 @@ class NoteApp {
                 </div>
             ` : '';
 
+            // Resaltar texto si hay búsqueda activa
+            const titleText = this.getRawText(note.title, 25) || 'Nota sin título';
+            const contentText = this.getRawText(note.content, 45);
+            const highlightedTitle = this.highlightText(titleText, query);
+            const highlightedContent = this.highlightText(contentText, query);
+
             html += `
                 <li class="note-item ${note.id === this.activeNoteId ? 'active' : ''} ${note.pinned ? 'pinned' : ''} ${note.trashed ? 'trashed' : ''}" 
                     data-id="${note.id}" 
                     onclick="app.setActiveNote('${note.id}')">
                     <div class="note-item-header">
                         ${pinIcon}
-                        <h3>${this.getRawText(note.title, 25) || 'Nota sin título'}</h3>
+                        <h3>${highlightedTitle}</h3>
                         <span class="category-badge cat-${cat}">${catLabels[cat]}</span>
                     </div>
-                    <p>${this.getRawText(note.content, 45)}</p>
+                    <p>${highlightedContent}</p>
                     <small>${this.formatDate(note.updatedAt)}</small>
                     ${trashActions}
                 </li>
@@ -769,6 +781,16 @@ class NoteApp {
         return str.replace(/[&<>"']/g, m => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         })[m]);
+    }
+
+    /**
+     * Resalta el texto buscado en un string
+     */
+    highlightText(text, query) {
+        if (!query || query.trim() === '') return text;
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escaped})`, 'gi');
+        return text.replace(regex, '<mark class="search-highlight">$1</mark>');
     }
 
     updateStats() {
@@ -1094,7 +1116,28 @@ class NoteApp {
         });
     }
 
+    /**
+     * Inicializa el tema desde localStorage
+     */
+    initTheme() {
+        const savedTheme = localStorage.getItem('nova_theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            this.themeIcon.textContent = '☀️';
+        } else {
+            document.body.classList.remove('light-theme');
+            this.themeIcon.textContent = '🌙';
+        }
+    }
 
+    /**
+     * Alterna entre tema claro y oscuro
+     */
+    toggleTheme() {
+        const isLight = document.body.classList.toggle('light-theme');
+        this.themeIcon.textContent = isLight ? '☀️' : '🌙';
+        localStorage.setItem('nova_theme', isLight ? 'light' : 'dark');
+    }
 
 }
 

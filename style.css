@@ -1,5 +1,5 @@
 :root {
-    /* Color Palette */
+    /* Color Palette - Dark Mode (Default) */
     --bg-dark: #0a0b10;
     --sidebar-bg: #11131a;
     --editor-bg: #0d0f16;
@@ -20,6 +20,20 @@
 
     /* Transitions - Optimized from 'all' to specific properties */
     --transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Light Theme */
+body.light-theme {
+    --bg-dark: #f8fafc;
+    --sidebar-bg: #ffffff;
+    --editor-bg: #f1f5f9;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-color: #e2e8f0;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --glass: rgba(0, 0, 0, 0.02);
+    --glass-border: rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -1787,4 +1801,35 @@ h2,
     border: none;
     border-top: 1px solid var(--border-color);
     margin: 1.5em 0;
+}
+
+/* ======================== */
+/* Search Highlight */
+/* ======================== */
+
+.search-highlight {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #1a1a2e;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+/* Light theme adjustment for search highlight */
+body.light-theme .search-highlight {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+}
+
+/* ======================== */
+/* Theme Toggle Button */
+/* ======================== */
+
+#theme-toggle-btn {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+#theme-toggle-btn:hover {
+    transform: scale(1.1) rotate(15deg);
 }
