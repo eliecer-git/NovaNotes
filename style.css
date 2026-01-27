@@ -1550,9 +1550,11 @@ h2,
         overflow-x: auto;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
+        /* Quitamos restricciones para permitir scroll fluido */
         gap: 12px;
         padding: 12px;
+        padding-right: 40px;
+        /* Espacio extra al final */
         background: rgba(15, 23, 42, 0.9);
         border: 1px solid var(--accent);
         border-radius: 12px;
@@ -1560,8 +1562,7 @@ h2,
         scrollbar-width: thin;
         min-height: 50px;
         align-items: center;
-        user-select: none;
-        -webkit-user-select: none;
+        /* user-select eliminado para evitar bloqueos */
     }
 
     .format-toolbar>* {
