@@ -614,6 +614,12 @@ class NoteApp {
         // Feedback Listeners
         this.initFeedback();
 
+        // Formato de Texto
+        document.getElementById('btn-bold').onclick = () => this.applyTextFormat('bold');
+        document.getElementById('btn-italic').onclick = () => this.applyTextFormat('italic');
+        document.getElementById('btn-underline').onclick = () => this.applyTextFormat('underline');
+        document.getElementById('btn-list').onclick = () => this.applyTextFormat('insertUnorderedList');
+
         // Botón de atrás en móvil
         if (this.mobileBackBtn) {
             this.mobileBackBtn.onclick = () => this.setActiveNote(null);
@@ -770,6 +776,12 @@ class NoteApp {
 
     applySelectionColor(color) {
         document.execCommand('foreColor', false, color);
+        this.debouncedSaveAndRender();
+    }
+
+    applyTextFormat(command, value = null) {
+        this.noteContentInput.focus();
+        document.execCommand(command, false, value);
         this.debouncedSaveAndRender();
     }
 

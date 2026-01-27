@@ -1698,6 +1698,34 @@ h2,
         gap: 6px;
     }
 
+    /* Small Icon Buttons (Bold, Italic, etc) */
+    .btn-icon-small {
+        width: 36px;
+        height: 36px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        font-family: serif;
+        /* For B I U styling */
+        font-size: 1rem;
+    }
+
+    .btn-icon-small:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .btn-icon-small:active {
+        transform: scale(0.95);
+    }
+
     .btn-install,
     .btn-change-pwd {
         margin-bottom: 0 !important;

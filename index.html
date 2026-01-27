@@ -173,14 +173,30 @@
                 </div>
                 <div class="editor-actions">
                     <div class="format-toolbar" id="format-toolbar" hidden>
-                        <select id="category-select" class="select-premium category-picker"
-                            title="Categoría de la Nota">
-                            <option value="personal">📝 Personal</option>
-                            <option value="ideas">💡 Ideas</option>
-                            <option value="proyectos">🚀 Proyectos</option>
-                            <option value="tareas">✅ Tareas</option>
-                            <option value="custom">➕ Otro...</option>
+                        <select id="category-select" class="select-premium category-picker" title="Carpeta de la Nota">
+                            <option value="personal">� Personal</option>
+                            <option value="ideas">� Ideas</option>
+                            <option value="proyectos">� Proyectos</option>
+                            <option value="tareas">📂 Tareas</option>
+                            <option value="custom">➕ Nueva Carpeta...</option>
                         </select>
+                        <div class="divider"></div>
+                        <div class="format-btn-group" style="display: flex; gap: 5px;">
+                            <button id="btn-bold" class="btn-icon-small" title="Negrita"><b>B</b></button>
+                            <button id="btn-italic" class="btn-icon-small" title="Cursiva"><i>I</i></button>
+                            <button id="btn-underline" class="btn-icon-small" title="Subrayado"><u>U</u></button>
+                            <button id="btn-list" class="btn-icon-small" title="Lista">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
                         <div class="divider"></div>
                         <select id="title-font-select" class="select-premium" title="Fuente del Título">
                             <option value="Outfit, sans-serif">Outfit (Moderno)</option>
