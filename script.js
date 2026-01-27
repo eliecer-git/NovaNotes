@@ -197,6 +197,9 @@ class NoteApp {
         // Establecer estado vacío inicial (oculta toolbar, muestra emoji de bienvenida)
         this.setActiveNote(null);
 
+        // Ocultar botón de cambiar contraseña (solo visible en bóveda privada)
+        this.changePwdBtn.style.display = 'none';
+
         // Format listeners
         this.titleFontSelect.onchange = (e) => this.updateFormat('titleFont', e.target.value);
         this.titleSizeSelect.onchange = (e) => this.updateFormat('titleSize', e.target.value);
@@ -878,6 +881,9 @@ class NoteApp {
 
         // Si volvemos a público, bloquear la bóveda de nuevo para seguridad
         if (filter === 'public') this.isVaultUnlocked = false;
+
+        // Mostrar botón de cambiar contraseña solo en la bóveda privada
+        this.changePwdBtn.style.display = (filter === 'private') ? 'flex' : 'none';
 
         this.setActiveNote(null);
         this.renderNotesList();
