@@ -470,10 +470,22 @@ class NoteApp {
         this.themeToggleBtn.onclick = () => this.toggleTheme();
         this.initTheme();
 
-        this.emojiBtn.onclick = (e) => { e.stopPropagation(); this.toggleEmojiPicker(); };
+        // Mobile Menu Logic
+        this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        this.mobileMenuBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.toggleMobileMenu();
+        };
 
+        // Close mobile menu when clicking outside
         document.addEventListener('click', (e) => {
-            if (this.emojiPicker) this.emojiPicker.hidden = true;
+            if (this.formatToolbar.classList.contains('show') &&
+                !this.formatToolbar.contains(e.target) &&
+                e.target !== this.mobileMenuBtn &&
+                !this.mobileMenuBtn.contains(e.target)) {
+                this.formatToolbar.classList.remove('show');
+                this.mobileMenuBtn.classList.remove('active');
+            }
         });
 
         // Content Editable Events
@@ -818,6 +830,11 @@ class NoteApp {
     }
 
     syncSelect(select, value) { if (select.value !== value) select.value = value; }
+
+    toggleMobileMenu() {
+        this.formatToolbar.classList.toggle('show');
+        this.mobileMenuBtn.classList.toggle('active');
+    }
 
     toggleFullscreen() {
         this.appContainer.classList.toggle('fullscreen');
