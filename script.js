@@ -1092,20 +1092,105 @@ class NoteApp {
      * Renders the note list based on current filters and search terms.
      */
     renderNotesList() {
-        data - id="${note.id}"
-        onclick = "app.setActiveNote('${note.id}')" >
-                    <div class="note-item-header">
-                        ${pinIcon}
-                        <h3>${highlightedTitle}</h3>
-                        <span class="category-badge cat-${cat}">${catLabels[cat]}</span>
-                    </div>
-                    <p>${highlightedContent}</p>
-                    <small>${this.formatDate(note.updatedAt)}</small>
-                    ${ trashActions }
-                </li >
+        this.notesList.innerHTML = '';
+
+        // Filter logic
+        let filteredNotes = [];
+        let filteredFolders = [];
+
+        if (this.searchTerm) {
+            // Flat search (search everywhere)
+            filteredNotes = this.notes.filter(note =>
+                note.type !== 'folder' &&
+                (note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                    note.content.toLowerCase().includes(this.searchTerm.toLowerCase()))
+            );
+        } else {
+            // Hierarchy view
+            filteredNotes = this.notes.filter(n => n.type !== 'folder' && n.parentId === this.currentFolderId);
+            filteredFolders = this.notes.filter(n => n.type === 'folder' && n.parentId === this.currentFolderId);
+
+            if (this.currentNoteFilter === 'trash') {
+                filteredNotes = this.notes.filter(n => n.deleted);
+                filteredFolders = []; // Don't show folders in trash for simplicity yet
+            } else if (this.currentNoteFilter === 'private') {
+                filteredNotes = this.notes.filter(n => n.isPrivate && !n.deleted);
+            } else {
+                filteredNotes = filteredNotes.filter(n => !n.isPrivate && !n.deleted);
+                filteredFolders = filteredFolders.filter(n => !n.deleted);
+            }
+        }
+
+        // Render Folders First
+        filteredFolders.forEach(folder => {
+            const el = document.createElement('div');
+            el.className = 'note-item folder-item';
+            el.innerHTML = `
+                <div class="note-icon">📂</div>
+                <div class="note-info">
+                    <div class="note-title">${folder.title}</div>
+                    <div class="note-meta">Carpeta</div>
+                </div>
             `;
+            el.onclick = () => this.navigateToFolder(folder.id);
+            this.notesList.appendChild(el);
         });
-        this.notesList.innerHTML = html;
+
+        // Render Notes
+        filteredNotes.sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.timestamp || b.updatedAt) - new Date(a.timestamp || a.updatedAt);
+        });
+
+        filteredNotes.forEach(note => {
+            const noteEl = document.createElement('div');
+            noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''}`;
+            if (note.pinned) noteEl.classList.add('pinned');
+
+            // Extract plain text for preview
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = note.content;
+            const plainText = tempDiv.textContent || tempDiv.innerText || '';
+            const cat = note.category || (note.parentId ? 'Carpeta' : 'Personal'); // Fallback logic
+
+            noteEl.innerHTML = `
+                <div class="note-icon">${this.getCategoryIcon(cat)}</div>
+                <div class="note-info">
+                    <div class="note-title">${note.title || 'Nota sin título'} <span style="font-size:0.7em; opacity:0.6">${note.pinned ? '📌' : ''}</span></div>
+                    <div class="note-preview">${plainText.substring(0, 40) || 'Sin contenido adicional...'}</div>
+                    <div class="note-meta">
+                        <span>${this.formatDate(note.timestamp || note.updatedAt)}</span>
+                        <span>•</span>
+                        <span class="category-badge">${cat}</span>
+                    </div>
+                </div>
+            `;
+
+            if (this.currentNoteFilter === 'trash') {
+                const actions = document.createElement('div');
+                actions.className = 'trash-actions';
+                actions.innerHTML = `
+                   <button class="btn-restore" onclick="event.stopPropagation(); app.restoreNote(${note.id})">♻️ Restaurar</button>
+                   <button class="btn-delete-permanent" onclick="event.stopPropagation(); app.deletePermanently(${note.id})">🗑️ Borrar</button>
+                 `;
+                noteEl.querySelector('.note-info').appendChild(actions);
+            } else {
+                noteEl.onclick = () => this.setActiveNote(note.id);
+            }
+
+            this.notesList.appendChild(noteEl);
+        });
+
+        if (filteredNotes.length === 0 && filteredFolders.length === 0) {
+            this.notesList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-illustration">📂</div>
+                    <h3>Carpeta Vacía</h3>
+                    <p>Crea una nota o una subcarpeta aquí.</p>
+                </div>
+             `;
+        }
     }
 
     // Versión optimizada de extracción de texto sin crear elementos DOM pesados
@@ -1128,13 +1213,13 @@ class NoteApp {
     highlightText(text, query) {
         if (!query || query.trim() === '') return text;
         const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${ escaped })`, 'gi');
+        const regex = new RegExp(`(${escaped})`, 'gi');
         return text.replace(regex, '<mark class="search-highlight">$1</mark>');
     }
 
     updateStats() {
         const count = this.notes.length;
-        this.noteCountText.textContent = `${ count } ${ count === 1 ? 'nota' : 'notas' } `;
+        this.noteCountText.textContent = `${count} ${count === 1 ? 'nota' : 'notas'} `;
     }
 
     /**
@@ -1142,7 +1227,7 @@ class NoteApp {
      */
     getNotesStorageKey() {
         if (this.currentUserId) {
-            return `novanotes_data_${ this.currentUserId } `;
+            return `novanotes_data_${this.currentUserId} `;
         }
         return 'novanotes_data';
     }
@@ -1211,7 +1296,7 @@ class NoteApp {
             if (cls.startsWith('theme-')) this.editorView.classList.remove(cls);
         });
         if (theme && theme !== 'none') {
-            this.editorView.classList.add(`theme - ${ theme } `);
+            this.editorView.classList.add(`theme - ${theme} `);
             if (theme === 'custom' && customColor) {
                 this.editorView.style.setProperty('--custom-bg-color', customColor);
             } else {
@@ -1465,7 +1550,7 @@ class NoteApp {
         const date = this.formatDate(note.updatedAt);
 
         container.innerHTML = `
-            < h1 style = "font-size: 28px; margin-bottom: 10px; color: #1a1a2e;" > ${ title }</h1 >
+            < h1 style = "font-size: 28px; margin-bottom: 10px; color: #1a1a2e;" > ${title}</h1 >
             <p style="font-size: 12px; color: #666; margin-bottom: 30px;">Exportado: ${date}</p>
             <div style="font-size: 14px; line-height: 1.8; color: #333;">${content}</div>
             <hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;">
