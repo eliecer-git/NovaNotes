@@ -363,8 +363,6 @@ class NoteApp {
 
             document.getElementById('like-count').textContent = lCount;
             document.getElementById('dislike-count').textContent = dCount;
-            document.getElementById('stat-likes-count').textContent = `${lCount} votos`;
-            document.getElementById('stat-dislikes-count').textContent = `${dCount} reportes`;
 
             if (lData?.count !== undefined) localStorage.setItem('nstar_l', lCount);
             if (dData?.count !== undefined) localStorage.setItem('nstar_d', dCount);
@@ -374,8 +372,6 @@ class NoteApp {
             const d = localStorage.getItem('nstar_d') || 0;
             document.getElementById('like-count').textContent = l;
             document.getElementById('dislike-count').textContent = d;
-            document.getElementById('stat-likes-count').textContent = `${l} votos`;
-            document.getElementById('stat-dislikes-count').textContent = `${d} reportes`;
         }
     }
 
