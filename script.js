@@ -426,7 +426,11 @@ class NoteApp {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
-            this.installBtn.style.display = 'flex';
+            // Solo mostrar si NO es móvil (opcional, según requerimiento) o dejar que el navegador lo maneje en móvil
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (!isMobile) {
+                this.installBtn.style.display = 'flex';
+            }
         });
 
         this.installBtn.addEventListener('click', async () => {
@@ -657,8 +661,10 @@ class NoteApp {
             const lCount = lData?.count !== undefined ? parseInt(lData.count) : (parseInt(localStorage.getItem('nstar_l')) || 0);
             const dCount = dData?.count !== undefined ? parseInt(dData.count) : (parseInt(localStorage.getItem('nstar_d')) || 0);
 
-            document.getElementById('like-count').textContent = lCount;
-            document.getElementById('dislike-count').textContent = dCount;
+            const lEl = document.getElementById('like-count');
+            const dEl = document.getElementById('dislike-count');
+            if (lEl) lEl.textContent = lCount;
+            if (dEl) dEl.textContent = dCount;
 
             if (lData?.count !== undefined) localStorage.setItem('nstar_l', lCount);
             if (dData?.count !== undefined) localStorage.setItem('nstar_d', dCount);
@@ -666,8 +672,10 @@ class NoteApp {
             // Silencioso - usar datos locales
             const l = localStorage.getItem('nstar_l') || 0;
             const d = localStorage.getItem('nstar_d') || 0;
-            document.getElementById('like-count').textContent = l;
-            document.getElementById('dislike-count').textContent = d;
+            const lEl = document.getElementById('like-count');
+            const dEl = document.getElementById('dislike-count');
+            if (lEl) lEl.textContent = l;
+            if (dEl) dEl.textContent = d;
         }
     }
 
