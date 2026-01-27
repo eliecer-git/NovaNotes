@@ -1410,6 +1410,103 @@ h2,
     /* Mejora rendimiento de scroll */
 }
 
+/* ======================== */
+/* FOLDER SYSTEM STYLES */
+/* ======================== */
+
+.sidebar-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.btn-primary-icon,
+.btn-secondary-icon {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    font-size: 0.9rem;
+}
+
+.btn-primary-icon {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-secondary-icon {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-muted);
+}
+
+.folder-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-color);
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.folder-breadcrumb::-webkit-scrollbar {
+    display: none;
+}
+
+.crumb-item {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+}
+
+.crumb-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.crumb-separator {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    opacity: 0.5;
+}
+
+/* Updated Note List Items for Folders */
+.folder-item {
+    background: rgba(251, 191, 36, 0.05) !important;
+    border-left: 3px solid #fbbf24 !important;
+}
+
+.folder-item .note-icon {
+    color: #fbbf24 !important;
+}
+
+.folder-item:hover {
+    background: rgba(251, 191, 36, 0.1) !important;
+}
+
+
 .note-item {
     will-change: background-color, transform;
 }

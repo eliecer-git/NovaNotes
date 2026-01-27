@@ -395,6 +395,15 @@ class NoteApp {
         this.currentNoteFilter = 'public'; // 'public' o 'private'
         this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
         this.deferredPrompt = null;
+        this.currentFolderId = null; // null = root
+
+        // Folder System DOM
+        this.newFolderBtn = document.getElementById('new-folder-btn');
+        this.folderModal = document.getElementById('folder-modal');
+        this.newFolderInput = document.getElementById('new-folder-input');
+        this.createFolderConfirmBtn = document.getElementById('create-folder-confirm-btn');
+        this.cancelFolderBtn = document.getElementById('cancel-folder-btn');
+        this.folderBreadcrumb = document.getElementById('folder-breadcrumb');
 
         // Optimized Debouncing
         this.debouncedSaveAndRender = this.debounce(() => this.autoSave(true), 1500);
@@ -417,6 +426,37 @@ class NoteApp {
 
     init() {
         this.newNoteBtn.addEventListener('click', () => this.createNewNote());
+
+        // Folder System Listeners
+        this.newFolderBtn.addEventListener('click', () => {
+            this.folderModal.hidden = false;
+            this.folderModal.classList.remove('hidden');
+            this.newFolderInput.focus();
+        });
+
+        this.createFolderConfirmBtn.addEventListener('click', () => {
+            const name = this.newFolderInput.value.trim();
+            if (name) {
+                this.createNewFolder(name);
+                this.newFolderInput.value = '';
+                this.folderModal.hidden = true;
+                this.folderModal.classList.add('hidden');
+            }
+        });
+
+        this.cancelFolderBtn.addEventListener('click', () => {
+            this.folderModal.hidden = true;
+            this.folderModal.classList.add('hidden');
+        });
+
+        this.folderBreadcrumb.addEventListener('click', (e) => {
+            const item = e.target.closest('.crumb-item');
+            if (item) {
+                const id = item.dataset.id;
+                this.navigateToFolder(id === 'root' ? null : parseInt(id));
+            }
+        });
+
         this.deleteNoteBtn.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
         this.saveNoteBtn.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
@@ -1017,68 +1057,66 @@ class NoteApp {
         this.renderNotesList();
     }
 
+    createNewFolder(name) {
+        const newFolder = {
+            id: Date.now(),
+            title: name,
+            type: 'folder',
+            parentId: this.currentFolderId,
+            timestamp: new Date().toISOString()
+        };
+        this.notes.unshift(newFolder);
+        this.saveToStorage();
+        this.renderNotesList();
+        this.updateStats();
+    }
+
+    navigateToFolder(folderId) {
+        this.currentFolderId = folderId;
+        this.activeNoteId = null; // Deselect note when changing folder
+        this.updateBreadcrumb();
+        this.renderNotesList();
+        this.setActiveNote(null); // Clear editor
+    }
+
+    updateBreadcrumb() {
+        if (!this.currentFolderId) {
+            this.folderBreadcrumb.innerHTML = `<span class="crumb-item" data-id="root">🏠 Inicio</span>`;
+            return;
+        }
+
+        const path = this.getFolderPath(this.currentFolderId);
+        let html = `<span class="crumb-item" data-id="root">🏠 Inicio</span>`;
+
+        path.forEach(folder => {
+            html += `<span class="crumb-separator">/</span>
+                     <span class="crumb-item" data-id="${folder.id}">📂 ${folder.title}</span>`;
+        });
+
+        this.folderBreadcrumb.innerHTML = html;
+    }
+
+    getFolderPath(folderId) {
+        const path = [];
+        let currentId = folderId;
+        while (currentId) {
+            const folder = this.notes.find(n => n.id === currentId && n.type === 'folder');
+            if (folder) {
+                path.unshift(folder);
+                currentId = folder.parentId;
+            } else {
+                break;
+            }
+        }
+        return path;
+    }
+
     /**
      * Renders the note list based on current filters and search terms.
      */
     renderNotesList() {
-        const query = this.searchTerm.toLowerCase();
-        const filteredBySearch = this.notes.filter(n =>
-            n.title.toLowerCase().includes(query) ||
-            n.content.toLowerCase().includes(query)
-        );
-
-        // FILTRO MAESTRO: Mostrar solo lo que toca según la pestaña activa
-        const filtered = filteredBySearch.filter(n => {
-            const isLocked = !!n.password;
-            const isTrashed = !!n.trashed;
-
-            // Papelera: solo notas eliminadas
-            if (this.currentNoteFilter === 'trash') return isTrashed;
-
-            // Otras pestañas: excluir notas en papelera
-            if (isTrashed) return false;
-
-            if (this.currentNoteFilter === 'private') return isLocked;
-            return !isLocked;
-        });
-
-        // Ordenar: fijadas primero, luego por fecha
-        filtered.sort((a, b) => {
-            if (a.pinned && !b.pinned) return -1;
-            if (!a.pinned && b.pinned) return 1;
-            return new Date(b.updatedAt) - new Date(a.updatedAt);
-        });
-
-        let html = '';
-        filtered.forEach(note => {
-            const cat = note.category || 'personal';
-            const catLabels = {
-                personal: '📝 Personal',
-                ideas: '💡 Idea',
-                proyectos: '🚀 Proyecto',
-                tareas: '✅ Tarea',
-                custom: `✨ ${note.customCategory || 'Otro'}`
-            };
-            const pinIcon = note.pinned ? '<span class="pin-icon" title="Fijada">📌</span>' : '';
-
-            // Botones especiales para notas en papelera
-            const trashActions = note.trashed ? `
-                <div class="trash-actions">
-                    <button class="btn-restore" onclick="event.stopPropagation(); app.restoreNote('${note.id}')" title="Restaurar">♻️</button>
-                    <button class="btn-delete-permanent" onclick="event.stopPropagation(); app.deletePermanently('${note.id}')" title="Eliminar permanentemente">🗑️</button>
-                </div>
-            ` : '';
-
-            // Resaltar texto si hay búsqueda activa
-            const titleText = this.getRawText(note.title, 25) || 'Nota sin título';
-            const contentText = this.getRawText(note.content, 45);
-            const highlightedTitle = this.highlightText(titleText, query);
-            const highlightedContent = this.highlightText(contentText, query);
-
-            html += `
-                <li class="note-item ${note.id === this.activeNoteId ? 'active' : ''} ${note.pinned ? 'pinned' : ''} ${note.trashed ? 'trashed' : ''}" 
-                    data-id="${note.id}" 
-                    onclick="app.setActiveNote('${note.id}')">
+        data - id="${note.id}"
+        onclick = "app.setActiveNote('${note.id}')" >
                     <div class="note-item-header">
                         ${pinIcon}
                         <h3>${highlightedTitle}</h3>
@@ -1086,8 +1124,8 @@ class NoteApp {
                     </div>
                     <p>${highlightedContent}</p>
                     <small>${this.formatDate(note.updatedAt)}</small>
-                    ${trashActions}
-                </li>
+                    ${ trashActions }
+                </li >
             `;
         });
         this.notesList.innerHTML = html;
@@ -1113,13 +1151,13 @@ class NoteApp {
     highlightText(text, query) {
         if (!query || query.trim() === '') return text;
         const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${escaped})`, 'gi');
+        const regex = new RegExp(`(${ escaped })`, 'gi');
         return text.replace(regex, '<mark class="search-highlight">$1</mark>');
     }
 
     updateStats() {
         const count = this.notes.length;
-        this.noteCountText.textContent = `${count} ${count === 1 ? 'nota' : 'notas'}`;
+        this.noteCountText.textContent = `${ count } ${ count === 1 ? 'nota' : 'notas' } `;
     }
 
     /**
@@ -1127,7 +1165,7 @@ class NoteApp {
      */
     getNotesStorageKey() {
         if (this.currentUserId) {
-            return `novanotes_data_${this.currentUserId}`;
+            return `novanotes_data_${ this.currentUserId } `;
         }
         return 'novanotes_data';
     }
@@ -1196,7 +1234,7 @@ class NoteApp {
             if (cls.startsWith('theme-')) this.editorView.classList.remove(cls);
         });
         if (theme && theme !== 'none') {
-            this.editorView.classList.add(`theme-${theme}`);
+            this.editorView.classList.add(`theme - ${ theme } `);
             if (theme === 'custom' && customColor) {
                 this.editorView.style.setProperty('--custom-bg-color', customColor);
             } else {
@@ -1438,11 +1476,11 @@ class NoteApp {
         // Crear elemento temporal para el PDF
         const container = document.createElement('div');
         container.style.cssText = `
-            font-family: 'Inter', sans-serif;
-            padding: 40px;
-            background: white;
-            color: #1a1a2e;
-            max-width: 800px;
+        font - family: 'Inter', sans - serif;
+        padding: 40px;
+        background: white;
+        color: #1a1a2e;
+        max - width: 800px;
         `;
 
         const title = note.title || 'Nota sin título';
@@ -1450,7 +1488,7 @@ class NoteApp {
         const date = this.formatDate(note.updatedAt);
 
         container.innerHTML = `
-            <h1 style="font-size: 28px; margin-bottom: 10px; color: #1a1a2e;">${title}</h1>
+            < h1 style = "font-size: 28px; margin-bottom: 10px; color: #1a1a2e;" > ${ title }</h1 >
             <p style="font-size: 12px; color: #666; margin-bottom: 30px;">Exportado: ${date}</p>
             <div style="font-size: 14px; line-height: 1.8; color: #333;">${content}</div>
             <hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;">
