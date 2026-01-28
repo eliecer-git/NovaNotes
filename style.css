@@ -1107,6 +1107,10 @@ body.light-theme .sort-option:hover {
     border-color: var(--text-secondary);
 }
 
+margin: 4px 0;
+padding: 0;
+}
+
 .category-menu {
     position: absolute;
     top: calc(100% + 8px);
@@ -1124,6 +1128,8 @@ body.light-theme .sort-option:hover {
     flex-direction: column;
     gap: 2px;
     animation: fadeInScale 0.2s ease;
+    z-index: 9999;
+    /* Ensure high z-index */
 }
 
 .cat-option {
@@ -1803,9 +1809,12 @@ animation: fadeIn 0.4s ease;
 }
 
 /* Ocultar campos si está vacío */
-.editor-view.empty .editor-fields {
+/* Ocultar campos y barra si está vacío */
+.editor-view.empty .editor-fields,
+.editor-view.empty .format-toolbar {
     display: none !important;
 }
+
 
 /* Ocultar mensaje de bienvenida si NO está vacío */
 .editor-view:not(.empty) .empty-state {
