@@ -1603,206 +1603,202 @@ class NoteApp {
         this.voiceNoteBtn.title = "Dictar Texto";
     }
 
-        // Focus editor and append (or insert at cursor)
-        this.noteContentInput.focus();
-document.execCommand('insertHTML', false, playerHtml);
-this.debouncedSaveAndRender();
-    }
 
-// 3. Reminder Logic
-openReminderModal() {
-    if (!this.activeNoteId) return;
-    const note = this.notes.find(n => n.id === this.activeNoteId);
 
-    if (note.reminder) {
-        this.reminderDateInput.value = note.reminder;
-        this.deleteReminderBtn.style.display = 'block';
-        this.saveReminderBtn.textContent = 'Actualizar Recordatorio';
-    } else {
-        this.reminderDateInput.value = '';
-        this.deleteReminderBtn.style.display = 'none';
-        this.saveReminderBtn.textContent = 'Guardar Recordatorio';
-    }
+    // 3. Reminder Logic
+    openReminderModal() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
 
-    this.reminderModal.hidden = false;
-    this.reminderModal.classList.remove('hidden');
-}
-
-saveReminder() {
-    if (!this.activeNoteId) return;
-    const dateVal = this.reminderDateInput.value;
-    if (!dateVal) return;
-
-    const note = this.notes.find(n => n.id === this.activeNoteId);
-    note.reminder = dateVal;
-    note.reminderFired = false; // Reset fired status whenever updated
-
-    this.saveToStorage();
-    this.updateReminderUI(note);
-    this.reminderModal.hidden = true;
-    this.renderNotesList(); // Update sidebar badge
-}
-
-deleteReminder() {
-    if (!this.activeNoteId) return;
-    const note = this.notes.find(n => n.id === this.activeNoteId);
-    delete note.reminder;
-
-    this.saveToStorage();
-    this.updateReminderUI(note);
-    this.reminderModal.hidden = true;
-    this.renderNotesList();
-}
-
-updateReminderUI(note) {
-    // Check if there is already a reminder badge in the editor meta
-    const existingBadge = document.querySelector('.reminder-badge');
-    if (existingBadge) existingBadge.remove();
-
-    if (note && note.reminder) {
-        const date = new Date(note.reminder);
-        const fmtDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        const badge = document.createElement('div');
-        badge.className = 'reminder-badge';
-        if (note.reminderFired) badge.classList.add('expired'); // Optional styling
-        badge.innerHTML = `<span>⏰ ${fmtDate}</span>`;
-
-        // Insert before save status
-        const metaDiv = document.querySelector('.editor-meta');
-        metaDiv.insertBefore(badge, this.saveStatus);
-    }
-}
-
-// --- Alarm System Methods ---
-
-startReminderCheck() {
-    if (this.reminderInterval) clearInterval(this.reminderInterval);
-
-    // Check every 30 seconds
-    this.reminderInterval = setInterval(() => {
-        this.checkReminders();
-    }, 30000);
-}
-
-checkReminders() {
-    const now = new Date();
-    let changed = false;
-
-    this.notes.forEach(note => {
-        if (note.reminder && !note.reminderFired) {
-            const reminderTime = new Date(note.reminder);
-
-            // If the time has passed (or is now)
-            if (now >= reminderTime) {
-                this.triggerAlarm(note);
-                note.reminderFired = true;
-                changed = true;
-            }
+        if (note.reminder) {
+            this.reminderDateInput.value = note.reminder;
+            this.deleteReminderBtn.style.display = 'block';
+            this.saveReminderBtn.textContent = 'Actualizar Recordatorio';
+        } else {
+            this.reminderDateInput.value = '';
+            this.deleteReminderBtn.style.display = 'none';
+            this.saveReminderBtn.textContent = 'Guardar Recordatorio';
         }
-    });
 
-    if (changed) {
+        this.reminderModal.hidden = false;
+        this.reminderModal.classList.remove('hidden');
+    }
+
+    saveReminder() {
+        if (!this.activeNoteId) return;
+        const dateVal = this.reminderDateInput.value;
+        if (!dateVal) return;
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        note.reminder = dateVal;
+        note.reminderFired = false; // Reset fired status whenever updated
+
         this.saveToStorage();
+        this.updateReminderUI(note);
+        this.reminderModal.hidden = true;
+        this.renderNotesList(); // Update sidebar badge
+    }
+
+    deleteReminder() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        delete note.reminder;
+
+        this.saveToStorage();
+        this.updateReminderUI(note);
+        this.reminderModal.hidden = true;
         this.renderNotesList();
-        if (this.activeNoteId) this.renderActiveNote();
     }
-}
 
-triggerAlarm(note) {
-    // 1. Play Sound (Web Audio API - Beep)
-    this.playAlarmSound();
+    updateReminderUI(note) {
+        // Check if there is already a reminder badge in the editor meta
+        const existingBadge = document.querySelector('.reminder-badge');
+        if (existingBadge) existingBadge.remove();
 
-    // 2. System Notification (background/outside app)
-    if (Notification.permission === "granted") {
-        const notif = new Notification("⏰ Recordatorio de novaStarPro", {
-            body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
-            icon: 'icons/icon-192x192.png', // Ensure this path exists or uses default
-            requireInteraction: true
+        if (note && note.reminder) {
+            const date = new Date(note.reminder);
+            const fmtDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const badge = document.createElement('div');
+            badge.className = 'reminder-badge';
+            if (note.reminderFired) badge.classList.add('expired'); // Optional styling
+            badge.innerHTML = `<span>⏰ ${fmtDate}</span>`;
+
+            // Insert before save status
+            const metaDiv = document.querySelector('.editor-meta');
+            metaDiv.insertBefore(badge, this.saveStatus);
+        }
+    }
+
+    // --- Alarm System Methods ---
+
+    startReminderCheck() {
+        if (this.reminderInterval) clearInterval(this.reminderInterval);
+
+        // Check every 30 seconds
+        this.reminderInterval = setInterval(() => {
+            this.checkReminders();
+        }, 30000);
+    }
+
+    checkReminders() {
+        const now = new Date();
+        let changed = false;
+
+        this.notes.forEach(note => {
+            if (note.reminder && !note.reminderFired) {
+                const reminderTime = new Date(note.reminder);
+
+                // If the time has passed (or is now)
+                if (now >= reminderTime) {
+                    this.triggerAlarm(note);
+                    note.reminderFired = true;
+                    changed = true;
+                }
+            }
         });
-        notif.onclick = () => {
-            window.focus();
-            this.setActiveNote(note.id);
-        };
+
+        if (changed) {
+            this.saveToStorage();
+            this.renderNotesList();
+            if (this.activeNoteId) this.renderActiveNote();
+        }
     }
 
-    // 3. In-App Alert
-    alert(`⏰ ¡DING DING! \n\nRecordatorio: ${note.title || 'Nota'}`);
-}
+    triggerAlarm(note) {
+        // 1. Play Sound (Web Audio API - Beep)
+        this.playAlarmSound();
 
-playAlarmSound() {
-    try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
+        // 2. System Notification (background/outside app)
+        if (Notification.permission === "granted") {
+            const notif = new Notification("⏰ Recordatorio de novaStarPro", {
+                body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
+                icon: 'icons/icon-192x192.png', // Ensure this path exists or uses default
+                requireInteraction: true
+            });
+            notif.onclick = () => {
+                window.focus();
+                this.setActiveNote(note.id);
+            };
+        }
 
-        const ctx = new AudioContext();
-        const oscillators = [];
-
-        // Function to create a beep
-        const beep = (startTime, freq, duration) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-
-            gain.gain.setValueAtTime(0.1, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.start(startTime);
-            osc.stop(startTime + duration);
-        };
-
-        // Sequence: High High Low (Air horn style or simple alarm)
-        const now = ctx.currentTime;
-        beep(now, 880, 0.5);       // A5
-        beep(now + 0.6, 880, 0.5); // A5
-        beep(now + 1.2, 880, 0.8); // A5 Long
-
-    } catch (e) {
-        console.error("Audio play error", e);
+        // 3. In-App Alert
+        alert(`⏰ ¡DING DING! \n\nRecordatorio: ${note.title || 'Nota'}`);
     }
-}
 
+    playAlarmSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
 
+            const ctx = new AudioContext();
+            const oscillators = [];
 
-/**
- * Inicializa el tema desde localStorage
- */
-initTheme() {
-    const savedTheme = localStorage.getItem('nova_theme') || 'dark';
-    if (savedTheme === 'light') {
-        document.body.classList.add('light-theme');
-        this.themeIcon.textContent = '☀️';
-    } else {
-        document.body.classList.remove('light-theme');
-        this.themeIcon.textContent = '🌙';
+            // Function to create a beep
+            const beep = (startTime, freq, duration) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            };
+
+            // Sequence: High High Low (Air horn style or simple alarm)
+            const now = ctx.currentTime;
+            beep(now, 880, 0.5);       // A5
+            beep(now + 0.6, 880, 0.5); // A5
+            beep(now + 1.2, 880, 0.8); // A5 Long
+
+        } catch (e) {
+            console.error("Audio play error", e);
+        }
     }
-}
 
-/**
- * Alterna entre tema claro y oscuro
- */
 
-toggleTheme() {
-    const isLight = document.body.classList.toggle('light-theme');
-    this.themeIcon.textContent = isLight ? '☀️' : '🌙';
-    localStorage.setItem('nova_theme', isLight ? 'light' : 'dark');
-}
 
-getCategoryIcon(category) {
-    switch (category) {
-        case 'personal': return '👤';
-        case 'ideas': return '💡';
-        case 'proyectos': return '🚀';
-        case 'tareas': return '✅';
-        case 'custom': return '📂';
-        default: return '📝';
+    /**
+     * Inicializa el tema desde localStorage
+     */
+    initTheme() {
+        const savedTheme = localStorage.getItem('nova_theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            this.themeIcon.textContent = '☀️';
+        } else {
+            document.body.classList.remove('light-theme');
+            this.themeIcon.textContent = '🌙';
+        }
     }
-}
+
+    /**
+     * Alterna entre tema claro y oscuro
+     */
+
+    toggleTheme() {
+        const isLight = document.body.classList.toggle('light-theme');
+        this.themeIcon.textContent = isLight ? '☀️' : '🌙';
+        localStorage.setItem('nova_theme', isLight ? 'light' : 'dark');
+    }
+
+    getCategoryIcon(category) {
+        switch (category) {
+            case 'personal': return '👤';
+            case 'ideas': return '💡';
+            case 'proyectos': return '🚀';
+            case 'tareas': return '✅';
+            case 'custom': return '📂';
+            default: return '📝';
+        }
+    }
 }
 
 /**
