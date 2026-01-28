@@ -344,6 +344,7 @@ class NoteApp {
         this.selectionColorPicker = document.getElementById('selection-color-picker');
         this.appContainer = document.querySelector('.app-container');
         this.formatToolbar = document.getElementById('format-toolbar');
+        this.editorActions = document.querySelector('.editor-actions'); // Add this line
         this.categorySelect = document.getElementById('category-select');
         this.themeSelect = document.getElementById('theme-select');
         this.lockNoteBtn = document.getElementById('lock-note-btn');
@@ -435,11 +436,6 @@ class NoteApp {
         this.categoryMenu = document.getElementById('category-menu');
         this.currentCategoryText = document.getElementById('current-category-text');
         this.currentCategoryIcon = document.getElementById('current-category-icon');
-
-        this.categoryModal = document.getElementById('category-modal');
-        this.newCategoryInput = document.getElementById('new-category-input');
-        this.saveCategoryBtn = document.getElementById('save-category-btn');
-        this.closeCategoryBtn = document.getElementById('close-category-btn');
 
         this.noteColorBtn = document.getElementById('note-color-btn');
         this.noteColorMenu = document.getElementById('note-color-menu');
@@ -796,8 +792,8 @@ class NoteApp {
         }
 
         // Custom Category Modal Listeners
-        if (this.saveCategoryBtn) this.saveCategoryBtn.onclick = () => this.saveCustomCategory();
-        if (this.closeCategoryBtn) this.closeCategoryBtn.onclick = () => this.categoryModal.hidden = true;
+        if (this.saveCustomCatBtn) this.saveCustomCatBtn.onclick = () => this.saveCustomCategory();
+        if (this.closeCatBtn) this.closeCatBtn.onclick = () => this.categoryModal.hidden = true;
 
         // Media Listeners
         if (this.btnImage) this.btnImage.onclick = () => this.imageUploadInput.click();
@@ -1093,7 +1089,8 @@ class NoteApp {
             this.editorFields.hidden = true;
             this.emptyState.hidden = false;
             this.editorView.classList.add('empty');
-            this.formatToolbar.hidden = true;
+            // Hide entire toolbar container
+            if (this.editorActions) this.editorActions.style.display = 'none';
             this.deleteNoteBtn.hidden = true;
             this.saveNoteBtn.hidden = true;
             this.lastEditedText.textContent = 'Selecciona una nota para comenzar';
@@ -1108,6 +1105,9 @@ class NoteApp {
 
             document.body.classList.add('editor-screen-active');
             this.activeNoteId = id;
+
+            // Show toolbar
+            if (this.editorActions) this.editorActions.style.display = 'flex';
             this.noteTitleInput.innerHTML = note.title;
             this.noteContentInput.innerHTML = note.content;
 
@@ -1204,14 +1204,14 @@ class NoteApp {
     }
 
     openNewCategoryModal() {
-        this.newCategoryInput.value = '';
+        this.customCategoryInput.value = '';
         this.categoryModal.hidden = false;
         this.categoryModal.classList.remove('hidden');
-        this.newCategoryInput.focus();
+        this.customCategoryInput.focus();
     }
 
     saveCustomCategory() {
-        const val = this.newCategoryInput.value.trim();
+        const val = this.customCategoryInput.value.trim();
         if (val) {
             // Add to dropdown visually (optional, or just set it)
             // For now, simple set
