@@ -1081,12 +1081,19 @@ class NoteApp {
 
     updateBreadcrumb() {
         if (!this.currentFolderId) {
-            this.folderBreadcrumb.innerHTML = `<span class="crumb-item" data-id="root">🏠 Inicio</span>`;
+            this.folderBreadcrumb.innerHTML = '';
+            this.folderBreadcrumb.style.display = 'none'; // Hide container if empty
             return;
         }
 
+        this.folderBreadcrumb.style.display = 'flex'; // Ensure visible when not root
         const path = this.getFolderPath(this.currentFolderId);
-        let html = `<span class="crumb-item" data-id="root">🏠 Inicio</span>`;
+        let html = `<span class="crumb-item" data-id="root">⬅ Volver a inicio</span>`;
+
+        // Solo mostrar el nombre de la carpeta actual si se desea, o simplificar
+        // El usuario pidió "que diga volver a inicio", lo cual ya está.
+        // Mantenemos el path por utilidad pero si quieren simplificar más se puede quitar.
+        // Por ahora dejamos el path visual para que sepan donde están.
 
         path.forEach(folder => {
             html += `<span class="crumb-separator">/</span>
@@ -1229,7 +1236,7 @@ class NoteApp {
                 <div class="note-icon">📂</div>
                 <div class="note-info">
                     <div class="note-title">${folder.title}</div>
-                    <div class="note-meta">Carpeta</div>
+                    <div class="note-meta">Subcarpeta</div>
                 </div>
             `;
             el.onclick = () => this.navigateToFolder(folder.id);
@@ -1283,13 +1290,7 @@ class NoteApp {
         });
 
         if (filteredNotes.length === 0 && filteredFolders.length === 0) {
-            this.notesList.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-illustration">📂</div>
-                    <h3>Carpeta Vacía</h3>
-                    <p>Crea una nota o una subcarpeta aquí.</p>
-                </div>
-             `;
+            // Sin mensaje de estado vacío
         }
     }
 
