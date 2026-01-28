@@ -508,12 +508,22 @@
                 <button id="close-share-btn" class="btn-close">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: var(--text-secondary); margin-bottom: 15px;">Este enlace permite que cualquiera vea
-                    esta nota (Solo lectura).</p>
-                <div style="display: flex; gap: 8px;">
+                <p style="color: var(--text-secondary); margin-bottom: 5px;">Enlace de la nota:</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
                     <input type="text" id="share-link-input" class="input-premium" readonly style="flex: 1;">
                     <button id="copy-link-btn" class="btn-primary" style="padding: 10px 15px;">Copiar</button>
                 </div>
+
+                <p
+                    style="font-size: 0.8rem; color: #fbbf24; background: rgba(251, 191, 36, 0.1); padding: 8px; border-radius: 6px; margin-bottom: 20px;">
+                    ⚠️ Nota: Este enlace solo funcionará si la otra persona tiene acceso a tu dispositivo, ya que las
+                    notas se guardan localmente.
+                </p>
+
+                <button id="share-whatsapp-btn" class="btn-secondary"
+                    style="width: 100%; background: #25D366; border-color: #25D366; color: white;">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">📱</span> Enviar por WhatsApp
+                </button>
             </div>
         </div>
     </div>

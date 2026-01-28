@@ -635,6 +635,7 @@ class NoteApp {
         this.shareNoteBtn.onclick = () => this.openShareModal();
         this.closeShareBtn.onclick = () => this.shareModal.hidden = true;
         this.copyLinkBtn.onclick = () => this.copyShareLink();
+        document.getElementById('share-whatsapp-btn').onclick = () => this.shareToWhatsApp();
 
         this.voiceNoteBtn.onclick = () => this.toggleRecording();
 
@@ -1524,14 +1525,17 @@ class NoteApp {
     // --- Features Implementation ---
 
     // 1. Share Note Logic
+    // 1. Share Note Logic
     openShareModal() {
         if (!this.activeNoteId) return;
         const note = this.notes.find(n => n.id === this.activeNoteId);
         if (!note) return;
 
-        // Simulate a public link
-        const fakeLink = `https://novastar.pro/share/${note.id.substring(3)}`;
-        this.shareLinkInput.value = fakeLink;
+        // Usar la URL actual de la app (GitHub Pages o Localhost)
+        const baseUrl = window.location.href.split('?')[0].split('#')[0];
+        const shareUrl = `${baseUrl}?note=${note.id}`; // URL simulada por ahora
+
+        this.shareLinkInput.value = shareUrl;
         this.shareModal.hidden = false;
         this.shareModal.classList.remove('hidden');
     }
@@ -1541,6 +1545,15 @@ class NoteApp {
         document.execCommand('copy');
         this.copyLinkBtn.textContent = '¡Copiado!';
         setTimeout(() => this.copyLinkBtn.textContent = 'Copiar', 2000);
+    }
+
+    shareToWhatsApp() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+
+        const text = `*${note.title}*\n\n${this.getRawText(note.content, 500)}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(whatsappUrl, '_blank');
     }
 
     // 2. Voice Note Logic
