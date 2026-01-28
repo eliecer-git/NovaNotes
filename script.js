@@ -401,6 +401,25 @@ class NoteApp {
         this.debouncedSaveAndRender = this.debounce(() => this.autoSave(true), 1500);
         this.debouncedSelection = this.debounce(() => this.handleSelection(), 100);
 
+        // Features: Share, Voice, Reminder
+        this.shareNoteBtn = document.getElementById('share-note-btn');
+        this.shareModal = document.getElementById('share-modal');
+        this.closeShareBtn = document.getElementById('close-share-btn');
+        this.shareLinkInput = document.getElementById('share-link-input');
+        this.copyLinkBtn = document.getElementById('copy-link-btn');
+
+        this.voiceNoteBtn = document.getElementById('voice-note-btn');
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecording = false;
+
+        this.reminderBtn = document.getElementById('reminder-btn');
+        this.reminderModal = document.getElementById('reminder-modal');
+        this.closeReminderBtn = document.getElementById('close-reminder-btn');
+        this.reminderDateInput = document.getElementById('reminder-date-input');
+        this.saveReminderBtn = document.getElementById('save-reminder-btn');
+        this.deleteReminderBtn = document.getElementById('delete-reminder-btn');
+
         this.init();
     }
 
@@ -611,6 +630,19 @@ class NoteApp {
         if (this.mobileBackBtn) {
             this.mobileBackBtn.onclick = () => this.setActiveNote(null);
         }
+
+        // Feature Listeners
+        this.shareNoteBtn.onclick = () => this.openShareModal();
+        this.closeShareBtn.onclick = () => this.shareModal.hidden = true;
+        this.copyLinkBtn.onclick = () => this.copyShareLink();
+
+        this.voiceNoteBtn.onclick = () => this.toggleRecording();
+
+        this.reminderBtn.onclick = () => this.openReminderModal();
+        this.closeReminderBtn.onclick = () => this.reminderModal.hidden = true;
+        this.saveReminderBtn.onclick = () => this.saveReminder();
+        this.deleteReminderBtn.onclick = () => this.deleteReminder();
+
     }
 
     async initFeedback() {
@@ -794,6 +826,24 @@ class NoteApp {
             this.applyFormat(note.styles);
             this.saveToStorage();
         }
+    }
+
+    renderActiveNote() {
+        if (!this.activeNoteId) return;
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        this.noteTitleInput.innerText = note.title || ''; // Use innerText to avoid HTML in title
+        this.noteContentInput.innerHTML = note.content || '';
+
+        this.updateReminderUI(note);
+
+        // ... rest of rendering ...
+        this.applyFormat(note.styles);
+        this.applyTheme(note.theme || 'none', note.customBgColor);
+
+        // Update placeholders
+        this.updatePlaceholderState();
+        this.updateWordCount();
     }
 
     applyFormat(styles) {
@@ -1064,7 +1114,12 @@ class NoteApp {
             noteEl.innerHTML = `
                 <div class="note-icon">${this.getCategoryIcon(cat)}</div>
                 <div class="note-info">
-                    <div class="note-title">${note.title || 'Nota sin título'} <span style="font-size:0.7em; opacity:0.6">${note.pinned ? '📌' : ''}</span></div>
+                    <div class="note-title">
+                        ${note.title || 'Nota sin título'} 
+                        ${note.pinned ? '<span title="Fijada">📌</span>' : ''}
+                        ${note.reminder ? '<span title="Recordatorio">⏰</span>' : ''}
+                        ${note.isRecording ? '<span title="Nota de voz">🎤</span>' : ''} 
+                    </div>
                     <div class="note-preview">${plainText.substring(0, 40) || 'Sin contenido adicional...'}</div>
                     <div class="note-meta">
                         <span>${this.formatDate(note.timestamp || note.updatedAt)}</span>
@@ -1448,53 +1503,174 @@ class NoteApp {
      */
     exportToPDF() {
         if (!this.activeNoteId) {
-            alert('Selecciona una nota para exportar');
             return;
         }
 
         const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (!note) return;
-
-        // Crear elemento temporal para el PDF
-        const container = document.createElement('div');
-        container.style.cssText = `
-        font - family: 'Inter', sans - serif;
-        padding: 40px;
-        background: white;
-        color: #1a1a2e;
-        max - width: 800px;
-        `;
-
-        const title = note.title || 'Nota sin título';
-        const content = note.content || '';
-        const date = this.formatDate(note.updatedAt);
-
-        container.innerHTML = `
-            < h1 style = "font-size: 28px; margin-bottom: 10px; color: #1a1a2e;" > ${title}</h1 >
-            <p style="font-size: 12px; color: #666; margin-bottom: 30px;">Exportado: ${date}</p>
-            <div style="font-size: 14px; line-height: 1.8; color: #333;">${content}</div>
-            <hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;">
-            <p style="font-size: 10px; color: #999; margin-top: 15px;">Generado con novaStarPro</p>
-        `;
-
-        // Configuración de html2pdf
+        // Basic configuration
         const opt = {
-            margin: [15, 15],
-            filename: `${this.getRawText(title, 30) || 'nota'}.pdf`,
+            margin: 1,
+            filename: (note.title || 'nota').replace(/\s+/g, '_') + '.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
 
-        // Generar y descargar PDF
-        html2pdf().set(opt).from(container).save().then(() => {
-            this.saveStatus.textContent = '✅ PDF exportado';
-            setTimeout(() => this.saveStatus.textContent = '', 2000);
-        }).catch(err => {
-            console.error('Error exportando PDF:', err);
-            alert('Error al exportar el PDF');
-        });
+        // Select element to export
+        const element = document.getElementById('editor-view');
+        html2pdf().set(opt).from(element).save();
     }
+
+    // --- Features Implementation ---
+
+    // 1. Share Note Logic
+    openShareModal() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (!note) return;
+
+        // Simulate a public link
+        const fakeLink = `https://novastar.pro/share/${note.id.substring(3)}`;
+        this.shareLinkInput.value = fakeLink;
+        this.shareModal.hidden = false;
+        this.shareModal.classList.remove('hidden');
+    }
+
+    copyShareLink() {
+        this.shareLinkInput.select();
+        document.execCommand('copy');
+        this.copyLinkBtn.textContent = '¡Copiado!';
+        setTimeout(() => this.copyLinkBtn.textContent = 'Copiar', 2000);
+    }
+
+    // 2. Voice Note Logic
+    async toggleRecording() {
+        if (!this.isRecording) {
+            // Start Recording
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                this.mediaRecorder = new MediaRecorder(stream);
+                this.audioChunks = [];
+
+                this.mediaRecorder.ondataavailable = (event) => {
+                    this.audioChunks.push(event.data);
+                };
+
+                this.mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp3' }); // Basic container
+                    // Convert to Base64 to save in localStorage
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        const base64Audio = reader.result;
+                        this.insertAudioPlayer(base64Audio);
+                    };
+
+                    // Stop stream tracks
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                this.mediaRecorder.start();
+                this.isRecording = true;
+                this.voiceNoteBtn.classList.add('recording');
+                this.voiceNoteBtn.title = "Detener Grabación";
+
+                // Optional: Insert "Recording..." marker
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                alert("No se pudo acceder al micrófono.");
+            }
+        } else {
+            // Stop Recording
+            if (this.mediaRecorder) {
+                this.mediaRecorder.stop();
+            }
+            this.isRecording = false;
+            this.voiceNoteBtn.classList.remove('recording');
+            this.voiceNoteBtn.title = "Nota de Voz";
+        }
+    }
+
+    insertAudioPlayer(base64Src) {
+        // Create a unique ID for the player to avoid conflicts if needed
+        const playerId = 'audio-' + Date.now();
+        const playerHtml = `
+            <div class="custom-audio-player" contenteditable="false">
+                <span class="audio-icon">🎤</span>
+                <audio controls src="${base64Src}"></audio>
+            </div>
+            <div><br></div>
+        `;
+
+        // Focus editor and append (or insert at cursor)
+        this.noteContentInput.focus();
+        document.execCommand('insertHTML', false, playerHtml);
+        this.debouncedSaveAndRender();
+    }
+
+    // 3. Reminder Logic
+    openReminderModal() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+
+        if (note.reminder) {
+            this.reminderDateInput.value = note.reminder;
+            this.deleteReminderBtn.style.display = 'block';
+            this.saveReminderBtn.textContent = 'Actualizar Recordatorio';
+        } else {
+            this.reminderDateInput.value = '';
+            this.deleteReminderBtn.style.display = 'none';
+            this.saveReminderBtn.textContent = 'Guardar Recordatorio';
+        }
+
+        this.reminderModal.hidden = false;
+        this.reminderModal.classList.remove('hidden');
+    }
+
+    saveReminder() {
+        if (!this.activeNoteId) return;
+        const dateVal = this.reminderDateInput.value;
+        if (!dateVal) return;
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        note.reminder = dateVal;
+
+        this.saveToStorage();
+        this.updateReminderUI(note);
+        this.reminderModal.hidden = true;
+        this.renderNotesList(); // Update sidebar badge
+    }
+
+    deleteReminder() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        delete note.reminder;
+
+        this.saveToStorage();
+        this.updateReminderUI(note);
+        this.reminderModal.hidden = true;
+        this.renderNotesList();
+    }
+
+    updateReminderUI(note) {
+        // Check if there is already a reminder badge in the editor meta
+        const existingBadge = document.querySelector('.reminder-badge');
+        if (existingBadge) existingBadge.remove();
+
+        if (note && note.reminder) {
+            const date = new Date(note.reminder);
+            const fmtDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const badge = document.createElement('div');
+            badge.className = 'reminder-badge';
+            badge.innerHTML = `<span>⏰ ${fmtDate}</span>`;
+
+            // Insert before save status
+            const metaDiv = document.querySelector('.editor-meta');
+            metaDiv.insertBefore(badge, this.saveStatus);
+        }
+    }
+
 
     /**
      * Inicializa el tema desde localStorage
