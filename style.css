@@ -804,10 +804,307 @@ h2,
     width: 100vw;
     height: 100vh;
     background: #000;
+    z-index: 200000;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 200000;
+    color: white;
+}
+
+.master-lock-content {
+    text-align: center;
+    max-width: 400px;
+    padding: 40px;
+    animation: fadeIn 0.5s ease;
+}
+
+.lock-illustration {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.4));
+}
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.btn-toggle-pwd {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.1rem;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.btn-toggle-pwd:hover {
+    color: var(--accent);
+}
+
+.master-input {
+    width: 100%;
+    background: #111;
+    border-color: #333;
+    font-size: 1.1rem;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+.master-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* --- Nuevas Funcionalidades: Favoritos, Tags, Sort, Colores --- */
+
+/* Sort Select */
+.sort-container {
+    padding: 0 24px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sort-select {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.sort-select:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+body.light-theme .sort-select {
+    background-color: #f5ecd0;
+    border-color: #c9b87a;
+    color: #4a4637;
+}
+
+/* Star Icon in List */
+.note-star {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.2);
+    transition: transform 0.2s;
+    margin-right: 4px;
+}
+
+.note-star.active {
+    color: #fbbf24;
+    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4));
+    animation: popStar 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popStar {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.4);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Tags in List */
+.note-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.tag-pill {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+body.light-theme .tag-pill {
+    background: rgba(0, 0, 0, 0.05);
+    color: #6b6452;
+}
+
+/* Star Button in Toolbar */
+#star-note-btn.active svg {
+    fill: #fbbf24;
+    color: #fbbf24;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+}
+
+/* Tags Input Area in Editor */
+.tags-input-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 4px 10px 4px;
+    margin-bottom: 5px;
+    align-items: center;
+}
+
+.tag-chip {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    animation: fadeIn 0.2s;
+}
+
+.tag-chip .remove-tag {
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.tag-chip .remove-tag:hover {
+    opacity: 1;
+}
+
+.add-tag-input {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    min-width: 80px;
+    outline: none;
+}
+
+.add-tag-input::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Note Colors Palette (Dropdown or visual selector) */
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+}
+
+.color-swatch.active {
+    border-color: white;
+    transform: scale(1.1);
+}
+
+/* Note Item Color Variants (Subtle Backgrounds) */
+.note-item.color-red {
+    background: rgba(239, 68, 68, 0.15);
+    border-left: 3px solid #ef4444;
+}
+
+.note-item.color-orange {
+    background: rgba(249, 115, 22, 0.15);
+    border-left: 3px solid #f97316;
+}
+
+.note-item.color-yellow {
+    background: rgba(234, 179, 8, 0.15);
+    border-left: 3px solid #eab308;
+}
+
+.note-item.color-green {
+    background: rgba(34, 197, 94, 0.15);
+    border-left: 3px solid #22c55e;
+}
+
+.note-item.color-teal {
+    background: rgba(20, 184, 166, 0.15);
+    border-left: 3px solid #14b8a6;
+}
+
+.note-item.color-blue {
+    background: rgba(59, 130, 246, 0.15);
+    border-left: 3px solid #3b82f6;
+}
+
+.note-item.color-purple {
+    background: rgba(168, 85, 247, 0.15);
+    border-left: 3px solid #a855f7;
+}
+
+.note-item.color-pink {
+    background: rgba(236, 72, 153, 0.15);
+    border-left: 3px solid #ec4899;
+}
+
+body.light-theme .note-item.color-red {
+    background: rgba(254, 202, 202, 0.5);
+}
+
+body.light-theme .note-item.color-orange {
+    background: rgba(253, 218, 196, 0.5);
+}
+
+body.light-theme .note-item.color-yellow {
+    background: rgba(254, 240, 138, 0.5);
+}
+
+body.light-theme .note-item.color-green {
+    background: rgba(187, 247, 208, 0.5);
+}
+
+body.light-theme .note-item.color-teal {
+    background: rgba(153, 246, 228, 0.5);
+}
+
+body.light-theme .note-item.color-blue {
+    background: rgba(191, 219, 254, 0.5);
+}
+
+body.light-theme .note-item.color-purple {
+    background: rgba(233, 213, 255, 0.5);
+}
+
+body.light-theme .note-item.color-pink {
+    background: rgba(251, 207, 232, 0.5);
+}
+
+position: fixed;
+top: 0;
+left: 0;
+width: 100vw;
+height: 100vh;
+background: #000;
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 200000;
 }
 
 /* Audio Player Styling */
@@ -2961,6 +3258,7 @@ body.light-theme .btn-auth-secondary:hover {
         justify-content: center;
     }
 }
+
 /* Active State for Feature Buttons */
 .btn-icon.active {
     color: var(--accent);
@@ -2982,7 +3280,18 @@ body.light-theme .btn-auth-secondary:hover {
 }
 
 @keyframes pulse-recording {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
 }

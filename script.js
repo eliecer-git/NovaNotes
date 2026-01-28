@@ -417,6 +417,16 @@ class NoteApp {
         // Alarm System
         this.reminderInterval = null;
 
+        // New Feature Elements
+        this.sortSelect = document.getElementById('sort-select');
+        this.starBtn = document.getElementById('star-note-btn');
+        this.tagsContainer = document.getElementById('note-tags-container');
+        this.addTagInput = document.getElementById('add-tag-input');
+
+        this.noteColorBtn = document.getElementById('note-color-btn');
+        this.noteColorMenu = document.getElementById('note-color-menu');
+        this.colorSwatches = document.querySelectorAll('.color-swatch');
+
         this.init();
     }
 
@@ -642,7 +652,45 @@ class NoteApp {
         }
         this.startReminderCheck();
 
+        // New Feature Listeners
+        if (this.sortSelect) {
+            this.sortSelect.onchange = () => this.renderNotesList();
+        }
 
+        if (this.starBtn) {
+            this.starBtn.onclick = () => this.toggleFavorite();
+        }
+
+        if (this.noteColorBtn) {
+            this.noteColorBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.noteColorMenu.style.display = this.noteColorMenu.style.display === 'grid' ? 'none' : 'grid';
+            };
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!this.noteColorBtn.contains(e.target) && !this.noteColorMenu.contains(e.target)) {
+                    this.noteColorMenu.style.display = 'none';
+                }
+            });
+        }
+
+        this.colorSwatches.forEach(swatch => {
+            swatch.onclick = (e) => {
+                const color = e.target.getAttribute('data-color');
+                this.setNoteColor(color);
+                this.noteColorMenu.style.display = 'none';
+            };
+        });
+
+        if (this.addTagInput) {
+            this.addTagInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.addTag(this.addTagInput.value.trim());
+                    this.addTagInput.value = '';
+                }
+            };
+        }
     }
 
     async initFeedback() {
@@ -888,7 +936,10 @@ class NoteApp {
             content: '',
             updatedAt: new Date().toISOString(),
             category: 'personal',
-            styles: { ...this.DEFAULT_STYLES }
+            styles: { ...this.DEFAULT_STYLES },
+            isFavorite: false,
+            tags: [], // Array of strings
+            color: 'none' // 'none', 'red', 'blue', etc.
         };
         this.notes.unshift(newNote);
         this.saveToStorage();
@@ -918,7 +969,7 @@ class NoteApp {
 
         const note = this.notes.find(n => n.id === id);
         if (note) {
-            // No permitir abrir notas privadas si el filtro es público (Seguridad extra)
+            // No permitir abrir notas privadas si el filtro es público
             if (note.password && this.currentNoteFilter === 'public') return;
 
             document.body.classList.add('editor-screen-active');
@@ -926,13 +977,24 @@ class NoteApp {
             this.noteTitleInput.innerHTML = note.title;
             this.noteContentInput.innerHTML = note.content;
 
+            // Restore Note Color logic (Visual bg wrapper or border)
+            // If uses "theme" (Canva style) or "color" (Simple color). 
+            // We'll prioritize 'theme' if set, else 'color'.
             this.themeSelect.value = note.theme || 'none';
             this.bgColorPicker.style.display = note.theme === 'custom' ? 'block' : 'none';
             if (note.customBgColor) this.bgColorPicker.value = note.customBgColor;
-
             this.applyTheme(note.theme || 'none', note.customBgColor);
+
+            // New: Handle Note Color UI (Button active state)
+            this.updateColorUI(note.color || 'none');
+
             this.lockNoteBtn.classList.toggle('locked-active', !!note.password);
             this.pinNoteBtn.classList.toggle('pin-active', !!note.pinned);
+
+            // Start Update
+            this.starBtn.classList.toggle('active', !!note.isFavorite);
+            this.renderTagsInEditor(note.tags || []);
+            // End Update
 
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
             this.applyFormat(note.styles);
@@ -950,6 +1012,94 @@ class NoteApp {
             this.setActiveNote(null);
         }
         this.updateActiveNoteInList();
+    }
+
+    updateColorUI(color) {
+        // Reset swatches
+        this.colorSwatches.forEach(s => s.classList.remove('active'));
+        // Activate current
+        const current = this.noteColorMenu.querySelector(`[data-color="${color}"]`);
+        if (current) current.classList.add('active');
+
+        // Update button icon color maybe?
+        if (color !== 'none') {
+            this.noteColorBtn.style.color = this.getColorHex(color);
+        } else {
+            this.noteColorBtn.style.color = '';
+        }
+    }
+
+    getColorHex(colorName) {
+        const colors = {
+            'red': '#ef4444', 'orange': '#f97316', 'yellow': '#eab308',
+            'green': '#22c55e', 'teal': '#14b8a6', 'blue': '#3b82f6',
+            'purple': '#a855f7', 'pink': '#ec4899'
+        };
+        return colors[colorName] || 'var(--text-muted)';
+    }
+
+    renderTagsInEditor(tags) {
+        // Clear existing tags (except input)
+        const chips = this.tagsContainer.querySelectorAll('.tag-chip');
+        chips.forEach(c => c.remove());
+
+        // Insert new tags before input
+        tags.forEach(tag => {
+            const chip = document.createElement('div');
+            chip.className = 'tag-chip';
+            chip.innerHTML = `
+                #${tag} 
+                <span class="remove-tag" onclick="app.removeTag('${tag}')">×</span>
+            `;
+            this.tagsContainer.insertBefore(chip, this.addTagInput);
+        });
+    }
+
+    toggleFavorite() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.isFavorite = !note.isFavorite;
+            this.starBtn.classList.toggle('active', note.isFavorite);
+            this.saveToStorage();
+            this.renderNotesList(); // Re-render to show star in list
+        }
+    }
+
+    setNoteColor(color) {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.color = color;
+            this.updateColorUI(color);
+            this.saveToStorage();
+            this.renderNotesList();
+        }
+    }
+
+    addTag(tag) {
+        if (!tag || !this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            if (!note.tags) note.tags = [];
+            if (!note.tags.includes(tag)) {
+                note.tags.push(tag);
+                this.renderTagsInEditor(note.tags);
+                this.saveToStorage();
+                this.renderNotesList();
+            }
+        }
+    }
+
+    removeTag(tag) {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note && note.tags) {
+            note.tags = note.tags.filter(t => t !== tag);
+            this.renderTagsInEditor(note.tags);
+            this.saveToStorage();
+            this.renderNotesList();
+        }
     }
 
     updateActiveNoteInList() {
@@ -1102,10 +1252,30 @@ class NoteApp {
         }
 
         // Sort
+        const sortMode = this.sortSelect ? this.sortSelect.value : 'date-desc';
+
         filteredNotes.sort((a, b) => {
+            // Pinned always on top? Or controlled by sort?
+            // Usually pinned is always on top.
             if (a.pinned && !b.pinned) return -1;
             if (!a.pinned && b.pinned) return 1;
-            return new Date(b.timestamp || b.updatedAt) - new Date(a.timestamp || a.updatedAt);
+
+            switch (sortMode) {
+                case 'favorites':
+                    if (a.isFavorite && !b.isFavorite) return -1;
+                    if (!a.isFavorite && b.isFavorite) return 1;
+                    // Fallback to date
+                    return new Date(b.timestamp || b.updatedAt) - new Date(a.timestamp || a.updatedAt);
+                case 'name-asc':
+                    return (a.title || '').localeCompare(b.title || '');
+                case 'name-desc':
+                    return (b.title || '').localeCompare(a.title || '');
+                case 'date-asc':
+                    return new Date(a.timestamp || a.updatedAt) - new Date(b.timestamp || b.updatedAt);
+                case 'date-desc':
+                default:
+                    return new Date(b.timestamp || b.updatedAt) - new Date(a.timestamp || a.updatedAt);
+            }
         });
 
         if (filteredNotes.length === 0) {
@@ -1136,9 +1306,22 @@ class NoteApp {
 
         filteredNotes.forEach(note => {
             const noteEl = document.createElement('div');
-            noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''}`;
+            // Add color class if present
+            const colorClass = note.color && note.color !== 'none' ? `color-${note.color}` : '';
+            noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''} ${colorClass}`;
             noteEl.setAttribute('data-id', note.id);
             if (note.pinned) noteEl.classList.add('pinned');
+
+            // Build star HTML
+            const starHtml = `<span class="note-star ${note.isFavorite ? 'active' : ''}">★</span>`;
+
+            // Build Tags HTML
+            let tagsHtml = '';
+            if (note.tags && note.tags.length > 0) {
+                tagsHtml = `<div class="note-tags-list">
+                    ${note.tags.map(t => `<span class="tag-pill">#${t}</span>`).join('')}
+                </div>`;
+            }
 
             const plainText = this.getRawText(note.content);
             const cat = note.category || 'Personal';
@@ -1156,7 +1339,7 @@ class NoteApp {
                 <div class="note-icon">${this.getCategoryIcon(cat)}</div>
                 <div class="note-info">
                     <div class="note-title">
-                        ${displayTitle}
+                        ${starHtml} ${displayTitle}
                         ${note.pinned ? '<span title="Fijada">📌</span>' : ''}
                         ${note.reminder ? '<span title="Recordatorio">⏰</span>' : ''}
                         ${note.isRecording ? '<span title="Nota de voz">🎤</span>' : ''}
@@ -1167,6 +1350,7 @@ class NoteApp {
                         <span>•</span>
                         <span class="category-badge">${cat}</span>
                     </div>
+                    ${tagsHtml}
                 </div>
             `;
 
