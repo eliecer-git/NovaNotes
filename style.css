@@ -1016,6 +1016,29 @@ h2,
     /* Rojo para el rayo/feedback de mejora */
 }
 
+/* Gradient Small Button */
+.btn-gradient-small {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.btn-gradient-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 16px 24px;
