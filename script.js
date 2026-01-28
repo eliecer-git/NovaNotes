@@ -401,13 +401,7 @@ class NoteApp {
         this.debouncedSaveAndRender = this.debounce(() => this.autoSave(true), 1500);
         this.debouncedSelection = this.debounce(() => this.handleSelection(), 100);
 
-        // Features: Share, Voice, Reminder
-        this.shareNoteBtn = document.getElementById('share-note-btn');
-        this.shareModal = document.getElementById('share-modal');
-        this.closeShareBtn = document.getElementById('close-share-btn');
-        this.shareLinkInput = document.getElementById('share-link-input');
-        this.copyLinkBtn = document.getElementById('copy-link-btn');
-
+        // Features: Voice, Reminder
         this.voiceNoteBtn = document.getElementById('voice-note-btn');
         this.recognition = null;
         this.isDictating = false;
@@ -631,11 +625,6 @@ class NoteApp {
         }
 
         // Feature Listeners
-        this.shareNoteBtn.onclick = () => this.openShareModal();
-        this.closeShareBtn.onclick = () => this.shareModal.hidden = true;
-        this.copyLinkBtn.onclick = () => this.copyShareLink();
-        document.getElementById('share-whatsapp-btn').onclick = () => this.shareToWhatsApp();
-
         this.voiceNoteBtn.onclick = () => this.toggleRecording();
 
         this.reminderBtn.onclick = () => this.openReminderModal();
@@ -1523,201 +1512,187 @@ class NoteApp {
 
     // --- Features Implementation ---
 
-    // 1. Share Note Logic
-    // 1. Share Note Logic
-    openShareModal() {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (!note) return;
+    // 2. Voice Dictation Logic (Speech-to-Text)
+    toggleRecording() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert("Tu navegador no soporta el dictado por voz. Intenta usar Google Chrome.");
+            return;
+        }
 
-        // Usar la URL actual de la app (GitHub Pages o Localhost)
-        const baseUrl = window.location.href.split('?')[0].split('#')[0];
-        const shareUrl = `${baseUrl}?note=${note.id}`; // URL simulada por ahora
+        if (!this.recognition) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            this.recognition = new SpeechRecognition();
+            this.recognition.lang = 'es-ES';
+            this.recognition.continuous = true;
+            this.recognition.interimResults = false;
 
-        this.shareLinkInput.value = shareUrl;
-        this.shareModal.hidden = false;
-        this.shareModal.classList.remove('hidden');
-    }
+            this.recognition.onresult = (event) => {
+                const last = event.results.length - 1;
+                const text = event.results[last][0].transcript;
+                this.insertTextAtCursor(text + ' ');
+            };
 
-    copyShareLink() {
-        this.shareLinkInput.select();
-        document.execCommand('copy');
-        this.copyLinkBtn.textContent = '¡Copiado!';
-        setTimeout(() => this.copyLinkBtn.textContent = 'Copiar', 2000);
-    }
+            this.recognition.onerror = (event) => {
+                console.error("Error de dictado:", event.error);
+                this.stopDictation();
+            };
 
-    shareToWhatsApp() {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
+            this.recognition.onend = () => {
+                if (this.isDictating) {
+                    this.stopDictation();
+                }
+            };
+        }
 
-        const text = `*${note.title}*\n\n${this.getRawText(note.content, 500)}`;
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-        window.open(whatsappUrl, '_blank');
-    }
-
-    // 2. Voice Note Logic
-    async toggleRecording() {
-        if (!this.isRecording) {
-            // Start Recording
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                this.mediaRecorder = new MediaRecorder(stream);
-                this.audioChunks = [];
-
-                this.mediaRecorder.ondataavailable = (event) => {
-                    this.audioChunks.push(event.data);
-                };
-
-                this.mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp3' }); // Basic container
-                    // Convert to Base64 to save in localStorage
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob);
-                    reader.onloadend = () => {
-                        const base64Audio = reader.result;
-                        this.insertAudioPlayer(base64Audio);
-                    };
-
-                    // Stop stream tracks
-                    stream.getTracks().forEach(track => track.stop());
-                };
-
-                this.mediaRecorder.start();
-                this.isRecording = true;
-                this.voiceNoteBtn.classList.add('recording');
-                this.voiceNoteBtn.title = "Detener Grabación";
-
-                // Optional: Insert "Recording..." marker
-            } catch (err) {
-                console.error("Error accessing microphone:", err);
-                alert("No se pudo acceder al micrófono.");
-            }
+        if (this.isDictating) {
+            this.stopDictation();
         } else {
-            // Stop Recording
-            if (this.mediaRecorder) {
-                this.mediaRecorder.stop();
-            }
-            this.isRecording = false;
-            this.voiceNoteBtn.classList.remove('recording');
-            this.voiceNoteBtn.title = "Nota de Voz";
+            this.startDictation();
         }
     }
 
-    insertAudioPlayer(base64Src) {
-        // Create a unique ID for the player to avoid conflicts if needed
-        const playerId = 'audio-' + Date.now();
-        const playerHtml = `
-            <div class="custom-audio-player" contenteditable="false">
-                <span class="audio-icon">🎤</span>
-                <audio controls src="${base64Src}"></audio>
-            </div>
-            <div><br></div>
+    startDictation() {
+        try {
+            this.recognition.start();
+            this.isDictating = true;
+            this.voiceNoteBtn.classList.add('recording');
+            this.voiceNoteBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   <line x1="1" y1="1" x2="23" y2="23"></line>
+                   <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                   <line x1="12" y1="19" x2="12" y2="23"></line>
+                   <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            `;
+            this.voiceNoteBtn.title = "Detener Dictado";
+            this.noteContentInput.focus();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    stopDictation() {
+        if (this.recognition) {
+            this.recognition.stop();
+        }
+        this.isDictating = false;
+        this.voiceNoteBtn.classList.remove('recording');
+        this.voiceNoteBtn.innerHTML = `
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
         `;
+        this.voiceNoteBtn.title = "Dictar Texto";
+    }
 
         // Focus editor and append (or insert at cursor)
         this.noteContentInput.focus();
-        document.execCommand('insertHTML', false, playerHtml);
-        this.debouncedSaveAndRender();
+document.execCommand('insertHTML', false, playerHtml);
+this.debouncedSaveAndRender();
     }
 
-    // 3. Reminder Logic
-    openReminderModal() {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
+// 3. Reminder Logic
+openReminderModal() {
+    if (!this.activeNoteId) return;
+    const note = this.notes.find(n => n.id === this.activeNoteId);
 
-        if (note.reminder) {
-            this.reminderDateInput.value = note.reminder;
-            this.deleteReminderBtn.style.display = 'block';
-            this.saveReminderBtn.textContent = 'Actualizar Recordatorio';
-        } else {
-            this.reminderDateInput.value = '';
-            this.deleteReminderBtn.style.display = 'none';
-            this.saveReminderBtn.textContent = 'Guardar Recordatorio';
-        }
-
-        this.reminderModal.hidden = false;
-        this.reminderModal.classList.remove('hidden');
+    if (note.reminder) {
+        this.reminderDateInput.value = note.reminder;
+        this.deleteReminderBtn.style.display = 'block';
+        this.saveReminderBtn.textContent = 'Actualizar Recordatorio';
+    } else {
+        this.reminderDateInput.value = '';
+        this.deleteReminderBtn.style.display = 'none';
+        this.saveReminderBtn.textContent = 'Guardar Recordatorio';
     }
 
-    saveReminder() {
-        if (!this.activeNoteId) return;
-        const dateVal = this.reminderDateInput.value;
-        if (!dateVal) return;
+    this.reminderModal.hidden = false;
+    this.reminderModal.classList.remove('hidden');
+}
 
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        note.reminder = dateVal;
+saveReminder() {
+    if (!this.activeNoteId) return;
+    const dateVal = this.reminderDateInput.value;
+    if (!dateVal) return;
 
-        this.saveToStorage();
-        this.updateReminderUI(note);
-        this.reminderModal.hidden = true;
-        this.renderNotesList(); // Update sidebar badge
+    const note = this.notes.find(n => n.id === this.activeNoteId);
+    note.reminder = dateVal;
+
+    this.saveToStorage();
+    this.updateReminderUI(note);
+    this.reminderModal.hidden = true;
+    this.renderNotesList(); // Update sidebar badge
+}
+
+deleteReminder() {
+    if (!this.activeNoteId) return;
+    const note = this.notes.find(n => n.id === this.activeNoteId);
+    delete note.reminder;
+
+    this.saveToStorage();
+    this.updateReminderUI(note);
+    this.reminderModal.hidden = true;
+    this.renderNotesList();
+}
+
+updateReminderUI(note) {
+    // Check if there is already a reminder badge in the editor meta
+    const existingBadge = document.querySelector('.reminder-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (note && note.reminder) {
+        const date = new Date(note.reminder);
+        const fmtDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const badge = document.createElement('div');
+        badge.className = 'reminder-badge';
+        badge.innerHTML = `<span>⏰ ${fmtDate}</span>`;
+
+        // Insert before save status
+        const metaDiv = document.querySelector('.editor-meta');
+        metaDiv.insertBefore(badge, this.saveStatus);
     }
+}
 
-    deleteReminder() {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        delete note.reminder;
 
-        this.saveToStorage();
-        this.updateReminderUI(note);
-        this.reminderModal.hidden = true;
-        this.renderNotesList();
+/**
+ * Inicializa el tema desde localStorage
+ */
+initTheme() {
+    const savedTheme = localStorage.getItem('nova_theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        this.themeIcon.textContent = '☀️';
+    } else {
+        document.body.classList.remove('light-theme');
+        this.themeIcon.textContent = '🌙';
     }
+}
 
-    updateReminderUI(note) {
-        // Check if there is already a reminder badge in the editor meta
-        const existingBadge = document.querySelector('.reminder-badge');
-        if (existingBadge) existingBadge.remove();
+/**
+ * Alterna entre tema claro y oscuro
+ */
 
-        if (note && note.reminder) {
-            const date = new Date(note.reminder);
-            const fmtDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+toggleTheme() {
+    const isLight = document.body.classList.toggle('light-theme');
+    this.themeIcon.textContent = isLight ? '☀️' : '🌙';
+    localStorage.setItem('nova_theme', isLight ? 'light' : 'dark');
+}
 
-            const badge = document.createElement('div');
-            badge.className = 'reminder-badge';
-            badge.innerHTML = `<span>⏰ ${fmtDate}</span>`;
-
-            // Insert before save status
-            const metaDiv = document.querySelector('.editor-meta');
-            metaDiv.insertBefore(badge, this.saveStatus);
-        }
+getCategoryIcon(category) {
+    switch (category) {
+        case 'personal': return '👤';
+        case 'ideas': return '💡';
+        case 'proyectos': return '🚀';
+        case 'tareas': return '✅';
+        case 'custom': return '📂';
+        default: return '📝';
     }
-
-
-    /**
-     * Inicializa el tema desde localStorage
-     */
-    initTheme() {
-        const savedTheme = localStorage.getItem('nova_theme') || 'dark';
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-theme');
-            this.themeIcon.textContent = '☀️';
-        } else {
-            document.body.classList.remove('light-theme');
-            this.themeIcon.textContent = '🌙';
-        }
-    }
-
-    /**
-     * Alterna entre tema claro y oscuro
-     */
-
-    toggleTheme() {
-        const isLight = document.body.classList.toggle('light-theme');
-        this.themeIcon.textContent = isLight ? '☀️' : '🌙';
-        localStorage.setItem('nova_theme', isLight ? 'light' : 'dark');
-    }
-
-    getCategoryIcon(category) {
-        switch (category) {
-            case 'personal': return '👤';
-            case 'ideas': return '💡';
-            case 'proyectos': return '🚀';
-            case 'tareas': return '✅';
-            case 'custom': return '📂';
-            default: return '📝';
-        }
-    }
+}
 }
 
 /**
