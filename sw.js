@@ -1,4 +1,4 @@
-const CACHE_NAME = 'novastarpro-v17';
+const CACHE_NAME = 'novastarpro-v18';
 const ASSETS = [
     './',
     './index.html',

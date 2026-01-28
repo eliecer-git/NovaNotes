@@ -1090,11 +1090,25 @@ class NoteApp {
         });
 
         if (filteredNotes.length === 0) {
+            let emptyIcon = '📝';
+            let emptyTitle = 'No hay notas';
+            let emptyMsg = '¡Crea tu primera nota ahora!';
+
+            if (this.currentNoteFilter === 'trash') {
+                emptyIcon = '🗑️';
+                emptyTitle = 'Papelera vacía';
+                emptyMsg = 'No hay notas eliminadas';
+            } else if (this.searchTerm) {
+                emptyIcon = '🔍';
+                emptyTitle = 'Sin resultados';
+                emptyMsg = 'No se encontró nada con esa búsqueda';
+            }
+
             this.notesList.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-illustration">📝</div>
-                    <h3>No hay notas</h3>
-                    <p>¡Crea tu primera nota ahora!</p>
+                    <div class="empty-illustration">${emptyIcon}</div>
+                    <h3>${emptyTitle}</h3>
+                    <p>${emptyMsg}</p>
                 </div>
              `;
         }
