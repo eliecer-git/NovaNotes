@@ -1083,8 +1083,10 @@ body.light-theme .sort-option:hover {
 /* Category Dropdown (Pill Style) */
 .category-selector-wrapper {
     position: relative;
-    z-index: 45;
+    z-index: 500;
+    /* Increased to stay above other toolbar items */
 }
+
 
 .btn-category-pill {
     display: flex;
