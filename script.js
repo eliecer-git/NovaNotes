@@ -782,10 +782,13 @@ class NoteApp {
                 if (!option) return;
 
                 const val = option.getAttribute('data-value');
+                // Fix: Check if separator, if so ignore
+                if (option.classList.contains('separator')) return;
+
                 if (val === 'custom') {
                     this.categoryMenu.hidden = true;
                     this.openNewCategoryModal();
-                } else if (val && !option.classList.contains('separator')) {
+                } else if (val) {
                     this.setCategory(val);
                     this.categoryMenu.hidden = true;
                 }
