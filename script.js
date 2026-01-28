@@ -1067,6 +1067,15 @@ class NoteApp {
     /**
      * Renders the note list based on current filters and search terms.
      */
+    // --- Rendering Helpers for Search Highlighting ---
+
+    highlightText(text, query) {
+        if (!query) return text;
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+        return text.replace(regex, '<span class="search-highlight">$1</span>');
+    }
+
     renderNotesList() {
         this.notesList.innerHTML = '';
 
@@ -1075,7 +1084,7 @@ class NoteApp {
         if (this.searchTerm) {
             filteredNotes = this.notes.filter(note =>
             (note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                note.content.toLowerCase().includes(this.searchTerm.toLowerCase()))
+                this.getRawText(note.content).toLowerCase().includes(this.searchTerm.toLowerCase()))
             );
         } else {
             if (this.currentNoteFilter === 'trash') {
@@ -1099,28 +1108,60 @@ class NoteApp {
             return new Date(b.timestamp || b.updatedAt) - new Date(a.timestamp || a.updatedAt);
         });
 
+        if (filteredNotes.length === 0) {
+            let emptyIcon = '📝';
+            let emptyTitle = 'No hay notas';
+            let emptyMsg = '¡Crea tu primera nota ahora!';
+
+            if (this.currentNoteFilter === 'trash') {
+                emptyIcon = '🗑️';
+                emptyTitle = 'Papelera vacía';
+                emptyMsg = 'No hay notas eliminadas';
+            } else if (this.searchTerm) {
+                emptyIcon = '🔍';
+                emptyTitle = 'Sin resultados';
+                emptyMsg = 'No se encontró nada con esa búsqueda';
+            }
+
+            this.notesList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-illustration">${emptyIcon}</div>
+                    <h3>${emptyTitle}</h3>
+                    <p>${emptyMsg}</p>
+                </div>
+             `;
+            this.updateStats(); // Ensure stats are updated even if empty
+            return;
+        }
+
         filteredNotes.forEach(note => {
             const noteEl = document.createElement('div');
             noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''}`;
             noteEl.setAttribute('data-id', note.id);
             if (note.pinned) noteEl.classList.add('pinned');
 
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = note.content;
-            const plainText = tempDiv.textContent || tempDiv.innerText || '';
-            // If we removed folders, 'category' might be 'personal' default.
+            const plainText = this.getRawText(note.content);
             const cat = note.category || 'Personal';
+
+            // Highlight Logic
+            let displayTitle = note.title || 'Nota sin título';
+            let displayPreview = plainText.substring(0, 40) || 'Sin contenido adicional...';
+
+            if (this.searchTerm) {
+                displayTitle = this.highlightText(displayTitle, this.searchTerm);
+                displayPreview = this.highlightText(displayPreview, this.searchTerm);
+            }
 
             noteEl.innerHTML = `
                 <div class="note-icon">${this.getCategoryIcon(cat)}</div>
                 <div class="note-info">
                     <div class="note-title">
-                        ${note.title || 'Nota sin título'} 
+                        ${displayTitle}
                         ${note.pinned ? '<span title="Fijada">📌</span>' : ''}
                         ${note.reminder ? '<span title="Recordatorio">⏰</span>' : ''}
-                        ${note.isRecording ? '<span title="Nota de voz">🎤</span>' : ''} 
+                        ${note.isRecording ? '<span title="Nota de voz">🎤</span>' : ''}
                     </div>
-                    <div class="note-preview">${plainText.substring(0, 40) || 'Sin contenido adicional...'}</div>
+                    <div class="note-preview">${displayPreview}</div>
                     <div class="note-meta">
                         <span>${this.formatDate(note.timestamp || note.updatedAt)}</span>
                         <span>•</span>
