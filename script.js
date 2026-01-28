@@ -500,6 +500,12 @@ class NoteApp {
         // Prevent enter key in title
         this.noteTitleInput.onkeydown = (e) => { if (e.key === 'Enter') e.preventDefault(); };
 
+        this.noteTitleInput.oninput = () => {
+            this.updateSidebarCardPreview();
+            this.debouncedSaveAndRender();
+            this.updatePlaceholderState();
+        };
+
         this.noteContentInput.oninput = () => {
             this.updateSidebarCardPreview();
             this.debouncedSaveAndRender();
@@ -907,8 +913,17 @@ class NoteApp {
         if (!this.activeNoteId) return;
         const card = this.notesList.querySelector(`.note-item[data-id="${this.activeNoteId}"]`);
         if (card) {
-            card.querySelector('h3').textContent = this.noteTitleInput.innerText || 'Nota sin título';
-            card.querySelector('p').textContent = this.noteContentInput.innerText.substring(0, 50) || 'Sin contenido...';
+            const titleEl = card.querySelector('.note-title');
+            const previewEl = card.querySelector('.note-preview');
+            const titleText = this.noteTitleInput.innerText || 'Nota sin título';
+
+            // Preserve pin/icon if technically possible or just simple update
+            // For simplicity and robustness, we just update text. 
+            // Ideally we should just update the text node, but innerText write removes children.
+            // Let's rely on full re-render (debounced) for perfect structure, 
+            // and for immediate preview just update text to show responsiveness.
+            if (titleEl) titleEl.innerText = titleText;
+            if (previewEl) previewEl.innerText = this.noteContentInput.innerText.substring(0, 40) || 'Sin contenido adicional...';
         }
     }
 
@@ -1037,6 +1052,7 @@ class NoteApp {
         filteredNotes.forEach(note => {
             const noteEl = document.createElement('div');
             noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''}`;
+            noteEl.setAttribute('data-id', note.id);
             if (note.pinned) noteEl.classList.add('pinned');
 
             const tempDiv = document.createElement('div');
