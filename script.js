@@ -890,6 +890,7 @@ class NoteApp {
             title: '',
             content: '',
             updatedAt: new Date().toISOString(),
+            parentId: this.currentFolderId, // Assign current folder
             category: 'personal',
             styles: { ...this.DEFAULT_STYLES }
         };
