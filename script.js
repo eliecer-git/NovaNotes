@@ -403,12 +403,9 @@ class NoteApp {
 
         // Features: Voice, Reminder
         this.voiceNoteBtn = document.getElementById('voice-note-btn');
-        this.recognition = null;
-        this.isDictating = false;
-
-        this.voiceNoteBtn = document.getElementById('voice-note-btn');
-        this.recognition = null;
-        this.isDictating = false;
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecording = false;
 
         this.reminderBtn = document.getElementById('reminder-btn');
         this.reminderModal = document.getElementById('reminder-modal');
@@ -1526,81 +1523,62 @@ class NoteApp {
 
     // --- Features Implementation ---
 
-    // 2. Voice Dictation Logic (Speech-to-Text)
-    toggleRecording() {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            alert("Tu navegador no soporta el dictado por voz. Intenta usar Google Chrome.");
-            return;
-        }
+    // 2. Voice Note Logic (Audio Recording)
+    async toggleRecording() {
+        if (!this.isRecording) {
+            // Start Recording
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                this.mediaRecorder = new MediaRecorder(stream);
+                this.audioChunks = [];
 
-        if (!this.recognition) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            this.recognition = new SpeechRecognition();
-            this.recognition.lang = 'es-ES';
-            this.recognition.continuous = true;
-            this.recognition.interimResults = false;
+                this.mediaRecorder.ondataavailable = (event) => {
+                    this.audioChunks.push(event.data);
+                };
 
-            this.recognition.onresult = (event) => {
-                const last = event.results.length - 1;
-                const text = event.results[last][0].transcript;
-                this.insertTextAtCursor(text + ' ');
-            };
+                this.mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp3' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        const base64Audio = reader.result;
+                        this.insertAudioPlayer(base64Audio);
+                    };
+                    stream.getTracks().forEach(track => track.stop());
+                };
 
-            this.recognition.onerror = (event) => {
-                console.error("Error de dictado:", event.error);
-                this.stopDictation();
-            };
+                this.mediaRecorder.start();
+                this.isRecording = true;
+                this.voiceNoteBtn.classList.add('recording');
+                this.voiceNoteBtn.title = "Detener Grabación";
 
-            this.recognition.onend = () => {
-                if (this.isDictating) {
-                    this.stopDictation();
-                }
-            };
-        }
-
-        if (this.isDictating) {
-            this.stopDictation();
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                alert("No se pudo acceder al micrófono.");
+            }
         } else {
-            this.startDictation();
+            // Stop Recording
+            if (this.mediaRecorder) {
+                this.mediaRecorder.stop();
+            }
+            this.isRecording = false;
+            this.voiceNoteBtn.classList.remove('recording');
+            this.voiceNoteBtn.title = "Nota de Voz";
         }
     }
 
-    startDictation() {
-        try {
-            this.recognition.start();
-            this.isDictating = true;
-            this.voiceNoteBtn.classList.add('recording');
-            this.voiceNoteBtn.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                   <line x1="1" y1="1" x2="23" y2="23"></line>
-                   <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
-                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                   <line x1="12" y1="19" x2="12" y2="23"></line>
-                   <line x1="8" y1="23" x2="16" y2="23"></line>
-                </svg>
-            `;
-            this.voiceNoteBtn.title = "Detener Dictado";
-            this.noteContentInput.focus();
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    stopDictation() {
-        if (this.recognition) {
-            this.recognition.stop();
-        }
-        this.isDictating = false;
-        this.voiceNoteBtn.classList.remove('recording');
-        this.voiceNoteBtn.innerHTML = `
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-            </svg>
+    insertAudioPlayer(base64Src) {
+        const playerHtml = `
+            <div class="custom-audio-player" contenteditable="false">
+                <span class="audio-icon">🎤</span>
+                <audio controls src="${base64Src}"></audio>
+            </div>
+            <div><br></div>
         `;
-        this.voiceNoteBtn.title = "Dictar Texto";
+
+        this.noteContentInput.focus();
+        document.execCommand('insertHTML', false, playerHtml);
+        this.debouncedSaveAndRender();
     }
 
 
