@@ -424,9 +424,22 @@ class NoteApp {
         this.sortIconCurrent = document.querySelector('.sort-icon-current');
         this.currentSortValue = 'date-desc'; // Default
 
+        this.sortTextCurrent = document.getElementById('sort-text-current');
+        this.sortIconCurrent = document.querySelector('.sort-icon-current');
+        this.currentSortValue = 'date-desc'; // Default
+
         this.starBtn = document.getElementById('star-note-btn');
-        this.tagsContainer = document.getElementById('note-tags-container');
-        this.addTagInput = document.getElementById('add-tag-input');
+
+        // Category System (New)
+        this.categoryTriggerBtn = document.getElementById('category-trigger-btn');
+        this.categoryMenu = document.getElementById('category-menu');
+        this.currentCategoryText = document.getElementById('current-category-text');
+        this.currentCategoryIcon = document.getElementById('current-category-icon');
+
+        this.categoryModal = document.getElementById('category-modal');
+        this.newCategoryInput = document.getElementById('new-category-input');
+        this.saveCategoryBtn = document.getElementById('save-category-btn');
+        this.closeCategoryBtn = document.getElementById('close-category-btn');
 
         this.noteColorBtn = document.getElementById('note-color-btn');
         this.noteColorMenu = document.getElementById('note-color-menu');
@@ -724,15 +737,40 @@ class NoteApp {
             };
         });
 
-        if (this.addTagInput) {
-            this.addTagInput.onkeydown = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.addTag(this.addTagInput.value.trim());
-                    this.addTagInput.value = '';
+        // Category Menu Logic
+        if (this.categoryTriggerBtn) {
+            this.categoryTriggerBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.categoryMenu.hidden = !this.categoryMenu.hidden;
+            };
+
+            document.addEventListener('click', (e) => {
+                if (this.categoryMenu && !this.categoryMenu.hidden) {
+                    if (!this.categoryTriggerBtn.contains(e.target) && !this.categoryMenu.contains(e.target)) {
+                        this.categoryMenu.hidden = true;
+                    }
+                }
+            });
+
+            // Delegate events for category options (static & dynamic)
+            this.categoryMenu.onclick = (e) => {
+                const option = e.target.closest('.cat-option');
+                if (!option) return;
+
+                const val = option.getAttribute('data-value');
+                if (val === 'custom') {
+                    this.categoryMenu.hidden = true;
+                    this.openNewCategoryModal();
+                } else if (val && !option.classList.contains('separator')) {
+                    this.setCategory(val);
+                    this.categoryMenu.hidden = true;
                 }
             };
         }
+
+        // Custom Category Modal Listeners
+        if (this.saveCategoryBtn) this.saveCategoryBtn.onclick = () => this.saveCustomCategory();
+        if (this.closeCategoryBtn) this.closeCategoryBtn.onclick = () => this.categoryModal.hidden = true;
     }
 
     async initFeedback() {
@@ -977,10 +1015,9 @@ class NoteApp {
             title: '',
             content: '',
             updatedAt: new Date().toISOString(),
-            category: 'personal',
+            category: 'personal', // Default
             styles: { ...this.DEFAULT_STYLES },
             isFavorite: false,
-            tags: [], // Array of strings
             color: 'none' // 'none', 'red', 'blue', etc.
         };
         this.notes.unshift(newNote);
@@ -1035,7 +1072,7 @@ class NoteApp {
 
             // Start Update
             this.starBtn.classList.toggle('active', !!note.isFavorite);
-            this.renderTagsInEditor(note.tags || []);
+            this.updateCategoryUI(note.category || 'personal');
             // End Update
 
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
@@ -1080,69 +1117,55 @@ class NoteApp {
         return colors[colorName] || 'var(--text-muted)';
     }
 
-    renderTagsInEditor(tags) {
-        // Clear existing tags (except input)
-        const chips = this.tagsContainer.querySelectorAll('.tag-chip');
-        chips.forEach(c => c.remove());
+    updateCategoryUI(catValue) {
+        // Map common values to text/icon
+        const map = {
+            'personal': { text: 'Personal', icon: '👤' },
+            'trabajo': { text: 'Trabajo', icon: '💼' },
+            'estudio': { text: 'Estudio', icon: '🎓' },
+            'ideas': { text: 'Ideas', icon: '💡' },
+            'importante': { text: 'Importante', icon: '⚠️' }
+        };
 
-        // Insert new tags before input
-        tags.forEach(tag => {
-            const chip = document.createElement('div');
-            chip.className = 'tag-chip';
-            chip.innerHTML = `
-                #${tag} 
-                <span class="remove-tag" onclick="app.removeTag('${tag}')">×</span>
-            `;
-            this.tagsContainer.insertBefore(chip, this.addTagInput);
-        });
-    }
-
-    toggleFavorite() {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (note) {
-            note.isFavorite = !note.isFavorite;
-            this.starBtn.classList.toggle('active', note.isFavorite);
-            this.saveToStorage();
-            this.renderNotesList(); // Re-render to show star in list
+        let display = map[catValue];
+        if (!display) {
+            // Custom category fallback
+            display = { text: catValue.charAt(0).toUpperCase() + catValue.slice(1), icon: '📂' };
         }
+
+        this.currentCategoryText.textContent = display.text;
+        this.currentCategoryIcon.textContent = display.icon;
     }
 
-    setNoteColor(color) {
+    setCategory(catValue) {
         if (!this.activeNoteId) return;
         const note = this.notes.find(n => n.id === this.activeNoteId);
         if (note) {
-            note.color = color;
-            this.updateColorUI(color);
+            note.category = catValue;
+            this.updateCategoryUI(catValue);
             this.saveToStorage();
             this.renderNotesList();
         }
     }
 
-    addTag(tag) {
-        if (!tag || !this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (note) {
-            if (!note.tags) note.tags = [];
-            if (!note.tags.includes(tag)) {
-                note.tags.push(tag);
-                this.renderTagsInEditor(note.tags);
-                this.saveToStorage();
-                this.renderNotesList();
-            }
+    openNewCategoryModal() {
+        this.newCategoryInput.value = '';
+        this.categoryModal.hidden = false;
+        this.categoryModal.classList.remove('hidden');
+        this.newCategoryInput.focus();
+    }
+
+    saveCustomCategory() {
+        const val = this.newCategoryInput.value.trim();
+        if (val) {
+            // Add to dropdown visually (optional, or just set it)
+            // For now, simple set
+            this.setCategory(val);
+            this.categoryModal.hidden = true;
         }
     }
 
-    removeTag(tag) {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (note && note.tags) {
-            note.tags = note.tags.filter(t => t !== tag);
-            this.renderTagsInEditor(note.tags);
-            this.saveToStorage();
-            this.renderNotesList();
-        }
-    }
+    /* Tag methods removed */
 
     updateActiveNoteInList() {
         const items = this.notesList.querySelectorAll('.note-item');
@@ -1354,16 +1377,11 @@ class NoteApp {
             noteEl.setAttribute('data-id', note.id);
             if (note.pinned) noteEl.classList.add('pinned');
 
+
             // Build star HTML
             const starHtml = `<span class="note-star ${note.isFavorite ? 'active' : ''}">★</span>`;
 
-            // Build Tags HTML
-            let tagsHtml = '';
-            if (note.tags && note.tags.length > 0) {
-                tagsHtml = `<div class="note-tags-list">
-                    ${note.tags.map(t => `<span class="tag-pill">#${t}</span>`).join('')}
-                </div>`;
-            }
+            // Tags removed
 
             const plainText = this.getRawText(note.content);
             const cat = note.category || 'Personal';
@@ -1390,9 +1408,9 @@ class NoteApp {
                     <div class="note-meta">
                         <span>${this.formatDate(note.timestamp || note.updatedAt)}</span>
                         <span>•</span>
+                        <span>•</span>
                         <span class="category-badge">${cat}</span>
                     </div>
-                    ${tagsHtml}
                 </div>
             `;
 

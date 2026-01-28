@@ -256,18 +256,33 @@
                                     <line x1="3" y1="18" x2="3.01" y2="18"></line>
                                 </svg>
                             </button>
-                            <button id="btn-list" class="btn-icon-small" title="Lista">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </div>
+                        <div class="divider"></div>
+
+                        <!-- Category Dropdown -->
+                        <div class="category-selector-wrapper" style="position:relative; display: inline-block;">
+                            <button id="category-trigger-btn" class="btn-category-pill" title="Cambiar Categoría">
+                                <span id="current-category-icon">👤</span>
+                                <span id="current-category-text">Personal</span>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M6 9l6 6 6-6" />
                                 </svg>
                             </button>
+
+                            <div id="category-menu" class="category-menu glass" hidden>
+                                <div class="cat-option" data-value="personal">👤 Personal</div>
+                                <div class="cat-option" data-value="trabajo">💼 Trabajo</div>
+                                <div class="cat-option" data-value="estudio">🎓 Estudio</div>
+                                <div class="cat-option" data-value="ideas">💡 Ideas</div>
+                                <div class="cat-option" data-value="importante">⚠️ Importante</div>
+                                <div class="cat-option separator"></div>
+                                <div class="cat-option create-new" data-value="custom">
+                                    <span>➕</span> Crear nueva...
+                                </div>
+                            </div>
                         </div>
+
                         <div class="divider"></div>
                         <button id="star-note-btn" class="btn-icon" title="Marcar como Favorito">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -449,10 +464,6 @@
                 </div>
 
                 <div class="editor-fields" hidden>
-                    <div id="note-tags-container" class="tags-input-area">
-                        <!-- Tags injected by JS -->
-                        <input type="text" id="add-tag-input" class="add-tag-input" placeholder="+ Etiqueta">
-                    </div>
                     <div id="note-title" class="input-title" contenteditable="true"
                         data-placeholder="Título de la nota...">
                     </div>

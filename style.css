@@ -1029,6 +1029,98 @@ body.light-theme .sort-option:hover {
 }
 
 
+/* Category Dropdown (Pill Style) */
+.category-selector-wrapper {
+    position: relative;
+    z-index: 45;
+}
+
+.btn-category-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    /* More subtle background */
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    /* Pill shape */
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-category-pill:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--text-secondary);
+}
+
+.category-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    /* Little offset */
+    left: 0;
+    width: 200px;
+    /* Wider for options */
+    background: rgba(20, 20, 25, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    animation: fadeInScale 0.2s ease;
+}
+
+.cat-option {
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cat-option:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+}
+
+.cat-option.separator {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
+    padding: 0;
+}
+
+.cat-option.create-new {
+    color: var(--accent);
+    /* Highlight create new */
+    font-weight: 500;
+}
+
+.cat-option.create-new:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* Star Icon in List */
 .note-star {
     font-size: 1rem;
