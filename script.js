@@ -1289,9 +1289,7 @@ class NoteApp {
             this.notesList.appendChild(noteEl);
         });
 
-        if (filteredNotes.length === 0 && filteredFolders.length === 0) {
-            // Sin mensaje de estado vacío
-        }
+
     }
 
     // Versión optimizada de extracción de texto sin crear elementos DOM pesados
@@ -1397,7 +1395,7 @@ class NoteApp {
             if (cls.startsWith('theme-')) this.editorView.classList.remove(cls);
         });
         if (theme && theme !== 'none') {
-            this.editorView.classList.add(`theme - ${theme} `);
+            this.editorView.classList.add(`theme-${theme}`);
             if (theme === 'custom' && customColor) {
                 this.editorView.style.setProperty('--custom-bg-color', customColor);
             } else {

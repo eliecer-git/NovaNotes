@@ -1587,17 +1587,24 @@ h2,
 }
 
 /* Formatting Buttons matching Save Button (Accent) */
+/* Formatting Buttons - Glass Style */
 .btn-icon-small {
-    background: var(--accent);
-    color: white;
-    border: none;
-    box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
 }
 
 .btn-icon-small:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Delete Folder Button in Breadcrumb */
