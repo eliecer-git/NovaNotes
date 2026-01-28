@@ -409,9 +409,8 @@ class NoteApp {
         this.copyLinkBtn = document.getElementById('copy-link-btn');
 
         this.voiceNoteBtn = document.getElementById('voice-note-btn');
-        this.mediaRecorder = null;
-        this.audioChunks = [];
-        this.isRecording = false;
+        this.recognition = null;
+        this.isDictating = false;
 
         this.reminderBtn = document.getElementById('reminder-btn');
         this.reminderModal = document.getElementById('reminder-modal');
