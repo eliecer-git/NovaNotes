@@ -128,13 +128,47 @@
             </div>
 
             <div class="sort-container">
-                <select id="sort-select" class="sort-select" title="Ordenar por">
-                    <option value="date-desc">📅 Más recientes</option>
-                    <option value="date-asc">📅 Más antiguas</option>
-                    <option value="name-asc">Aa Nombre (A-Z)</option>
-                    <option value="name-desc">zZ Nombre (Z-A)</option>
-                    <option value="favorites">⭐ Favoritos primero</option>
-                </select>
+                <div class="custom-sort-dropdown" id="custom-sort-dropdown">
+                    <button id="sort-trigger-btn" class="sort-trigger-btn">
+                        <span class="sort-icon-current">📅</span>
+                        <span id="sort-text-current" class="sort-text">Recientes</span>
+                        <svg class="sort-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+
+                    <div class="sort-menu-options glass" id="sort-menu-options" hidden>
+                        <button class="sort-option active" data-value="date-desc">
+                            <span class="opt-icon icon-calendar-new">📅</span>
+                            <div class="opt-info">
+                                <span class="opt-title">Más Recientes</span>
+                                <span class="opt-desc">Lo último arriba</span>
+                            </div>
+                        </button>
+                        <button class="sort-option" data-value="date-asc">
+                            <span class="opt-icon icon-calendar-old">📜</span>
+                            <div class="opt-info">
+                                <span class="opt-title">Más Antiguas</span>
+                                <span class="opt-desc">Cronológico</span>
+                            </div>
+                        </button>
+                        <button class="sort-option" data-value="name-asc">
+                            <span class="opt-icon icon-alpha">🅰️</span>
+                            <div class="opt-info">
+                                <span class="opt-title">Nombre (A-Z)</span>
+                                <span class="opt-desc">Alfabético</span>
+                            </div>
+                        </button>
+                        <button class="sort-option" data-value="favorites">
+                            <span class="opt-icon icon-star">⭐</span>
+                            <div class="opt-info">
+                                <span class="opt-title">Favoritos</span>
+                                <span class="opt-desc">Prioridad Alta</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <nav class="notes-list-container">

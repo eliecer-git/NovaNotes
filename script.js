@@ -417,8 +417,13 @@ class NoteApp {
         // Alarm System
         this.reminderInterval = null;
 
-        // New Feature Elements
-        this.sortSelect = document.getElementById('sort-select');
+        // New Layout Elements for Sort
+        this.sortTriggerBtn = document.getElementById('sort-trigger-btn');
+        this.sortMenuOptions = document.getElementById('sort-menu-options');
+        this.sortTextCurrent = document.getElementById('sort-text-current');
+        this.sortIconCurrent = document.querySelector('.sort-icon-current');
+        this.currentSortValue = 'date-desc'; // Default
+
         this.starBtn = document.getElementById('star-note-btn');
         this.tagsContainer = document.getElementById('note-tags-container');
         this.addTagInput = document.getElementById('add-tag-input');
@@ -652,9 +657,46 @@ class NoteApp {
         }
         this.startReminderCheck();
 
-        // New Feature Listeners
-        if (this.sortSelect) {
-            this.sortSelect.onchange = () => this.renderNotesList();
+        // SORT DROPDOWN LOGIC
+        if (this.sortTriggerBtn) {
+            this.sortTriggerBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.sortMenuOptions.hidden = !this.sortMenuOptions.hidden;
+            };
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (this.sortMenuOptions && !this.sortMenuOptions.hidden) {
+                    if (!this.sortTriggerBtn.contains(e.target) && !this.sortMenuOptions.contains(e.target)) {
+                        this.sortMenuOptions.hidden = true;
+                    }
+                }
+            });
+
+            // Options Selection
+            const sortOptions = this.sortMenuOptions.querySelectorAll('.sort-option');
+            sortOptions.forEach(opt => {
+                opt.onclick = () => {
+                    // Remove active from all
+                    sortOptions.forEach(o => o.classList.remove('active'));
+                    // Add active to current
+                    opt.classList.add('active');
+
+                    // Update Logic
+                    this.currentSortValue = opt.getAttribute('data-value');
+                    this.renderNotesList();
+
+                    // Update UI Trigger (Icon & Text)
+                    const icon = opt.querySelector('.opt-icon').textContent;
+                    const title = opt.querySelector('.opt-title').textContent;
+
+                    this.sortIconCurrent.textContent = icon;
+                    this.sortTextCurrent.textContent = title;
+
+                    // Close menu
+                    this.sortMenuOptions.hidden = true;
+                };
+            });
         }
 
         if (this.starBtn) {

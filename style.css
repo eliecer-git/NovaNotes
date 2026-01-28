@@ -868,36 +868,166 @@ h2,
 
 /* --- Nuevas Funcionalidades: Favoritos, Tags, Sort, Colores --- */
 
-/* Sort Select */
-.sort-container {
-    padding: 0 24px 10px;
+/* Custom Sort Dropdown - Artistic */
+.custom-sort-dropdown {
+    position: relative;
+    width: 100%;
+    z-index: 50;
+}
+
+.sort-trigger-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.sort-select {
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 8px 12px;
+    justify-content: space-between;
     color: var(--text-secondary);
-    font-size: 0.85rem;
-    outline: none;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease;
 }
 
-.sort-select:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+.sort-trigger-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent);
+    color: var(--text-primary);
 }
 
-body.light-theme .sort-select {
-    background-color: #f5ecd0;
+.sort-text {
+    flex: 1;
+    text-align: left;
+    margin-left: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.sort-menu-options {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: rgba(17, 19, 26, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: slideDownFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+}
+
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.sort-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.sort-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sort-option.active {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.opt-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Specific Icon Colors for vibrancy */
+.icon-calendar-new {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+}
+
+.icon-calendar-old {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
+.icon-alpha {
+    background: rgba(249, 115, 22, 0.15);
+    color: #fb923c;
+}
+
+.icon-star {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+}
+
+.opt-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.opt-title {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.opt-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Light Theme Adjustments */
+body.light-theme .sort-trigger-btn {
+    background: #f5ecd0;
     border-color: #c9b87a;
     color: #4a4637;
 }
+
+body.light-theme .sort-menu-options {
+    background: rgba(240, 228, 190, 0.95);
+    border-color: #c9b87a;
+}
+
+body.light-theme .opt-title {
+    color: #2d2a1f;
+}
+
+body.light-theme .opt-desc {
+    color: #6b6452;
+}
+
+body.light-theme .sort-option:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
 
 /* Star Icon in List */
 .note-star {
