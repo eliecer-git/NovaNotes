@@ -2961,3 +2961,28 @@ body.light-theme .btn-auth-secondary:hover {
         justify-content: center;
     }
 }
+/* Active State for Feature Buttons */
+.btn-icon.active {
+    color: var(--accent);
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+}
+
+/* Voice Note Button Shadow & Effect */
+#voice-note-btn {
+    transition: all 0.3s ease;
+}
+
+#voice-note-btn.recording {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    animation: pulse-recording 1.5s infinite;
+}
+
+@keyframes pulse-recording {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}

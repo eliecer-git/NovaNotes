@@ -1634,6 +1634,9 @@ class NoteApp {
         if (existingBadge) existingBadge.remove();
 
         if (note && note.reminder) {
+            // Update Button State
+            if (this.reminderBtn) this.reminderBtn.classList.add('active');
+
             const date = new Date(note.reminder);
             const fmtDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -1645,6 +1648,9 @@ class NoteApp {
             // Insert before save status
             const metaDiv = document.querySelector('.editor-meta');
             metaDiv.insertBefore(badge, this.saveStatus);
+        } else {
+            // Reset Button State
+            if (this.reminderBtn) this.reminderBtn.classList.remove('active');
         }
     }
 
