@@ -1216,6 +1216,7 @@ class NoteApp {
     }
 
     saveCustomCategory() {
+        if (!this.customCategoryInput) return;
         const val = this.customCategoryInput.value.trim();
         if (val) {
             // Add to dropdown visually (optional, or just set it)
