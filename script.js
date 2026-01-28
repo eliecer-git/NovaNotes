@@ -928,7 +928,7 @@ class NoteApp {
             this.activeNoteId = id;
             this.noteTitleInput.innerHTML = note.title;
             this.noteContentInput.innerHTML = note.content;
-            this.categorySelect.value = note.category || 'personal';
+
             this.themeSelect.value = note.theme || 'none';
             this.bgColorPicker.style.display = note.theme === 'custom' ? 'block' : 'none';
             if (note.customBgColor) this.bgColorPicker.value = note.customBgColor;
@@ -984,7 +984,7 @@ class NoteApp {
         const note = this.notes[index];
         note.title = this.noteTitleInput.innerHTML;
         note.content = this.noteContentInput.innerHTML;
-        note.category = this.categorySelect.value;
+
         note.updatedAt = new Date().toISOString();
 
         this.saveToStorage();
