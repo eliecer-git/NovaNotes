@@ -1204,10 +1204,15 @@ class NoteApp {
     }
 
     openNewCategoryModal() {
+        if (!this.customCategoryInput) {
+            this.customCategoryInput = document.getElementById('custom-category-input');
+        }
+        if (!this.customCategoryInput) return;
+
         this.customCategoryInput.value = '';
         this.categoryModal.hidden = false;
         this.categoryModal.classList.remove('hidden');
-        this.customCategoryInput.focus();
+        setTimeout(() => this.customCategoryInput.focus(), 100); // Slight delay for focus
     }
 
     saveCustomCategory() {
