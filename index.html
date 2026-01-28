@@ -256,6 +256,26 @@
                                     <line x1="3" y1="18" x2="3.01" y2="18"></line>
                                 </svg>
                             </button>
+                            <!-- New Media Buttons -->
+                            <div class="divider-v"></div>
+                            <button id="btn-image" class="btn-icon-small" title="Insertar Imagen">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                            </button>
+                            <button id="btn-sketch" class="btn-icon-small" title="Dibujar">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 19l7-7 3 3-7 7-3-3z" />
+                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+                                    <path d="M2 2l7.586 7.586" />
+                                    <circle cx="11" cy="11" r="2" />
+                                </svg>
+                            </button>
+                            <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
                         </div>
                         <div class="divider"></div>
 
@@ -732,6 +752,44 @@
 
 
     <!-- Librería para PDF -->
+    <!-- Modal de Dibujo (Sketch) -->
+    <div id="sketch-modal" class="modal-overlay" hidden>
+        <div class="modal-content glass sketch-modal-content">
+            <div class="modal-header">
+                <h2>🎨 Pizarra de Dibujo</h2>
+                <button id="close-sketch-btn" class="btn-close">×</button>
+            </div>
+            <div class="sketch-area">
+                <canvas id="sketch-canvas"></canvas>
+            </div>
+            <div class="sketch-tools">
+                <div class="tool-group">
+                    <input type="color" id="sketch-color" value="#000000" title="Color del pincel">
+                    <input type="range" id="sketch-size" min="1" max="20" value="3" title="Grosor">
+                </div>
+                <div class="tool-group">
+                    <button id="clear-sketch-btn" class="btn-secondary">🗑️ Limpiar</button>
+                    <button id="save-sketch-btn" class="btn-primary">Insertar Dibujo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Redimensionar Imagen (Simple overlay) -->
+    <div id="image-resize-modal" class="modal-overlay" hidden>
+        <div class="modal-content glass">
+            <h3>📏 Ajustar Tamaño</h3>
+            <div class="resize-controls" style="display:flex; gap:10px; margin: 20px 0;">
+                <input type="range" id="img-resize-range" min="10" max="100" value="100" style="width:100%">
+                <span id="img-resize-val">100%</span>
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-resize-btn" class="btn-secondary">Cancelar</button>
+                <button id="confirm-resize-btn" class="btn-primary">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script src="script.js?v=7.7"></script>

@@ -445,6 +445,30 @@ class NoteApp {
         this.noteColorMenu = document.getElementById('note-color-menu');
         this.colorSwatches = document.querySelectorAll('.color-swatch');
 
+        // New Media Elements
+        this.btnImage = document.getElementById('btn-image');
+        this.btnSketch = document.getElementById('btn-sketch');
+        this.imageUploadInput = document.getElementById('image-upload-input');
+
+        // Sketch Modal
+        this.sketchModal = document.getElementById('sketch-modal');
+        this.sketchCanvas = document.getElementById('sketch-canvas');
+        this.closeSketchBtn = document.getElementById('close-sketch-btn');
+        this.clearSketchBtn = document.getElementById('clear-sketch-btn');
+        this.saveSketchBtn = document.getElementById('save-sketch-btn');
+        this.sketchColor = document.getElementById('sketch-color');
+        this.sketchSize = document.getElementById('sketch-size');
+        this.ctx = null;
+        this.isDrawing = false;
+
+        // Image Resize Modal
+        this.imageResizeModal = document.getElementById('image-resize-modal');
+        this.imgResizeRange = document.getElementById('img-resize-range');
+        this.imgResizeVal = document.getElementById('img-resize-val');
+        this.cancelResizeBtn = document.getElementById('cancel-resize-btn');
+        this.confirmResizeBtn = document.getElementById('confirm-resize-btn');
+        this.currentResizingImg = null;
+
         this.init();
     }
 
@@ -771,6 +795,34 @@ class NoteApp {
         // Custom Category Modal Listeners
         if (this.saveCategoryBtn) this.saveCategoryBtn.onclick = () => this.saveCustomCategory();
         if (this.closeCategoryBtn) this.closeCategoryBtn.onclick = () => this.categoryModal.hidden = true;
+
+        // Media Listeners
+        if (this.btnImage) this.btnImage.onclick = () => this.imageUploadInput.click();
+        if (this.imageUploadInput) this.imageUploadInput.onchange = (e) => this.handleImageUpload(e);
+        if (this.btnSketch) this.btnSketch.onclick = () => this.openSketchModal();
+
+        // Sketch Logic
+        if (this.closeSketchBtn) this.closeSketchBtn.onclick = () => this.sketchModal.hidden = true;
+        if (this.clearSketchBtn) this.clearSketchBtn.onclick = () => this.clearSketch();
+        if (this.saveSketchBtn) this.saveSketchBtn.onclick = () => this.saveSketch();
+
+        // Resize Logic
+        if (this.cancelResizeBtn) this.cancelResizeBtn.onclick = () => this.imageResizeModal.hidden = true;
+        if (this.confirmResizeBtn) this.confirmResizeBtn.onclick = () => this.applyImageResize();
+        if (this.imgResizeRange) {
+            this.imgResizeRange.oninput = (e) => {
+                const val = e.target.value + '%';
+                this.imgResizeVal.textContent = val;
+                if (this.currentResizingImg) this.currentResizingImg.style.width = val;
+            };
+        }
+
+        // Image Double Click to Resize
+        this.noteContentInput.addEventListener('dblclick', (e) => {
+            if (e.target.tagName === 'IMG') {
+                this.openResizeModal(e.target);
+            }
+        });
     }
 
     async initFeedback() {
@@ -1163,6 +1215,122 @@ class NoteApp {
             this.setCategory(val);
             this.categoryModal.hidden = true;
         }
+    }
+
+    // --- Media Methods --- //
+
+    handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (readerEvent) => {
+                this.insertImage(readerEvent.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+        e.target.value = ''; // Reset
+    }
+
+    openResizeModal(img) {
+        this.currentResizingImg = img;
+        // Parse width %
+        let currentWidth = img.style.width || '100%';
+        if (!currentWidth.includes('%')) currentWidth = '100%';
+        const val = parseInt(currentWidth);
+
+        this.imgResizeRange.value = val;
+        this.imgResizeVal.textContent = val + '%';
+
+        this.imageResizeModal.hidden = false;
+        this.imageResizeModal.classList.remove('hidden');
+    }
+
+    applyImageResize() {
+        // Just hide, change updates realtime-ish or we can finalize here
+        if (this.currentResizingImg) {
+            this.currentResizingImg.style.width = this.imgResizeRange.value + '%';
+            this.debouncedSaveAndRender();
+        }
+        this.imageResizeModal.hidden = true;
+        this.currentResizingImg = null;
+    }
+
+    // --- Sketch Methods --- //
+
+    openSketchModal() {
+        this.sketchModal.hidden = false;
+        this.sketchModal.classList.remove('hidden');
+
+        // Init Canvas
+        if (!this.ctx) {
+            this.initCanvas();
+        } else {
+            this.clearSketch();
+        }
+    }
+
+    initCanvas() {
+        const canvas = this.sketchCanvas;
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+
+        this.ctx = canvas.getContext('2d');
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+
+        // Mouse Events
+        canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+        canvas.addEventListener('mousemove', (e) => this.draw(e));
+        canvas.addEventListener('mouseup', () => this.stopDrawing());
+        canvas.addEventListener('mouseout', () => this.stopDrawing());
+
+        // Touch Events
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); this.startDrawing(e.touches[0]); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); this.draw(e.touches[0]); });
+        canvas.addEventListener('touchend', () => this.stopDrawing());
+    }
+
+    startDrawing(e) {
+        this.isDrawing = true;
+        const rect = this.sketchCanvas.getBoundingClientRect();
+        this.lastX = e.clientX - rect.left;
+        this.lastY = e.clientY - rect.top;
+    }
+
+    draw(e) {
+        if (!this.isDrawing) return;
+
+        const rect = this.sketchCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        this.ctx.lineWidth = this.sketchSize.value;
+        this.ctx.strokeStyle = this.sketchColor.value;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.lastX, this.lastY);
+        this.ctx.lineTo(x, y);
+        this.ctx.stroke();
+
+        this.lastX = x;
+        this.lastY = y;
+    }
+
+    stopDrawing() {
+        this.isDrawing = false;
+    }
+
+    clearSketch() {
+        if (this.ctx) {
+            this.ctx.clearRect(0, 0, this.sketchCanvas.width, this.sketchCanvas.height);
+        }
+    }
+
+    saveSketch() {
+        const dataUrl = this.sketchCanvas.toDataURL('image/png');
+        this.insertImage(dataUrl);
+        this.sketchModal.hidden = true;
     }
 
     /* Tag methods removed */

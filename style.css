@@ -1109,6 +1109,52 @@ body.light-theme .sort-option:hover {
     background: rgba(99, 102, 241, 0.1);
 }
 
+/* Sketch Modal */
+.sketch-modal-content {
+    width: 90%;
+    max-width: 600px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.sketch-area {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    margin: 10px 0;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    cursor: crosshair;
+}
+
+#sketch-canvas {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+.sketch-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.tool-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Light theme support */
+body.light-theme .sketch-area {
+    border: 1px solid #ccc;
+}
+
 @keyframes fadeInScale {
     from {
         opacity: 0;
