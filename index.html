@@ -77,30 +77,7 @@
                     <button id="new-note-btn" class="btn-primary" title="Nueva Nota">
                         <span class="icon">+</span> Nota
                     </button>
-                    <button id="new-folder-btn" class="btn-secondary-folder" title="Nueva Subcarpeta">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
-                            </path>
-                            <line x1="12" y1="11" x2="12" y2="17"></line>
-                            <line x1="9" y1="14" x2="15" y2="14"></line>
-                        </svg>
-                        Subcarpeta
-                    </button>
                 </div>
-            </div>
-            <div class="sidebar-secondary-actions" style="display: flex; gap: 10px; margin-top: 10px; width: 100%;">
-                <button id="theme-toggle-btn" class="btn-icon-info" title="Cambiar Tema" style="flex: 1;">
-                    <span id="theme-icon">🌙</span>
-                </button>
-                <button id="info-btn" class="btn-icon-info" title="Información" style="flex: 1;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                </button>
             </div>
 
 
@@ -161,7 +138,15 @@
                     </svg>
                     Cambiar contraseña
                 </button>
-
+                <div class="footer-actions-row"
+                    style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: space-between;">
+                    <button id="theme-toggle-btn" class="btn-icon-info" title="Cambiar Tema" style="flex: 1;">
+                        <span id="theme-icon">🌙</span> Tema
+                    </button>
+                    <button id="info-btn" class="btn-icon-info" title="Información" style="flex: 1;">
+                        ℹ️ Info
+                    </button>
+                </div>
 
 
                 <div class="footer-bottom-row">
@@ -305,13 +290,7 @@
                                 </path>
                             </svg>
                         </button>
-                        <button id="move-note-btn" class="btn-icon" title="Mover Nota a Categoría">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
-                                </path>
-                            </svg>
-                        </button>
+
                         <button id="export-pdf-btn" class="btn-icon" title="Exportar a PDF">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -599,37 +578,14 @@
         </div>
     </div>
 
-    <!-- Folder Modal -->
-    <div id="folder-modal" class="modal hidden" hidden>
-        <div class="modal-content glass">
-            <h3>Nueva Subcarpeta</h3>
-            <div class="input-group">
-                <input type="text" id="new-folder-input" class="bg-input" placeholder="Nombre de la subcarpeta...">
-            </div>
-            <div class="modal-actions">
-                <button id="cancel-folder-btn" class="btn-text">Cancelar</button>
-                <button id="create-folder-confirm-btn" class="btn-primary">Crear Subcarpeta</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Move Note Modal -->
-    <div id="move-note-modal" class="modal hidden" hidden>
-        <div class="modal-content glass">
-            <h3>Mover Nota a...</h3>
-            <div id="move-folder-list" class="folder-selection-list">
-                <!-- Folders will be injected here -->
-            </div>
-            <div class="modal-actions">
-                <button id="cancel-move-btn" class="btn-text" style="width: 100%;">Cancelar</button>
-            </div>
-        </div>
-    </div>
+
+
 
     <!-- Librería para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <script src="script.js?v=7.4"></script>
+    <script src="script.js?v=7.5"></script>
 </body>
 
 </html>

@@ -395,21 +395,7 @@ class NoteApp {
         this.currentNoteFilter = 'public'; // 'public' o 'private'
         this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
         this.deferredPrompt = null;
-        this.currentFolderId = null; // null = root
 
-        // Folder System DOM
-        this.newFolderBtn = document.getElementById('new-folder-btn');
-        this.folderModal = document.getElementById('folder-modal');
-        this.newFolderInput = document.getElementById('new-folder-input');
-        this.createFolderConfirmBtn = document.getElementById('create-folder-confirm-btn');
-        this.cancelFolderBtn = document.getElementById('cancel-folder-btn');
-        this.folderBreadcrumb = document.getElementById('folder-breadcrumb');
-
-        // Move Note System
-        this.moveNoteBtn = document.getElementById('move-note-btn');
-        this.moveNoteModal = document.getElementById('move-note-modal');
-        this.moveFolderList = document.getElementById('move-folder-list');
-        this.cancelMoveBtn = document.getElementById('cancel-move-btn');
 
         // Optimized Debouncing
         this.debouncedSaveAndRender = this.debounce(() => this.autoSave(true), 1500);
@@ -433,52 +419,7 @@ class NoteApp {
     init() {
         this.newNoteBtn.addEventListener('click', () => this.createNewNote());
 
-        // Folder System Listeners
-        this.newFolderBtn.addEventListener('click', () => {
-            this.folderModal.hidden = false;
-            this.folderModal.classList.remove('hidden');
-            this.newFolderInput.focus();
-        });
 
-        this.createFolderConfirmBtn.addEventListener('click', () => {
-            const name = this.newFolderInput.value.trim();
-            if (name) {
-                this.createNewFolder(name);
-                this.newFolderInput.value = '';
-                this.folderModal.hidden = true;
-                this.folderModal.classList.add('hidden');
-            }
-        });
-
-        this.cancelFolderBtn.addEventListener('click', () => {
-            this.folderModal.hidden = true;
-            this.folderModal.classList.add('hidden');
-        });
-
-        this.folderBreadcrumb.addEventListener('click', (e) => {
-            const item = e.target.closest('.crumb-item');
-            if (item) {
-                const id = item.dataset.id;
-                this.navigateToFolder(id === 'root' ? null : parseInt(id));
-            }
-        });
-
-        // Move Note Listeners
-        if (this.moveNoteBtn) { // Check existence as elements load dynamically
-            this.moveNoteBtn.onclick = () => {
-                if (!this.activeNoteId) return;
-                this.moveNoteModal.hidden = false;
-                this.moveNoteModal.classList.remove('hidden');
-                this.renderMoveFolderList();
-            };
-        }
-
-        if (this.cancelMoveBtn) {
-            this.cancelMoveBtn.onclick = () => {
-                this.moveNoteModal.hidden = true;
-                this.moveNoteModal.classList.add('hidden');
-            };
-        }
 
         this.deleteNoteBtn.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
         this.saveNoteBtn.onclick = () => this.saveActiveNote();
@@ -890,7 +831,6 @@ class NoteApp {
             title: '',
             content: '',
             updatedAt: new Date().toISOString(),
-            parentId: this.currentFolderId, // Assign current folder
             category: 'personal',
             styles: { ...this.DEFAULT_STYLES }
         };
@@ -1058,143 +998,6 @@ class NoteApp {
         this.renderNotesList();
     }
 
-    createNewFolder(name) {
-        const newFolder = {
-            id: Date.now(),
-            title: name,
-            type: 'folder',
-            parentId: this.currentFolderId,
-            timestamp: new Date().toISOString()
-        };
-        this.notes.unshift(newFolder);
-        this.saveToStorage();
-        this.renderNotesList();
-        this.updateStats();
-    }
-
-    navigateToFolder(folderId) {
-        this.currentFolderId = folderId;
-        this.activeNoteId = null; // Deselect note when changing folder
-        this.updateBreadcrumb();
-        this.renderNotesList();
-        this.setActiveNote(null); // Clear editor
-    }
-
-    updateBreadcrumb() {
-        if (!this.currentFolderId) {
-            this.folderBreadcrumb.innerHTML = '';
-            this.folderBreadcrumb.style.display = 'none'; // Hide container if empty
-            return;
-        }
-
-        this.folderBreadcrumb.style.display = 'flex'; // Ensure visible when not root
-        const path = this.getFolderPath(this.currentFolderId);
-        let html = `<span class="crumb-item" data-id="root">⬅ Volver a inicio</span>`;
-
-        // Solo mostrar el nombre de la carpeta actual si se desea, o simplificar
-        // El usuario pidió "que diga volver a inicio", lo cual ya está.
-        // Mantenemos el path por utilidad pero si quieren simplificar más se puede quitar.
-        // Por ahora dejamos el path visual para que sepan donde están.
-
-        path.forEach(folder => {
-            html += `<span class="crumb-separator">/</span>
-                     <span class="crumb-item" data-id="${folder.id}">📂 ${folder.title}</span>`;
-        });
-
-        // Add Delete Folder Button only if not root
-        html += `<button class="btn-delete-folder" onclick="app.deleteCurrentFolder()" title="Eliminar carpeta actual">🗑️</button>`;
-
-        this.folderBreadcrumb.innerHTML = html;
-    }
-
-    deleteCurrentFolder() {
-        if (!this.currentFolderId) return;
-
-        const folder = this.notes.find(n => n.id === this.currentFolderId);
-        if (!folder) return;
-
-        if (confirm(`¿Estás seguro de que quieres eliminar la carpeta "${folder.title}" y todo su contenido? Esta acción no se puede deshacer.`)) {
-            // Recursive delete or move to trash? Let's implement move to trash for items inside.
-            // Actually, simplest is to mark everything inside as deleted.
-            const itemsToDelete = this.notes.filter(n => n.parentId === this.currentFolderId || n.id === this.currentFolderId);
-
-            // Mark folder as deleted (or remove completely? User asked to "delete folder")
-            // Let's remove folder object completely to avoid complexity in trash view for folders for now.
-            // But notes inside should go to trash to be safe.
-
-            this.notes.forEach(n => {
-                if (n.parentId === this.currentFolderId && n.type !== 'folder') {
-                    n.trashed = true;
-                    n.parentId = null; // Detach so it shows in trash root
-                    n.updatedAt = new Date().toISOString();
-                }
-            });
-
-            // Remove the folder itself
-            this.notes = this.notes.filter(n => n.id !== this.currentFolderId);
-
-            this.saveToStorage();
-            this.navigateToFolder(folder.parentId); // Go up one level
-        }
-    }
-
-    renderMoveFolderList() {
-        this.moveFolderList.innerHTML = '';
-
-        // Option: Root
-        const rootItem = document.createElement('div');
-        rootItem.className = 'folder-selection-item';
-        rootItem.innerHTML = `<span>🏠 Inicio</span>`;
-        rootItem.onclick = () => this.moveCurrentNoteTo(null);
-        this.moveFolderList.appendChild(rootItem);
-
-        // Get all folders (flat list for simplicity in selection)
-        const folders = this.notes.filter(n => n.type === 'folder');
-
-        folders.forEach(folder => {
-            const el = document.createElement('div');
-            el.className = 'folder-selection-item';
-            el.innerHTML = `<span>📂 ${folder.title}</span>`;
-            el.onclick = () => this.moveCurrentNoteTo(folder.id);
-            this.moveFolderList.appendChild(el);
-        });
-    }
-
-    moveCurrentNoteTo(targetFolderId) {
-        if (!this.activeNoteId) return;
-
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (note) {
-            note.parentId = targetFolderId;
-            note.updatedAt = new Date().toISOString();
-            this.saveToStorage();
-            this.moveNoteModal.hidden = true;
-            this.moveNoteModal.classList.add('hidden');
-
-            // If we are in hierarchy view, the note might disappear from view (moved elsewhere)
-            // Or stay if we are in search.
-            // Let's re-render to reflect state.
-            this.renderNotesList();
-
-            // Optionally notify user
-            // alert('Nota movida con éxito');
-        }
-    }
-
-    getFolderPath(folderId) {
-        const path = [];
-        let currentId = folderId;
-        while (currentId) {
-            const folder = this.notes.find(n => n.id === currentId && n.type === 'folder');
-            if (folder) {
-                path.unshift(folder);
-                currentId = folder.parentId;
-            } else {
-                break;
-            }
-        }
-        return path;
-    }
 
     /**
      * Renders the note list based on current filters and search terms.
@@ -1202,49 +1005,29 @@ class NoteApp {
     renderNotesList() {
         this.notesList.innerHTML = '';
 
-        // Filter logic
         let filteredNotes = [];
-        let filteredFolders = [];
 
         if (this.searchTerm) {
-            // Flat search (search everywhere)
             filteredNotes = this.notes.filter(note =>
-                note.type !== 'folder' &&
-                (note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                    note.content.toLowerCase().includes(this.searchTerm.toLowerCase()))
+            (note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                note.content.toLowerCase().includes(this.searchTerm.toLowerCase()))
             );
         } else {
-            // Hierarchy view
-            filteredNotes = this.notes.filter(n => n.type !== 'folder' && n.parentId === this.currentFolderId);
-            filteredFolders = this.notes.filter(n => n.type === 'folder' && n.parentId === this.currentFolderId);
-
             if (this.currentNoteFilter === 'trash') {
-                filteredNotes = this.notes.filter(n => n.deleted);
-                filteredFolders = []; // Don't show folders in trash for simplicity yet
+                filteredNotes = this.notes.filter(n => n.trashed);
             } else if (this.currentNoteFilter === 'private') {
-                filteredNotes = this.notes.filter(n => n.isPrivate && !n.deleted);
+                // Private = has password OR isPrivate flag
+                filteredNotes = this.notes.filter(n => (n.password || n.isPrivate) && !n.trashed);
+
             } else {
-                filteredNotes = filteredNotes.filter(n => !n.isPrivate && !n.deleted);
-                filteredFolders = filteredFolders.filter(n => !n.deleted);
+                // Public logic
+                filteredNotes = this.notes.filter(n =>
+                    !n.password && !n.isPrivate && !n.trashed && n.type !== 'folder'
+                );
             }
         }
 
-        // Render Folders First
-        filteredFolders.forEach(folder => {
-            const el = document.createElement('div');
-            el.className = 'note-item folder-item';
-            el.innerHTML = `
-                <div class="note-icon">📂</div>
-                <div class="note-info">
-                    <div class="note-title">${folder.title}</div>
-                    <div class="note-meta">Subcarpeta</div>
-                </div>
-            `;
-            el.onclick = () => this.navigateToFolder(folder.id);
-            this.notesList.appendChild(el);
-        });
-
-        // Render Notes
+        // Sort
         filteredNotes.sort((a, b) => {
             if (a.pinned && !b.pinned) return -1;
             if (!a.pinned && b.pinned) return 1;
@@ -1256,11 +1039,11 @@ class NoteApp {
             noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''}`;
             if (note.pinned) noteEl.classList.add('pinned');
 
-            // Extract plain text for preview
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = note.content;
             const plainText = tempDiv.textContent || tempDiv.innerText || '';
-            const cat = note.category || (note.parentId ? 'Carpeta' : 'Personal'); // Fallback logic
+            // If we removed folders, 'category' might be 'personal' default.
+            const cat = note.category || 'Personal';
 
             noteEl.innerHTML = `
                 <div class="note-icon">${this.getCategoryIcon(cat)}</div>
@@ -1279,8 +1062,8 @@ class NoteApp {
                 const actions = document.createElement('div');
                 actions.className = 'trash-actions';
                 actions.innerHTML = `
-                   <button class="btn-restore" onclick="event.stopPropagation(); app.restoreNote(${note.id})">♻️ Restaurar</button>
-                   <button class="btn-delete-permanent" onclick="event.stopPropagation(); app.deletePermanently(${note.id})">🗑️ Borrar</button>
+                   <button class="btn-restore" onclick="event.stopPropagation(); app.restoreNote('${note.id}')">♻️ Restaurar</button>
+                   <button class="btn-delete-permanent" onclick="event.stopPropagation(); app.deletePermanently('${note.id}')">🗑️ Borrar</button>
                  `;
                 noteEl.querySelector('.note-info').appendChild(actions);
             } else {
@@ -1290,9 +1073,16 @@ class NoteApp {
             this.notesList.appendChild(noteEl);
         });
 
-
+        if (filteredNotes.length === 0) {
+            this.notesList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-illustration">📝</div>
+                    <h3>No hay notas</h3>
+                    <p>¡Crea tu primera nota ahora!</p>
+                </div>
+             `;
+        }
     }
-
     // Versión optimizada de extracción de texto sin crear elementos DOM pesados
     getRawText(html, limit = 45) {
         if (!html) return '';
@@ -1693,12 +1483,23 @@ class NoteApp {
     /**
      * Alterna entre tema claro y oscuro
      */
+
     toggleTheme() {
         const isLight = document.body.classList.toggle('light-theme');
         this.themeIcon.textContent = isLight ? '☀️' : '🌙';
         localStorage.setItem('nova_theme', isLight ? 'light' : 'dark');
     }
 
+    getCategoryIcon(category) {
+        switch (category) {
+            case 'personal': return '👤';
+            case 'ideas': return '💡';
+            case 'proyectos': return '🚀';
+            case 'tareas': return '✅';
+            case 'custom': return '📂';
+            default: return '📝';
+        }
+    }
 }
 
 /**
