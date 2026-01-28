@@ -593,6 +593,57 @@ h2,
     background: var(--card-bg);
 }
 
+/* Notes List */
+/* Format Toolbar - Responsive Fixes */
+.format-toolbar {
+    display: flex !important;
+    gap: 10px;
+    align-items: center;
+    background: rgba(30, 30, 35, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 12px;
+    width: 100%;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    /* Allow wrapping */
+    justify-content: flex-start;
+    /* Align start */
+}
+
+/* Ensure nice wrapping on smaller screens */
+.format-btn-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-wrap: nowrap;
+    /* Keep groups together */
+}
+
+.divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 4px;
+    /* Reduced margin */
+}
+
+/* Placeholder visibility fix: Hide when focused or not empty */
+.input-content:focus::before {
+    display: none;
+    opacity: 0;
+    content: none;
+}
+
+/* Solo mostrar placeholder si está REALMENTE vacío y no hay hijos como <br> innecesarios, y NO tiene foco */
+.input-content:empty:not(:focus)::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: block;
+}
+
 .note-item.active {
     background: rgba(99, 102, 241, 0.1);
     border-color: rgba(99, 102, 241, 0.3);
