@@ -406,12 +406,19 @@ class NoteApp {
         this.recognition = null;
         this.isDictating = false;
 
+        this.voiceNoteBtn = document.getElementById('voice-note-btn');
+        this.recognition = null;
+        this.isDictating = false;
+
         this.reminderBtn = document.getElementById('reminder-btn');
         this.reminderModal = document.getElementById('reminder-modal');
         this.closeReminderBtn = document.getElementById('close-reminder-btn');
         this.reminderDateInput = document.getElementById('reminder-date-input');
         this.saveReminderBtn = document.getElementById('save-reminder-btn');
         this.deleteReminderBtn = document.getElementById('delete-reminder-btn');
+
+        // Alarm System
+        this.reminderInterval = null;
 
         this.init();
     }
@@ -631,6 +638,13 @@ class NoteApp {
         this.closeReminderBtn.onclick = () => this.reminderModal.hidden = true;
         this.saveReminderBtn.onclick = () => this.saveReminder();
         this.deleteReminderBtn.onclick = () => this.deleteReminder();
+
+        // Start Alarm System
+        if ('Notification' in window) {
+            Notification.requestPermission();
+        }
+        this.startReminderCheck();
+
 
     }
 
@@ -1621,6 +1635,7 @@ saveReminder() {
 
     const note = this.notes.find(n => n.id === this.activeNoteId);
     note.reminder = dateVal;
+    note.reminderFired = false; // Reset fired status whenever updated
 
     this.saveToStorage();
     this.updateReminderUI(note);
@@ -1650,6 +1665,7 @@ updateReminderUI(note) {
 
         const badge = document.createElement('div');
         badge.className = 'reminder-badge';
+        if (note.reminderFired) badge.classList.add('expired'); // Optional styling
         badge.innerHTML = `<span>⏰ ${fmtDate}</span>`;
 
         // Insert before save status
@@ -1657,6 +1673,100 @@ updateReminderUI(note) {
         metaDiv.insertBefore(badge, this.saveStatus);
     }
 }
+
+// --- Alarm System Methods ---
+
+startReminderCheck() {
+    if (this.reminderInterval) clearInterval(this.reminderInterval);
+
+    // Check every 30 seconds
+    this.reminderInterval = setInterval(() => {
+        this.checkReminders();
+    }, 30000);
+}
+
+checkReminders() {
+    const now = new Date();
+    let changed = false;
+
+    this.notes.forEach(note => {
+        if (note.reminder && !note.reminderFired) {
+            const reminderTime = new Date(note.reminder);
+
+            // If the time has passed (or is now)
+            if (now >= reminderTime) {
+                this.triggerAlarm(note);
+                note.reminderFired = true;
+                changed = true;
+            }
+        }
+    });
+
+    if (changed) {
+        this.saveToStorage();
+        this.renderNotesList();
+        if (this.activeNoteId) this.renderActiveNote();
+    }
+}
+
+triggerAlarm(note) {
+    // 1. Play Sound (Web Audio API - Beep)
+    this.playAlarmSound();
+
+    // 2. System Notification (background/outside app)
+    if (Notification.permission === "granted") {
+        const notif = new Notification("⏰ Recordatorio de novaStarPro", {
+            body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
+            icon: 'icons/icon-192x192.png', // Ensure this path exists or uses default
+            requireInteraction: true
+        });
+        notif.onclick = () => {
+            window.focus();
+            this.setActiveNote(note.id);
+        };
+    }
+
+    // 3. In-App Alert
+    alert(`⏰ ¡DING DING! \n\nRecordatorio: ${note.title || 'Nota'}`);
+}
+
+playAlarmSound() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        const ctx = new AudioContext();
+        const oscillators = [];
+
+        // Function to create a beep
+        const beep = (startTime, freq, duration) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        };
+
+        // Sequence: High High Low (Air horn style or simple alarm)
+        const now = ctx.currentTime;
+        beep(now, 880, 0.5);       // A5
+        beep(now + 0.6, 880, 0.5); // A5
+        beep(now + 1.2, 880, 0.8); // A5 Long
+
+    } catch (e) {
+        console.error("Audio play error", e);
+    }
+}
+
 
 
 /**
