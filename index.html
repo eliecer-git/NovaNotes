@@ -102,269 +102,270 @@
                     </svg>
                 </button>
             </div>
-    </div>
-
-    <!-- Barra de Navegación de Carpetas -->
-    <div id="folder-breadcrumb" class="folder-breadcrumb" style="display: none;">
-        <!-- Filled dynamically -->
-    </div>
-
-    <!-- User Greeting (visible when logged in) -->
-    <div id="user-greeting-box" class="user-greeting-box" style="display: none;">
-        <span class="greeting-wave">👋</span>
-        <div class="greeting-text">
-            <span class="greeting-hello">Hola de nuevo,</span>
-            <span id="greeting-name" class="greeting-name">Usuario</span>
-        </div>
-        <button id="logout-btn" class="btn-logout-small" title="Cerrar sesión">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-        </button>
-    </div>
-
-    <div class="search-box">
-        <input type="text" id="search-input" placeholder="Buscar notas...">
-    </div>
-
-    <div class="filter-tabs">
-        <button id="filter-public-btn" class="filter-tab active">
-            <span class="icon">🔓</span> Públicas
-        </button>
-        <button id="filter-private-btn" class="filter-tab">
-            <span class="icon">🔒</span> Privadas
-        </button>
-        <button id="filter-trash-btn" class="filter-tab">
-            <span class="icon">🗑️</span> Papelera
-        </button>
-    </div>
-
-    <nav class="notes-list-container">
-        <ul id="notes-list" class="notes-list">
-            <!-- Las notas se cargarán aquí dinámicamente -->
-        </ul>
-    </nav>
-
-    <div class="sidebar-footer">
-        <button id="pwa-install-btn" class="btn-install" style="display: none;">
-            <span class="icon">📥</span> Instalar App
-        </button>
-
-        <button id="change-pwd-btn" class="btn-change-pwd" title="Cambiar contraseña maestra">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            Cambiar contraseña
-        </button>
 
 
-
-        <div class="footer-bottom-row">
-            <div class="stats">
-                <span id="note-count">0 notas</span>
+            <!-- Barra de Navegación de Carpetas -->
+            <div id="folder-breadcrumb" class="folder-breadcrumb" style="display: none;">
+                <!-- Filled dynamically -->
             </div>
-            <div class="global-feedback-mini">
-                <span class="feedback-label-mini">¿Te gusta?</span>
-                <button id="like-btn" class="btn-feedback-mini" title="¡Me encanta novaStarPro!">✨</button>
-                <button id="dislike-btn" class="btn-feedback-mini" title="Puede mejorar">✖️</button>
-            </div>
-        </div>
-    </div>
-    </aside>
 
-    <!-- Main Content / Editor -->
-    <main class="editor-container">
-        <div class="editor-header">
-            <div class="editor-meta">
-                <button id="mobile-back-btn" class="btn-back-mobile" title="Volver a la lista">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            <!-- User Greeting (visible when logged in) -->
+            <div id="user-greeting-box" class="user-greeting-box" style="display: none;">
+                <span class="greeting-wave">👋</span>
+                <div class="greeting-text">
+                    <span class="greeting-hello">Hola de nuevo,</span>
+                    <span id="greeting-name" class="greeting-name">Usuario</span>
+                </div>
+                <button id="logout-btn" class="btn-logout-small" title="Cerrar sesión">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
                 </button>
-                <span id="last-edited" class="last-edited">Selecciona una nota para comenzar</span>
-                <span id="save-status" class="save-status"></span>
             </div>
-            <div class="editor-actions">
-                <div class="format-toolbar" id="format-toolbar" hidden>
-                    <div class="format-btn-group" style="display: flex; gap: 5px;">
-                        <button id="btn-bold" class="btn-icon-small" title="Negrita">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-                                <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-                            </svg>
-                        </button>
-                        <button id="btn-italic" class="btn-icon-small" title="Cursiva">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="4" x2="10" y2="4"></line>
-                                <line x1="14" y1="20" x2="5" y2="20"></line>
-                                <line x1="15" y1="4" x2="9" y2="20"></line>
-                            </svg>
-                        </button>
-                        <button id="btn-underline" class="btn-icon-small" title="Subrayado">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
-                                <line x1="4" y1="21" x2="20" y2="21"></line>
-                            </svg>
-                        </button>
-                        <button id="btn-list" class="btn-icon-small" title="Lista">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="8" y1="6" x2="21" y2="6"></line>
-                                <line x1="8" y1="12" x2="21" y2="12"></line>
-                                <line x1="8" y1="18" x2="21" y2="18"></line>
-                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                            </svg>
-                        </button>
+
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Buscar notas...">
+            </div>
+
+            <div class="filter-tabs">
+                <button id="filter-public-btn" class="filter-tab active">
+                    <span class="icon">🔓</span> Públicas
+                </button>
+                <button id="filter-private-btn" class="filter-tab">
+                    <span class="icon">🔒</span> Privadas
+                </button>
+                <button id="filter-trash-btn" class="filter-tab">
+                    <span class="icon">🗑️</span> Papelera
+                </button>
+            </div>
+
+            <nav class="notes-list-container">
+                <ul id="notes-list" class="notes-list">
+                    <!-- Las notas se cargarán aquí dinámicamente -->
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="pwa-install-btn" class="btn-install" style="display: none;">
+                    <span class="icon">📥</span> Instalar App
+                </button>
+
+                <button id="change-pwd-btn" class="btn-change-pwd" title="Cambiar contraseña maestra">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    Cambiar contraseña
+                </button>
+
+
+
+                <div class="footer-bottom-row">
+                    <div class="stats">
+                        <span id="note-count">0 notas</span>
                     </div>
-                    <div class="divider"></div>
-                    <select id="title-font-select" class="select-premium" title="Fuente del Título">
-                        <option value="Outfit, sans-serif">Outfit (Moderno)</option>
-                        <option value="Inter, sans-serif">Inter (Limpio)</option>
-                        <option value="Playfair Display, serif">Playfair (Elegante)</option>
-                        <option value="Montserrat, sans-serif">Montserrat (Geométrico)</option>
-                        <option value="Poppins, sans-serif">Poppins (Suave)</option>
-                        <option value="Lora, serif">Lora (Clásico)</option>
-                        <option value="Merriweather, serif">Merriweather (Lectura)</option>
-                        <option value="Ubuntu, sans-serif">Ubuntu (Humanista)</option>
-                        <option value="Fira Code, monospace">Fira Code (Tech)</option>
-                        <option value="Dancing Script, cursive">Cursiva (Elegante)</option>
-                    </select>
-                    <select id="title-size-select" class="select-premium" title="Tamaño Título">
-                        <option value="1.5rem">Título: Pequeño</option>
-                        <option value="2rem">Título: Normal</option>
-                        <option value="2.5rem" selected>Título: Grande</option>
-                        <option value="3.5rem">Título: Gigante</option>
-                    </select>
-                    <input type="color" id="title-color-picker" class="color-picker-premium" title="Color del Título"
-                        value="#f8fafc">
-                    <div class="divider"></div>
-                    <select id="content-font-select" class="select-premium" title="Tipo de Letra del Cuerpo">
-                        <option value="Inter, sans-serif">Text Type: Inter</option>
-                        <option value="Poppins, sans-serif">Text Type: Poppins</option>
-                        <option value="Lora, serif">Text Type: Lora</option>
-                        <option value="Merriweather, serif">Text Type: Merriweather</option>
-                        <option value="Ubuntu, sans-serif">Text Type: Ubuntu</option>
-                        <option value="Dancing Script, cursive">Text Type: Cursiva</option>
-                    </select>
-                    <select id="content-size-select" class="select-premium" title="Tamaño Contenido">
-                        <option value="0.9rem">Text Size: Pequeño</option>
-                        <option value="1.15rem" selected>Text Size: Normal</option>
-                        <option value="1.4rem">Text Size: Grande</option>
-                        <option value="1.7rem">Text Size: Extra</option>
-                    </select>
-                    <div class="divider"></div>
-                    <input type="color" id="text-color-picker" class="color-picker-premium" title="Color del Texto"
-                        value="#94a3b8">
-                    <button id="fullscreen-btn" class="btn-icon desktop-only" title="Modo Pantalla Completa">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
-                            </path>
+                    <div class="global-feedback-mini">
+                        <span class="feedback-label-mini">¿Te gusta?</span>
+                        <button id="like-btn" class="btn-feedback-mini" title="¡Me encanta novaStarPro!">✨</button>
+                        <button id="dislike-btn" class="btn-feedback-mini" title="Puede mejorar">✖️</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content / Editor -->
+        <main class="editor-container">
+            <div class="editor-header">
+                <div class="editor-meta">
+                    <button id="mobile-back-btn" class="btn-back-mobile" title="Volver a la lista">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
                     </button>
-                    <div class="divider"></div>
-                    <div class="theme-picker-group">
-                        <select id="theme-select" class="select-premium" title="Fondo del Editor (Estilo Canva)">
-                            <option value="none">Fondo: Default</option>
-                            <option value="sunset">🌅 Sunset Rose</option>
-                            <option value="ocean">🌊 Deep Ocean</option>
-                            <option value="emerald">🍃 Emerald Forest</option>
-                            <option value="royal">👑 Royal Purple</option>
-                            <option value="midnight">🌑 Midnight Aura</option>
-                            <option value="custom">🎨 Color Sólido...</option>
+                    <span id="last-edited" class="last-edited">Selecciona una nota para comenzar</span>
+                    <span id="save-status" class="save-status"></span>
+                </div>
+                <div class="editor-actions">
+                    <div class="format-toolbar" id="format-toolbar" hidden>
+                        <div class="format-btn-group" style="display: flex; gap: 5px;">
+                            <button id="btn-bold" class="btn-icon-small" title="Negrita">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                                    <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                                </svg>
+                            </button>
+                            <button id="btn-italic" class="btn-icon-small" title="Cursiva">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="19" y1="4" x2="10" y2="4"></line>
+                                    <line x1="14" y1="20" x2="5" y2="20"></line>
+                                    <line x1="15" y1="4" x2="9" y2="20"></line>
+                                </svg>
+                            </button>
+                            <button id="btn-underline" class="btn-icon-small" title="Subrayado">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
+                                    <line x1="4" y1="21" x2="20" y2="21"></line>
+                                </svg>
+                            </button>
+                            <button id="btn-list" class="btn-icon-small" title="Lista">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="divider"></div>
+                        <select id="title-font-select" class="select-premium" title="Fuente del Título">
+                            <option value="Outfit, sans-serif">Outfit (Moderno)</option>
+                            <option value="Inter, sans-serif">Inter (Limpio)</option>
+                            <option value="Playfair Display, serif">Playfair (Elegante)</option>
+                            <option value="Montserrat, sans-serif">Montserrat (Geométrico)</option>
+                            <option value="Poppins, sans-serif">Poppins (Suave)</option>
+                            <option value="Lora, serif">Lora (Clásico)</option>
+                            <option value="Merriweather, serif">Merriweather (Lectura)</option>
+                            <option value="Ubuntu, sans-serif">Ubuntu (Humanista)</option>
+                            <option value="Fira Code, monospace">Fira Code (Tech)</option>
+                            <option value="Dancing Script, cursive">Cursiva (Elegante)</option>
                         </select>
-                        <input type="color" id="bg-color-picker" class="color-picker-premium"
-                            title="Seleccionar Color de Fondo" value="#0d0f16" style="display: none;">
+                        <select id="title-size-select" class="select-premium" title="Tamaño Título">
+                            <option value="1.5rem">Título: Pequeño</option>
+                            <option value="2rem">Título: Normal</option>
+                            <option value="2.5rem" selected>Título: Grande</option>
+                            <option value="3.5rem">Título: Gigante</option>
+                        </select>
+                        <input type="color" id="title-color-picker" class="color-picker-premium"
+                            title="Color del Título" value="#f8fafc">
+                        <div class="divider"></div>
+                        <select id="content-font-select" class="select-premium" title="Tipo de Letra del Cuerpo">
+                            <option value="Inter, sans-serif">Text Type: Inter</option>
+                            <option value="Poppins, sans-serif">Text Type: Poppins</option>
+                            <option value="Lora, serif">Text Type: Lora</option>
+                            <option value="Merriweather, serif">Text Type: Merriweather</option>
+                            <option value="Ubuntu, sans-serif">Text Type: Ubuntu</option>
+                            <option value="Dancing Script, cursive">Text Type: Cursiva</option>
+                        </select>
+                        <select id="content-size-select" class="select-premium" title="Tamaño Contenido">
+                            <option value="0.9rem">Text Size: Pequeño</option>
+                            <option value="1.15rem" selected>Text Size: Normal</option>
+                            <option value="1.4rem">Text Size: Grande</option>
+                            <option value="1.7rem">Text Size: Extra</option>
+                        </select>
+                        <div class="divider"></div>
+                        <input type="color" id="text-color-picker" class="color-picker-premium" title="Color del Texto"
+                            value="#94a3b8">
+                        <button id="fullscreen-btn" class="btn-icon desktop-only" title="Modo Pantalla Completa">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="divider"></div>
+                        <div class="theme-picker-group">
+                            <select id="theme-select" class="select-premium" title="Fondo del Editor (Estilo Canva)">
+                                <option value="none">Fondo: Default</option>
+                                <option value="sunset">🌅 Sunset Rose</option>
+                                <option value="ocean">🌊 Deep Ocean</option>
+                                <option value="emerald">🍃 Emerald Forest</option>
+                                <option value="royal">👑 Royal Purple</option>
+                                <option value="midnight">🌑 Midnight Aura</option>
+                                <option value="custom">🎨 Color Sólido...</option>
+                            </select>
+                            <input type="color" id="bg-color-picker" class="color-picker-premium"
+                                title="Seleccionar Color de Fondo" value="#0d0f16" style="display: none;">
+                        </div>
+                        <button id="lock-note-btn" class="btn-icon" title="Proteger Nota con Contraseña">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </button>
+                        <button id="pin-note-btn" class="btn-icon" title="Fijar Nota">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="17" x2="12" y2="22"></line>
+                                <path
+                                    d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z">
+                                </path>
+                            </svg>
+                        </button>
+                        <button id="move-note-btn" class="btn-icon" title="Mover Nota a Categoría">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                </path>
+                            </svg>
+                        </button>
+                        <button id="export-pdf-btn" class="btn-icon" title="Exportar a PDF">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="12" y1="18" x2="12" y2="12"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                        </button>
+
                     </div>
-                    <button id="lock-note-btn" class="btn-icon" title="Proteger Nota con Contraseña">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <button id="mobile-menu-btn" class="mobile-menu-btn" title="Opciones de Formato">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
                         </svg>
                     </button>
-                    <button id="pin-note-btn" class="btn-icon" title="Fijar Nota">
+                    <button id="delete-note-btn" class="btn-icon btn-delete" title="Eliminar nota" hidden>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="17" x2="12" y2="22"></line>
-                            <path
-                                d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z">
-                            </path>
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
                         </svg>
                     </button>
-                    <button id="move-note-btn" class="btn-icon" title="Mover Nota a Categoría">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
-                            </path>
-                        </svg>
-                    </button>
-                    <button id="export-pdf-btn" class="btn-icon" title="Exportar a PDF">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="12" y1="18" x2="12" y2="12"></line>
-                            <line x1="9" y1="15" x2="15" y2="15"></line>
-                        </svg>
-                    </button>
-
-                </div>
-                <button id="mobile-menu-btn" class="mobile-menu-btn" title="Opciones de Formato">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="12" cy="5" r="1"></circle>
-                        <circle cx="12" cy="19" r="1"></circle>
-                    </svg>
-                </button>
-                <button id="delete-note-btn" class="btn-icon btn-delete" title="Eliminar nota" hidden>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    </svg>
-                </button>
-                <button id="save-note-btn" class="btn-secondary" title="Guardar cambios" hidden>Guardar</button>
-            </div>
-        </div>
-
-        <div id="editor-view" class="editor-view empty">
-            <div class="empty-state">
-                <div class="empty-illustration">✍️</div>
-                <h2>Comienza tu historia</h2>
-                <p>Crea una nueva nota o selecciona una existente para editar.</p>
-            </div>
-
-            <div class="editor-fields" hidden>
-                <div id="note-title" class="input-title" contenteditable="true" data-placeholder="Título de la nota...">
-                </div>
-                <!-- Cambiado de textarea a div para soportar colores por palabra -->
-                <div id="note-content" class="input-content" contenteditable="true"
-                    data-placeholder="Empieza a escribir tu historia..."></div>
-
-                <!-- Barra flotante de color para selección -->
-                <div id="selection-toolbar" class="selection-toolbar glass" hidden>
-                    <input type="color" id="selection-color-picker" title="Color de selección">
-                    <span class="toolbar-label">Color del texto</span>
+                    <button id="save-note-btn" class="btn-secondary" title="Guardar cambios" hidden>Guardar</button>
                 </div>
             </div>
-        </div>
-    </main>
+
+            <div id="editor-view" class="editor-view empty">
+                <div class="empty-state">
+                    <div class="empty-illustration">✍️</div>
+                    <h2>Comienza tu historia</h2>
+                    <p>Crea una nueva nota o selecciona una existente para editar.</p>
+                </div>
+
+                <div class="editor-fields" hidden>
+                    <div id="note-title" class="input-title" contenteditable="true"
+                        data-placeholder="Título de la nota...">
+                    </div>
+                    <!-- Cambiado de textarea a div para soportar colores por palabra -->
+                    <div id="note-content" class="input-content" contenteditable="true"
+                        data-placeholder="Empieza a escribir tu historia..."></div>
+
+                    <!-- Barra flotante de color para selección -->
+                    <div id="selection-toolbar" class="selection-toolbar glass" hidden>
+                        <input type="color" id="selection-color-picker" title="Color de selección">
+                        <span class="toolbar-label">Color del texto</span>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <!-- Modal de Información -->
