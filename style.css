@@ -587,7 +587,10 @@ h2,
     cursor: pointer;
     transition: var(--transition);
     border: 1px solid transparent;
+    background: var(--card-bg);
+    /* Fondo por defecto para que se vea el "botón" */
 }
+
 
 .note-item:hover {
     background: var(--card-bg);
@@ -1151,27 +1154,6 @@ padding: 0;
     color: var(--text-primary);
 }
 
-.cat-option.custom-generated {
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    color: white !important;
-    /* Force white text */
-    font-size: 0.85rem;
-    font-weight: 600;
-    justify-content: center;
-    border-radius: 6px;
-    /* Slightly rounded, not full pill to match menu style better */
-    margin: 3px 0;
-    text-transform: capitalize;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
-    border: none;
-}
-
-.cat-option.custom-generated:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    /* Keep gradient on hover */
-}
 
 
 .cat-option.separator {
