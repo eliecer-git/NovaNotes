@@ -1060,7 +1060,7 @@ class NoteApp {
             this.emptyState.hidden = true;
             this.deleteNoteBtn.hidden = false;
             this.saveNoteBtn.hidden = false;
-            this.formatToolbar.hidden = false;
+
         } else {
             this.setActiveNote(null);
         }
