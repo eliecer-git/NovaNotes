@@ -2637,27 +2637,32 @@ animation: fadeIn 0.4s ease;
         transform: rotate(90deg);
     }
 
+    .editor-header {
+        position: relative;
+        /* Base for absolute toolbar */
+        padding: 8px 16px;
+    }
+
     .editor-actions {
         display: flex;
         flex-direction: row;
         align-items: center;
-        gap: 10px;
-        position: relative;
+        gap: 8px;
+        position: static;
+        /* Allow toolbar to use header width */
     }
 
     /* Transform toolbar into an elegant dropdown */
     .format-toolbar {
         display: none;
-        /* Hidden by default toggled via JS */
         flex-direction: column;
         position: absolute;
-        top: 60px;
-        right: 10px;
-        /* Separación del borde derecho */
-        left: 10px;
-        /* Separación del borde izquierdo para centrado */
+        top: 100%;
+        /* Just below the header */
+        left: 12px;
+        right: 12px;
         width: auto;
-        /* Ancho automático basado en left/right */
+        max-width: none;
         background: rgba(15, 23, 42, 0.98);
         /* Más opaco para legibilidad */
         backdrop-filter: blur(20px);
@@ -2726,7 +2731,13 @@ animation: fadeIn 0.4s ease;
         width: 100%;
         height: 1px;
         background: rgba(255, 255, 255, 0.1);
-        margin: 5px 0;
+        margin: 2px 0;
+    }
+
+    .format-toolbar .format-btn-group {
+        justify-content: space-around;
+        width: 100%;
+        padding: 5px 0;
     }
 
     /* Ensure specific buttons are visible/hidden properly */
