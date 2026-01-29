@@ -1445,9 +1445,6 @@ class NoteApp {
                     <div class="note-preview">${displayPreview}</div>
                     <div class="note-meta">
                         <span>${this.formatDate(note.timestamp || note.updatedAt)}</span>
-                        <span>•</span>
-                        <span>•</span>
-                        <span class="category-badge">${cat}</span>
                     </div>
                 </div>
             `;
