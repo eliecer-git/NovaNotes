@@ -1262,7 +1262,7 @@ class NoteApp {
             const div = document.createElement('div');
             div.className = 'cat-option custom-generated';
             div.setAttribute('data-value', cat.toLowerCase());
-            div.innerHTML = `📂 ${cat}`; // Simple icon for custom
+            div.textContent = cat; // Just text, no icon
 
             if (separator) {
                 this.categoryMenu.insertBefore(div, separator);
