@@ -852,105 +852,58 @@ class NoteApp {
         dislikeBtn.onclick = () => this.handleVote('dislikes', dislikeBtn);
     }
 
-    async refreshCounts() {
-        const NS = 'novastar_final_resilient_v5';
+    // Simplified Feedback System (Local Only to prevent CORS errors)
+    refreshCounts() {
+        // Load from local storage or default to 0
+        const lCount = parseInt(localStorage.getItem('nstar_l') || '0');
+        const dCount = parseInt(localStorage.getItem('nstar_d') || '0');
 
-        const tryFetch = async (url) => {
-            const turl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
-            // Cadena de proxies resiliente actualizada
-            const proxies = [
-                `https://corsproxy.io/?${encodeURIComponent(turl)}`,
-                `https://api.allorigins.win/get?url=${encodeURIComponent(turl)}`,
-                `https://thingproxy.freeboard.io/fetch/${turl}`
-            ];
-
-            for (const p of proxies) {
-                try {
-                    const res = await fetch(p, { signal: AbortSignal.timeout(5000) });
-                    if (!res.ok) continue;
-                    let data = await res.json();
-                    if (p.includes('allorigins')) data = JSON.parse(data.contents);
-                    if (data && data.count !== undefined) return data;
-                } catch (e) { /* Silencioso */ }
-            }
-            return null; // Retornar null en lugar de lanzar error
-        };
-
-        try {
-            const [lData, dData] = await Promise.all([
-                tryFetch(`https://api.counterapi.dev/v1/${NS}/likes`),
-                tryFetch(`https://api.counterapi.dev/v1/${NS}/dislikes`)
-            ]);
-
-            // Usar datos de API si están disponibles, sino usar localStorage
-            const lCount = lData?.count !== undefined ? parseInt(lData.count) : (parseInt(localStorage.getItem('nstar_l')) || 0);
-            const dCount = dData?.count !== undefined ? parseInt(dData.count) : (parseInt(localStorage.getItem('nstar_d')) || 0);
-
-            const lEl = document.getElementById('like-count');
-            const dEl = document.getElementById('dislike-count');
-            if (lEl) lEl.textContent = lCount;
-            if (dEl) dEl.textContent = dCount;
-
-            if (lData?.count !== undefined) localStorage.setItem('nstar_l', lCount);
-            if (dData?.count !== undefined) localStorage.setItem('nstar_d', dCount);
-        } catch (e) {
-            // Silencioso - usar datos locales
-            const l = localStorage.getItem('nstar_l') || 0;
-            const d = localStorage.getItem('nstar_d') || 0;
-            const lEl = document.getElementById('like-count');
-            const dEl = document.getElementById('dislike-count');
-            if (lEl) lEl.textContent = l;
-            if (dEl) dEl.textContent = d;
-        }
+        const lEl = document.getElementById('like-count');
+        const dEl = document.getElementById('dislike-count');
+        if (lEl) lEl.textContent = lCount;
+        if (dEl) dEl.textContent = dCount;
     }
 
-    async handleVote(type, btn) {
-        const UID = 'novastar_final_resilient_v5';
-        const currentSelection = localStorage.getItem('novanotes_voted');
+    handleVote(type, btn) {
+        // Simple toggle logic for local feel
+        const isVoted = btn.classList.contains('voted');
 
-        if (btn.classList.contains('voting-locked')) return;
-        btn.classList.add('voting-locked');
+        // Handle "deselect" if clicking same button, or switch if checking other
+        const otherType = type === 'likes' ? 'dislikes' : 'likes';
+        const otherBtn = type === 'likes' ? document.getElementById('dislike-btn') : document.getElementById('like-btn');
 
-        const execVote = async (action, voteType) => {
-            const url = `https://api.counterapi.dev/v1/${UID}/${voteType}/${action}?t=${Date.now()}`;
-            const proxies = [
-                url,
-                `https://api.codetabs.com/v1/proxy?url=${encodeURIComponent(url)}`,
-                `https://corsproxy.io/?${encodeURIComponent(url)}`
-            ];
-            for (const p of proxies) {
-                try {
-                    const r = await fetch(p);
-                    if (r.ok) return true;
-                } catch (e) { }
+        // If I was voted, deselect me
+        if (isVoted) {
+            btn.classList.remove('voted');
+            localStorage.removeItem('novanotes_voted');
+
+            let myCount = parseInt(localStorage.getItem(type === 'likes' ? 'nstar_l' : 'nstar_d') || '0');
+            myCount = Math.max(0, myCount - 1);
+            localStorage.setItem(type === 'likes' ? 'nstar_l' : 'nstar_d', myCount);
+
+        } else {
+            // If other was voted, deselect it
+            if (otherBtn.classList.contains('voted')) {
+                otherBtn.classList.remove('voted');
+                let otherCount = parseInt(localStorage.getItem(otherType === 'likes' ? 'nstar_l' : 'nstar_d') || '0');
+                otherCount = Math.max(0, otherCount - 1);
+                localStorage.setItem(otherType === 'likes' ? 'nstar_l' : 'nstar_d', otherCount);
             }
-            return false;
-        };
 
-        try {
-            if (currentSelection === type) {
-                // DESELECT
-                localStorage.removeItem('novanotes_voted');
-                await execVote('down', type);
-            } else {
-                // CHANGE OR NEW
-                if (currentSelection) {
-                    await execVote('down', currentSelection);
-                }
-                await execVote('up', type);
-                localStorage.setItem('novanotes_voted', type);
-                btn.classList.add('vote-success');
-                setTimeout(() => btn.classList.remove('vote-success'), 1000);
-            }
-        } catch (e) {
-            console.log('Error al votar');
-        } finally {
-            await this.refreshCounts();
-            const finalSelection = localStorage.getItem('novanotes_voted');
-            document.getElementById('like-btn').classList.toggle('voted', finalSelection === 'likes');
-            document.getElementById('dislike-btn').classList.toggle('voted', finalSelection === 'dislikes');
-            setTimeout(() => btn.classList.remove('voting-locked'), 400);
+            // Select me
+            btn.classList.add('voted');
+            localStorage.setItem('novanotes_voted', type);
+
+            let myCount = parseInt(localStorage.getItem(type === 'likes' ? 'nstar_l' : 'nstar_d') || '0');
+            myCount++;
+            localStorage.setItem(type === 'likes' ? 'nstar_l' : 'nstar_d', myCount);
+
+            // Visual feedback
+            const emoji = type === 'likes' ? '✨' : '💫';
+            this.showFloatingEmoji(emoji, btn);
         }
+
+        this.refreshCounts();
     }
 
     handleSelection() {
