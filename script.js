@@ -305,6 +305,7 @@ class NoteApp {
     constructor(userId = null) {
         this.currentUserId = userId;
         this.notes = this.loadUserNotes();
+        this.customCategories = this.loadCustomCategories(); // Load custom cats
         this.activeNoteId = null;
         this.searchTerm = '';
 
@@ -795,6 +796,9 @@ class NoteApp {
         if (this.saveCustomCatBtn) this.saveCustomCatBtn.onclick = () => this.saveCustomCategory();
         if (this.closeCatBtn) this.closeCatBtn.onclick = () => this.categoryModal.hidden = true;
 
+        // Init Custom Categories in Menu
+        this.renderCategoryMenuOptions();
+
         // Media Listeners
         if (this.btnImage) this.btnImage.onclick = () => this.imageUploadInput.click();
         if (this.imageUploadInput) this.imageUploadInput.onchange = (e) => this.handleImageUpload(e);
@@ -1219,11 +1223,54 @@ class NoteApp {
         if (!this.customCategoryInput) return;
         const val = this.customCategoryInput.value.trim();
         if (val) {
-            // Add to dropdown visually (optional, or just set it)
-            // For now, simple set
-            this.setCategory(val);
+            // Save to custom categories list if distinct
+            const lowerVal = val.toLowerCase();
+            const exists = this.customCategories.some(c => c.toLowerCase() === lowerVal);
+            if (!exists) {
+                this.customCategories.push(val);
+                this.saveCustomCategories();
+                this.renderCategoryMenuOptions(); // Update menu
+            }
+
+            this.setCategory(lowerVal); // Set as active
             this.categoryModal.hidden = true;
         }
+    }
+
+    // New Helpers for Custom Categories
+    loadCustomCategories() {
+        const stored = localStorage.getItem('nova_custom_categories');
+        return stored ? JSON.parse(stored) : [];
+    }
+
+    saveCustomCategories() {
+        localStorage.setItem('nova_custom_categories', JSON.stringify(this.customCategories));
+    }
+
+    renderCategoryMenuOptions() {
+        // Find the place to insert custom options (before separator)
+        if (!this.categoryMenu) return;
+
+        // Clear existing custom options first (identify them by a specific class or reconstruct part of menu)
+        // Easiest is to remove all .cat-option.custom-generated
+        const existing = this.categoryMenu.querySelectorAll('.cat-option.custom-generated');
+        existing.forEach(el => el.remove());
+
+        const separator = this.categoryMenu.querySelector('.cat-option.separator');
+
+        this.customCategories.forEach(cat => {
+            const div = document.createElement('div');
+            div.className = 'cat-option custom-generated';
+            div.setAttribute('data-value', cat.toLowerCase());
+            div.innerHTML = `📂 ${cat}`; // Simple icon for custom
+
+            if (separator) {
+                this.categoryMenu.insertBefore(div, separator);
+            } else {
+                // Fallback if separator missing
+                this.categoryMenu.appendChild(div);
+            }
+        });
     }
 
     // --- Media Methods --- //
