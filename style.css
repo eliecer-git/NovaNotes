@@ -1837,6 +1837,19 @@ animation: fadeIn 0.4s ease;
     box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
 }
 
+body.light-theme .btn-gradient-small {
+    background: #f5ecd0;
+    border: 1px solid #c9b87a;
+    color: #2d2a1f;
+    /* Darker text for visibility */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .btn-gradient-small:hover {
+    background: #ebe0b8;
+    border-color: #b8a56a;
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 16px 24px;
