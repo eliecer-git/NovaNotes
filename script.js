@@ -556,15 +556,9 @@ class NoteApp {
         this.noteTitleInput.oninput = () => {
             this.updateSidebarCardPreview();
             this.debouncedSaveAndRender();
-        };
-        // Prevent enter key in title
-        this.noteTitleInput.onkeydown = (e) => { if (e.key === 'Enter') e.preventDefault(); };
-
-        this.noteTitleInput.oninput = () => {
-            this.updateSidebarCardPreview();
-            this.debouncedSaveAndRender();
             this.updatePlaceholderState();
         };
+        this.noteTitleInput.onkeydown = (e) => { if (e.key === 'Enter') e.preventDefault(); };
 
         this.noteContentInput.oninput = () => {
             this.updateSidebarCardPreview();
@@ -1619,13 +1613,11 @@ class NoteApp {
     }
 
     updatePlaceholderState() {
-        // Verificar si el título está vacío
-        const titleEmpty = !this.noteTitleInput.innerText.trim();
-        this.noteTitleInput.classList.toggle('is-empty', titleEmpty);
+        const isTitleEmpty = (this.noteTitleInput.textContent.trim() === '');
+        const isContentEmpty = (this.noteContentInput.textContent.trim() === '' && !this.noteContentInput.querySelector('img'));
 
-        // Verificar si el contenido está vacío
-        const contentEmpty = !this.noteContentInput.innerText.trim();
-        this.noteContentInput.classList.toggle('is-empty', contentEmpty);
+        this.noteTitleInput.classList.toggle('is-empty', isTitleEmpty);
+        this.noteContentInput.classList.toggle('is-empty', isContentEmpty);
     }
 
     applyTheme(theme, customColor) {

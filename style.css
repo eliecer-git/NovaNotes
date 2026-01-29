@@ -2101,39 +2101,31 @@ animation: fadeIn 0.4s ease;
     transform: scale(1.1);
 }
 
-/* contenteditable Placeholder Support - Mejorado */
+/* contenteditable Placeholder Support - Mejorado y Consolidado */
+.input-title,
+.input-content {
+    position: relative;
+}
+
 .input-title:empty:before,
 .input-content:empty:before,
-.input-title:not(:focus):empty:before,
-.input-content:not(:focus):empty:before {
-    content: attr(data-placeholder);
-    color: var(--text-muted);
-    pointer-events: none;
-    display: block;
-    font-style: italic;
-    opacity: 0.6;
-}
-
-/* Fallback para cuando el contenido tiene solo un BR */
-.input-title:has(br:only-child):before,
-.input-content:has(br:only-child):before {
-    content: attr(data-placeholder);
-    color: var(--text-muted);
-    pointer-events: none;
-    display: block;
-    font-style: italic;
-    opacity: 0.6;
-}
-
-/* Placeholder usando clase JS (más confiable) */
 .input-title.is-empty:before,
 .input-content.is-empty:before {
     content: attr(data-placeholder);
     color: var(--text-muted);
     pointer-events: none;
-    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
     font-style: italic;
-    opacity: 0.6;
+    opacity: 0.5;
+    display: block;
+}
+
+/* Ocultar placeholder al enfocar o si tiene contenido real */
+.input-title:focus:before,
+.input-content:focus:before {
+    display: none !important;
 }
 
 .input-title {
