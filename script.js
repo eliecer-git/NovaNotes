@@ -305,7 +305,7 @@ class NoteApp {
     constructor(userId = null) {
         this.currentUserId = userId;
         this.notes = this.loadUserNotes();
-        this.customCategories = this.loadCustomCategories(); // Load custom cats
+
         this.activeNoteId = null;
         this.searchTerm = '';
 
@@ -346,7 +346,7 @@ class NoteApp {
         this.appContainer = document.querySelector('.app-container');
         this.formatToolbar = document.getElementById('format-toolbar');
         this.editorActions = document.querySelector('.editor-actions'); // Add this line
-        this.categorySelect = document.getElementById('category-select');
+
         this.themeSelect = document.getElementById('theme-select');
         this.lockNoteBtn = document.getElementById('lock-note-btn');
         this.passwordModal = document.getElementById('password-modal');
@@ -356,9 +356,7 @@ class NoteApp {
         this.pwdError = document.getElementById('pwd-error');
         this.bgColorPicker = document.getElementById('bg-color-picker');
         this.categoryModal = document.getElementById('category-modal');
-        this.customCategoryInput = document.getElementById('custom-category-input');
-        this.saveCustomCatBtn = document.getElementById('save-custom-cat-btn');
-        this.closeCatBtn = document.getElementById('close-cat-btn');
+
         this.installBtn = document.getElementById('pwa-install-btn');
         this.infoBtn = document.getElementById('info-btn');
         this.infoModal = document.getElementById('info-modal');
@@ -433,10 +431,7 @@ class NoteApp {
         this.starBtn = document.getElementById('star-note-btn');
 
         // Category System (New)
-        this.categoryTriggerBtn = document.getElementById('category-trigger-btn');
-        this.categoryMenu = document.getElementById('category-menu');
-        this.currentCategoryText = document.getElementById('current-category-text');
-        this.currentCategoryIcon = document.getElementById('current-category-icon');
+
 
         this.noteColorBtn = document.getElementById('note-color-btn');
         this.noteColorMenu = document.getElementById('note-color-menu');
@@ -758,46 +753,7 @@ class NoteApp {
             };
         });
 
-        // Category Menu Logic
-        if (this.categoryTriggerBtn) {
-            this.categoryTriggerBtn.onclick = (e) => {
-                e.stopPropagation();
-                this.categoryMenu.hidden = !this.categoryMenu.hidden;
-            };
 
-            document.addEventListener('click', (e) => {
-                if (this.categoryMenu && !this.categoryMenu.hidden) {
-                    if (!this.categoryTriggerBtn.contains(e.target) && !this.categoryMenu.contains(e.target)) {
-                        this.categoryMenu.hidden = true;
-                    }
-                }
-            });
-
-            // Delegate events for category options (static & dynamic)
-            this.categoryMenu.onclick = (e) => {
-                const option = e.target.closest('.cat-option');
-                if (!option) return;
-
-                const val = option.getAttribute('data-value');
-                // Fix: Check if separator, if so ignore
-                if (option.classList.contains('separator')) return;
-
-                if (val === 'custom') {
-                    this.categoryMenu.hidden = true;
-                    this.openNewCategoryModal();
-                } else if (val) {
-                    this.setCategory(val);
-                    this.categoryMenu.hidden = true;
-                }
-            };
-        }
-
-        // Custom Category Modal Listeners
-        if (this.saveCustomCatBtn) this.saveCustomCatBtn.onclick = () => this.saveCustomCategory();
-        if (this.closeCatBtn) this.closeCatBtn.onclick = () => this.categoryModal.hidden = true;
-
-        // Init Custom Categories in Menu
-        this.renderCategoryMenuOptions();
 
         // Media Listeners
         if (this.btnImage) this.btnImage.onclick = () => this.imageUploadInput.click();
@@ -1084,7 +1040,7 @@ class NoteApp {
 
             // Start Update
             this.starBtn.classList.toggle('active', !!note.isFavorite);
-            this.updateCategoryUI(note.category || 'personal');
+
             // End Update
 
             this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
@@ -1129,102 +1085,7 @@ class NoteApp {
         return colors[colorName] || 'var(--text-muted)';
     }
 
-    updateCategoryUI(catValue) {
-        // Map common values to text/icon
-        const map = {
-            'personal': { text: 'Personal', icon: '👤' },
-            'trabajo': { text: 'Trabajo', icon: '💼' },
-            'estudio': { text: 'Estudio', icon: '🎓' },
-            'ideas': { text: 'Ideas', icon: '💡' },
-            'importante': { text: 'Importante', icon: '⚠️' }
-        };
 
-        let display = map[catValue];
-        if (!display) {
-            // Custom category fallback
-            display = { text: catValue.charAt(0).toUpperCase() + catValue.slice(1), icon: '📂' };
-        }
-
-        this.currentCategoryText.textContent = display.text;
-        this.currentCategoryIcon.textContent = display.icon;
-    }
-
-    setCategory(catValue) {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (note) {
-            note.category = catValue;
-            this.updateCategoryUI(catValue);
-            this.saveToStorage();
-            this.renderNotesList();
-        }
-    }
-
-    openNewCategoryModal() {
-        if (!this.customCategoryInput) {
-            this.customCategoryInput = document.getElementById('custom-category-input');
-        }
-        if (!this.customCategoryInput) return;
-
-        this.customCategoryInput.value = '';
-        this.categoryModal.hidden = false;
-        this.categoryModal.classList.remove('hidden');
-        setTimeout(() => this.customCategoryInput.focus(), 100); // Slight delay for focus
-    }
-
-    saveCustomCategory() {
-        if (!this.customCategoryInput) return;
-        const val = this.customCategoryInput.value.trim();
-        if (val) {
-            // Save to custom categories list if distinct
-            const lowerVal = val.toLowerCase();
-            const exists = this.customCategories.some(c => c.toLowerCase() === lowerVal);
-            if (!exists) {
-                this.customCategories.push(val);
-                this.saveCustomCategories();
-                this.renderCategoryMenuOptions(); // Update menu
-            }
-
-            this.setCategory(lowerVal); // Set as active
-            this.categoryModal.hidden = true;
-        }
-    }
-
-    // New Helpers for Custom Categories
-    loadCustomCategories() {
-        const stored = localStorage.getItem('nova_custom_categories');
-        return stored ? JSON.parse(stored) : [];
-    }
-
-    saveCustomCategories() {
-        localStorage.setItem('nova_custom_categories', JSON.stringify(this.customCategories));
-    }
-
-    renderCategoryMenuOptions() {
-        // Find the place to insert custom options (before separator)
-        if (!this.categoryMenu) return;
-
-        // Clear existing custom options first (identify them by a specific class or reconstruct part of menu)
-        // Easiest is to remove all .cat-option.custom-generated
-        const existing = this.categoryMenu.querySelectorAll('.cat-option.custom-generated');
-        existing.forEach(el => el.remove());
-
-        const separator = this.categoryMenu.querySelector('.cat-option.separator');
-
-        this.customCategories.forEach(cat => {
-            const div = document.createElement('div');
-            div.className = 'cat-option custom-generated';
-            div.setAttribute('data-value', cat.toLowerCase());
-            div.textContent = cat; // Just text, no icon
-
-            if (separator) {
-                this.categoryMenu.insertBefore(div, separator);
-            } else {
-                // Fallback if separator missing
-                this.categoryMenu.appendChild(div);
-            }
-        });
-    }
 
     // --- Media Methods --- //
 

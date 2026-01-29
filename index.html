@@ -278,32 +278,6 @@
                             <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
                         </div>
                         <div class="divider"></div>
-
-                        <!-- Category Dropdown -->
-                        <div class="category-selector-wrapper" style="position:relative; display: inline-block;">
-                            <button id="category-trigger-btn" class="btn-category-pill" title="Cambiar Categoría">
-                                <span id="current-category-icon">👤</span>
-                                <span id="current-category-text">Personal</span>
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M6 9l6 6 6-6" />
-                                </svg>
-                            </button>
-
-                            <div id="category-menu" class="category-menu glass" hidden>
-                                <div class="cat-option" data-value="personal">👤 Personal</div>
-                                <div class="cat-option" data-value="trabajo">💼 Trabajo</div>
-                                <div class="cat-option" data-value="estudio">🎓 Estudio</div>
-                                <div class="cat-option" data-value="ideas">💡 Ideas</div>
-                                <div class="cat-option" data-value="importante">⚠️ Importante</div>
-                                <div class="cat-option separator"></div>
-                                <div class="cat-option create-new" data-value="custom">
-                                    <span>➕</span> Crear nueva...
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="divider"></div>
                         <button id="star-note-btn" class="btn-icon" title="Marcar como Favorito">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -561,20 +535,7 @@
         </div>
     </div>
 
-    <!-- Modal para Nueva Categoría -->
-    <div id="category-modal" class="modal-overlay" hidden>
-        <div class="modal-content glass" style="max-width: 350px;">
-            <div class="modal-header">
-                <h2>Nueva Categoría</h2>
-                <button id="close-cat-btn" class="btn-close">×</button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="custom-category-input" class="input-premium"
-                    placeholder="Nombre de la categoría..." style="width: 100%; margin-bottom: 20px;">
-                <button id="save-custom-cat-btn" class="btn-primary" style="width: 100%;">Crear Categoría</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Modal Maestro de Bóveda (Pantalla Completa Negra) -->
     <div id="master-lock-modal" class="master-lock-overlay" hidden>
