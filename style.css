@@ -988,6 +988,12 @@ h2,
 /* --- Nuevas Funcionalidades: Favoritos, Tags, Sort, Colores --- */
 
 /* Custom Sort Dropdown - Artistic */
+.sort-container {
+    padding: 0 24px;
+    margin-bottom: 8px;
+    /* Added separation as requested */
+}
+
 .custom-sort-dropdown {
     position: relative;
     width: 100%;
