@@ -776,6 +776,55 @@ class NoteApp {
                 this.openResizeModal(e.target);
             }
         });
+
+        // --- Gestos Táctiles para Redimensionar Imágenes (Móvil) ---
+        let initialPinchDistance = 0;
+        let initialPinchWidthPercent = 100;
+        let pinchTargetImg = null;
+
+        this.noteContentInput.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2 && e.target.tagName === 'IMG') {
+                pinchTargetImg = e.target;
+                initialPinchDistance = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                let currentWidth = pinchTargetImg.style.width || '100%';
+                initialPinchWidthPercent = parseInt(currentWidth) || 100;
+                // No llamamos a preventDefault para no romper el scroll normal, 
+                // a menos que estemos pinchando la imagen.
+            }
+        }, { passive: true });
+
+        this.noteContentInput.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && pinchTargetImg) {
+                const currentDistance = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+
+                if (initialPinchDistance > 0) {
+                    const ratio = currentDistance / initialPinchDistance;
+                    let newWidthPercent = initialPinchWidthPercent * ratio;
+
+                    // Limitar entre 10% y 100%
+                    newWidthPercent = Math.max(10, Math.min(100, Math.round(newWidthPercent)));
+
+                    pinchTargetImg.style.width = newWidthPercent + '%';
+
+                    // Aquí sí prevenimos el scroll para que el gesto de zoom sea fluido
+                    if (e.cancelable) e.preventDefault();
+                }
+            }
+        }, { passive: false });
+
+        this.noteContentInput.addEventListener('touchend', () => {
+            if (pinchTargetImg) {
+                this.debouncedSaveAndRender();
+                pinchTargetImg = null;
+                initialPinchDistance = 0;
+            }
+        });
     }
 
     async initFeedback() {
