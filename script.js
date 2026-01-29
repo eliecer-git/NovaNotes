@@ -1398,7 +1398,7 @@ class NoteApp {
         }
 
         // Sort
-        const sortMode = this.sortSelect ? this.sortSelect.value : 'date-desc';
+        const sortMode = this.currentSortValue || 'date-desc';
 
         filteredNotes.sort((a, b) => {
             // Pinned always on top? Or controlled by sort?
