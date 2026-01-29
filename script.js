@@ -933,6 +933,10 @@ class NoteApp {
         this.applyFormat(note.styles);
         this.applyTheme(note.theme || 'none', note.customBgColor);
 
+
+
+        this.updateNoteMetaUI(note);
+
         // Update placeholders
         this.updatePlaceholderState();
         this.updateWordCount();
@@ -988,8 +992,10 @@ class NoteApp {
         this.saveToStorage();
         this.setActiveNote(newNote.id);
         this.renderNotesList();
+        this.renderNotesList();
         this.updateStats();
         this.noteTitleInput.focus();
+        this.updateNoteMetaUI(newNote);
     }
 
     /**
@@ -1308,6 +1314,43 @@ class NoteApp {
             this.setActiveNote(null);
             this.renderNotesList();
             this.updateStats();
+        }
+    }
+
+    toggleFavorite() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.isFavorite = !note.isFavorite;
+            this.saveToStorage();
+            this.updateNoteMetaUI(note); // Update star button
+            this.renderNotesList(); // Update list item star
+        }
+    }
+
+    setNoteColor(color) {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.color = color;
+            this.saveToStorage();
+            this.renderNotesList();
+        }
+    }
+
+    updateNoteMetaUI(note) {
+        // Update Star Button
+        if (this.starBtn) {
+            const svg = this.starBtn.querySelector('svg');
+            if (note.isFavorite) {
+                this.starBtn.classList.add('active');
+                if (svg) svg.setAttribute('fill', 'currentColor');
+                this.starBtn.style.color = '#fbbf24'; // Gold
+            } else {
+                this.starBtn.classList.remove('active');
+                if (svg) svg.setAttribute('fill', 'none');
+                this.starBtn.style.color = ''; // Reset
+            }
         }
     }
 
