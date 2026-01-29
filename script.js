@@ -1434,7 +1434,7 @@ class NoteApp {
             }
 
             noteEl.innerHTML = `
-                <div class="note-icon">${this.getCategoryIcon(cat)}</div>
+                <!-- <div class="note-icon">${this.getCategoryIcon(cat)}</div> -->
                 <div class="note-info">
                     <div class="note-title">
                         ${starHtml} ${displayTitle}
