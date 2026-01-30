@@ -3911,7 +3911,11 @@ body.light-theme .btn-auth-secondary:hover {
         border-radius: 50%;
         border: 2px solid rgba(255, 255, 255, 0.1);
         padding: 0;
+        margin: 0;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Icon Buttons on Desktop */
@@ -3941,10 +3945,14 @@ body.light-theme .btn-auth-secondary:hover {
     }
 
     /* Actions Row Layout */
+    /* Actions Row Layout */
     .toolbar-row.actions-row {
         display: flex;
         align-items: center;
         gap: 4px;
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 
