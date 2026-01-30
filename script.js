@@ -2510,9 +2510,10 @@ class NoteApp {
         if (!this.activeNoteId) {
             return { title: 'Ninguna (Interfaz vacía)', content: '' };
         }
+        // Use innerText to get full visible text (Note: getRawText truncates to 45 chars by default!)
         return {
-            title: this.getRawText(this.noteTitleInput.innerText || ''),
-            content: this.getRawText(this.noteContentInput.innerText || '')
+            title: this.noteTitleInput.innerText || '',
+            content: this.noteContentInput.innerText || ''
         };
     }
 }
