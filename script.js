@@ -293,6 +293,246 @@ class AuthManager {
 }
 
 /**
+ * @class AIManager
+ * @description Handles interaction with Google Gemini API for AI features.
+ */
+class AIManager {
+    constructor(noteApp) {
+        this.noteApp = noteApp; // Reference to main app for context
+        this.API_KEY_KEY = 'novanotes_gemini_key';
+        this.MODEL_NAME = 'gemini-1.5-flash';
+
+        // DOM Elements
+        this.aiBtn = document.getElementById('ai-btn');
+        this.chatInterface = document.getElementById('ai-chat-interface');
+        this.closeChatBtn = document.getElementById('close-ai-chat-btn');
+        this.keyModal = document.getElementById('ai-key-modal');
+        this.keyInput = document.getElementById('ai-api-key-input');
+        this.saveKeyBtn = document.getElementById('save-ai-key-btn');
+        this.closeKeyBtn = document.getElementById('close-ai-key-btn');
+        this.settingsBtn = document.getElementById('ai-settings-btn');
+        this.chatInput = document.getElementById('ai-chat-input');
+        this.sendBtn = document.getElementById('ai-send-btn');
+        this.messagesContainer = document.getElementById('ai-chat-messages');
+        this.keyError = document.getElementById('ai-key-error');
+
+        this.initListeners();
+    }
+
+    initListeners() {
+        // Toggle Chat
+        if (this.aiBtn) {
+            this.aiBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleChat();
+            });
+        }
+
+        // Close Chat
+        if (this.closeChatBtn) {
+            this.closeChatBtn.addEventListener('click', () => {
+                this.chatInterface.hidden = true;
+            });
+        }
+
+        // Settings (Key Configuration)
+        if (this.settingsBtn) {
+            this.settingsBtn.addEventListener('click', () => {
+                this.openKeyModal();
+            });
+        }
+
+        // Key Modal
+        if (this.saveKeyBtn) {
+            this.saveKeyBtn.addEventListener('click', () => this.saveKey());
+        }
+        if (this.closeKeyBtn) {
+            this.closeKeyBtn.addEventListener('click', () => this.keyModal.hidden = true);
+        }
+
+        // Sending Messages
+        if (this.sendBtn) {
+            this.sendBtn.addEventListener('click', () => this.handleUserSend());
+        }
+        if (this.chatInput) {
+            this.chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.handleUserSend();
+                }
+            });
+        }
+    }
+
+    toggleChat() {
+        // First check if user has a key
+        const key = this.getKey();
+        if (!key) {
+            this.openKeyModal();
+            return;
+        }
+
+        this.chatInterface.hidden = !this.chatInterface.hidden;
+        if (!this.chatInterface.hidden) {
+            this.chatInput.focus();
+            this.scrollToBottom();
+        }
+    }
+
+    openKeyModal() {
+        this.keyModal.hidden = false;
+        this.keyInput.value = this.getKey() || '';
+        this.keyInput.focus();
+        this.keyError.textContent = '';
+    }
+
+    getKey() {
+        return localStorage.getItem(this.API_KEY_KEY);
+    }
+
+    saveKey() {
+        const key = this.keyInput.value.trim();
+        if (!key) {
+            this.keyError.textContent = 'Por favor ingresa una clave válida.';
+            return;
+        }
+        if (!key.startsWith('AIza')) {
+            this.keyError.textContent = 'La clave no parece válida (debe empezar con AIza...).';
+            return; // Soft validation, can be removed if strict
+        }
+
+        localStorage.setItem(this.API_KEY_KEY, key);
+        this.keyModal.hidden = true;
+        this.chatInterface.hidden = false; // Open chat after saving
+
+        // Greeting if first time
+        if (this.messagesContainer.children.length <= 1) {
+            this.appendMessage('ai', '¡Configuración exitosa! Ahora puedo leer tus notas y ayudarte. Intenta pedirme que resuma lo que estás escribiendo.');
+        }
+    }
+
+    handleUserSend() {
+        const text = this.chatInput.value.trim();
+        if (!text) return;
+
+        // Clear input
+        this.chatInput.value = '';
+        this.chatInput.style.height = 'auto'; // Reset height if auto-expanding
+
+        // Show user message
+        this.appendMessage('user', text);
+
+        // Get context from active note
+        const context = this.noteApp.getActiveNoteContext();
+
+        // Show loading
+        const loadingId = this.appendLoading();
+
+        // Call API
+        this.callGemini(text, context)
+            .then(response => {
+                this.removeLoading(loadingId);
+                this.appendMessage('ai', response);
+            })
+            .catch(err => {
+                this.removeLoading(loadingId);
+                this.appendMessage('ai error', 'Lo siento, hubo un error: ' + (err.message || 'Desconocido'));
+            });
+    }
+
+    appendMessage(type, text) {
+        const div = document.createElement('div');
+        div.className = `ai-message ${type}`;
+
+        // Simple Markdown parsing (bold, code blocks)
+        let formattedText = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\`\`\`(.*?)\`\`\`/gs, '<pre><code>$1</code></pre>')
+            .replace(/\n/g, '<br>');
+
+        div.innerHTML = formattedText;
+        this.messagesContainer.appendChild(div);
+        this.scrollToBottom();
+        return div;
+    }
+
+    appendLoading() {
+        const id = 'loading-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'ai-message loading';
+        div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+        this.messagesContainer.appendChild(div);
+        this.scrollToBottom();
+        return id;
+    }
+
+    removeLoading(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    scrollToBottom() {
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    }
+
+    async callGemini(prompt, context) {
+        const key = this.getKey();
+        if (!key) throw new Error('No hay API Key configurada.');
+
+        const systemInstruction = `Eres Nova, un asistente inteligente integrado en una aplicación de notas.
+        El usuario está editando una nota.
+        
+        CONTEXTO DE LA NOTA ACTUAL (Puede estar vacío):
+        ---
+        TÍTULO: ${context.title}
+        CONTENIDO: ${context.content}
+        ---
+
+        INSTRUCCIONES:
+        1. Responde de manera concisa y útil.
+        2. Si el usuario te pide resumir, usa el contexto proporcionado.
+        3. Si te pide redactar, genera el texto directamente.
+        4. Eres servicial, amigable y profesional.
+        5. Habla siempre en Español (o en el idioma que el usuario prefiera si lo cambia).
+        `;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.MODEL_NAME}:generateContent?key=${key}`;
+
+        const payload = {
+            contents: [{
+                parts: [{
+                    text: systemInstruction + "\n\nUSUARIO DICE: " + prompt
+                }]
+            }]
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error?.message || 'Error en la petición a Google AI');
+            }
+
+            const data = await response.json();
+            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (!aiText) throw new Error('Respuesta vacía de la IA.');
+            return aiText;
+
+        } catch (error) {
+            console.error('Gemini API Error:', error);
+            throw error;
+        }
+    }
+}
+
+/**
  * @class NoteApp
  * @description Core engine for novaStarPro. Handles note management, state, UI rendering, and security.
  */
@@ -460,6 +700,9 @@ class NoteApp {
         this.cancelResizeBtn = document.getElementById('cancel-resize-btn');
         this.confirmResizeBtn = document.getElementById('confirm-resize-btn');
         this.currentResizingImg = null;
+
+        // Initialize AI Manager
+        this.aiManager = new AIManager(this);
 
         this.init();
     }
@@ -2261,6 +2504,16 @@ class NoteApp {
             case 'custom': return '📂';
             default: return '📝';
         }
+    }
+    // --- AI Context Helper ---
+    getActiveNoteContext() {
+        if (!this.activeNoteId) {
+            return { title: 'Ninguna (Interfaz vacía)', content: '' };
+        }
+        return {
+            title: this.getRawText(this.noteTitleInput.innerText || ''),
+            content: this.getRawText(this.noteContentInput.innerText || '')
+        };
     }
 }
 
