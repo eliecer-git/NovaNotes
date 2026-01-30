@@ -836,19 +836,7 @@ h2,
     background-image: none !important;
 }
 
-/* Adjust readability for themes */
-.editor-view[class*="theme-"]:not(.theme-none) .input-title,
-.editor-view[class*="theme-"]:not(.theme-none) .input-content {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.editor-view[class*="theme-"]:not(.theme-none):not(.theme-midnight) .input-title {
-    color: #1a1a1a !important;
-}
-
-.editor-view[class*="theme-"]:not(.theme-none):not(.theme-midnight) .input-content {
-    color: #2d3748 !important;
-}
+/* Readability adjustments removed to allow manual color control */
 
 /* Security Blur */
 .editor-view.locked .editor-fields {
