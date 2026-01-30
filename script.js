@@ -491,11 +491,7 @@ class NoteApp {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
-            // Solo mostrar si NO es móvil (opcional, según requerimiento) o dejar que el navegador lo maneje en móvil
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            if (!isMobile) {
-                this.installBtn.style.display = 'flex';
-            }
+            this.installBtn.style.display = 'flex';
         });
 
         this.installBtn.addEventListener('click', async () => {
