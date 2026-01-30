@@ -578,13 +578,14 @@ class NoteApp {
         // Ocultar botón de cambiar contraseña (solo visible en bóveda privada)
         this.changePwdBtn.style.display = 'none';
 
-        // Format listeners
-        this.titleFontSelect.onchange = (e) => this.updateFormat('titleFont', e.target.value);
-        this.titleSizeSelect.onchange = (e) => this.updateFormat('titleSize', e.target.value);
-        this.titleColorPicker.oninput = (e) => this.updateFormat('titleColor', e.target.value);
-        this.contentFontSelect.onchange = (e) => this.updateFormat('contentFont', e.target.value);
-        this.contentSizeSelect.onchange = (e) => this.updateFormat('contentSize', e.target.value);
-        this.textColorPicker.oninput = (e) => this.updateFormat('textColor', e.target.value);
+        // Format listeners with auto-close
+        this.titleFontSelect.onchange = (e) => { this.updateFormat('titleFont', e.target.value); this.closeToolbarMobile(); };
+        this.titleSizeSelect.onchange = (e) => { this.updateFormat('titleSize', e.target.value); this.closeToolbarMobile(); };
+        this.titleColorPicker.onchange = (e) => { this.updateFormat('titleColor', e.target.value); this.closeToolbarMobile(); }; // Use onchange for final value
+
+        this.contentFontSelect.onchange = (e) => { this.updateFormat('contentFont', e.target.value); this.closeToolbarMobile(); };
+        this.contentSizeSelect.onchange = (e) => { this.updateFormat('contentSize', e.target.value); this.closeToolbarMobile(); };
+        this.textColorPicker.onchange = (e) => { this.updateFormat('textColor', e.target.value); this.closeToolbarMobile(); };
 
 
         this.themeSelect.onchange = (e) => {
@@ -652,11 +653,50 @@ class NoteApp {
         this.initFeedback();
 
         // Formato de Texto
-        document.getElementById('btn-bold').onclick = () => this.applyTextFormat('bold');
-        document.getElementById('btn-italic').onclick = () => this.applyTextFormat('italic');
-        document.getElementById('btn-underline').onclick = () => this.applyTextFormat('underline');
-        document.getElementById('btn-list').onclick = () => this.applyTextFormat('insertUnorderedList');
+        // Format Toolbar Buttons
+        const formatButtons = [
+            { id: 'btn-bold', cmd: 'bold' },
+            { id: 'btn-italic', cmd: 'italic' },
+            { id: 'btn-underline', cmd: 'underline' }
+        ];
 
+        formatButtons.forEach(btn => {
+            const el = document.getElementById(btn.id);
+            if (el) {
+                el.onclick = () => {
+                    this.applyTextFormat(btn.cmd);
+                    this.closeToolbarMobile();
+                };
+            }
+        });
+
+        // Custom Checklist Logic
+        const btnList = document.getElementById('btn-list');
+        if (btnList) {
+            btnList.onclick = () => {
+                this.insertChecklist();
+                this.closeToolbarMobile();
+            };
+        }
+
+        // Checklist Interaction (Delegated)
+        this.noteContentInput.addEventListener('click', (e) => {
+            // Check if clicking on LI
+            if (e.target.tagName === 'LI' && this.noteContentInput.contains(e.target)) {
+                // Toggle checked state
+                const li = e.target;
+                // Get click position relative to LI
+                const rect = li.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+
+                // If click is in the "checkbox area" (first 30px approximately)
+                if (x <= 30) {
+                    li.classList.toggle('checked');
+                    this.debouncedSaveAndRender();
+                    e.preventDefault(); // Prevent moving cursor there if just checking
+                }
+            }
+        });
         // Botón de atrás en móvil
         if (this.mobileBackBtn) {
             this.mobileBackBtn.onclick = () => this.setActiveNote(null);
@@ -925,8 +965,12 @@ class NoteApp {
     }
 
     applySelectionColor(color) {
-        document.execCommand('foreColor', false, color);
+        // Now acts as Highlight / Marker Background Color
+        document.execCommand('hiliteColor', false, color);
+        // Also support 'backColor' for some browsers if needed, but hiliteColor is standard for selection
         this.debouncedSaveAndRender();
+        this.selectionToolbar.hidden = true; // Auto hide after selection
+        this.noteContentInput.focus();
     }
 
     applyTextFormat(command, value = null) {
@@ -939,6 +983,27 @@ class NoteApp {
         const imgHtml = `<img src="${src}" style="max-width: 100%; border-radius: 15px; margin: 15px 0; display: block; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">`;
         this.noteContentInput.focus();
         document.execCommand('insertHTML', false, imgHtml + '<div><br></div>');
+        this.debouncedSaveAndRender();
+    }
+
+    insertChecklist() {
+        this.noteContentInput.focus();
+        // Insert a UL with class "checklist"
+        // We need to check if we are already in a list or just insert a new one.
+        // Simplified: use execCommand to make a list, then add class to the parent UL
+        document.execCommand('insertUnorderedList');
+
+        // Find the parent UL of the current selection and add class
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            let node = selection.anchorNode;
+            while (node && node.nodeName !== 'UL' && node !== this.noteContentInput) {
+                node = node.parentNode;
+            }
+            if (node && node.nodeName === 'UL') {
+                node.classList.add('checklist');
+            }
+        }
         this.debouncedSaveAndRender();
     }
 
@@ -1005,6 +1070,15 @@ class NoteApp {
     toggleMobileMenu() {
         this.formatToolbar.classList.toggle('show');
         this.mobileMenuBtn.classList.toggle('active');
+    }
+
+    closeToolbarMobile() {
+        if (window.innerWidth <= 768) {
+            this.formatToolbar.classList.remove('show');
+            this.mobileMenuBtn.classList.remove('active');
+        }
+        // Return focus to content to keep typing flow
+        if (this.activeNoteId) this.noteContentInput.focus();
     }
 
     toggleFullscreen() {

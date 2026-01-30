@@ -2163,9 +2163,56 @@ body.light-theme .btn-gradient-small:hover {
     outline: none;
     line-height: 1.8;
     transition: font-size 0.2s ease;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    min-height: 300px;
+}
+
+/* Custom Checklist Styles */
+ul.checklist {
+    list-style: none;
+    /* Remove default bullets */
+    padding-left: 0;
+}
+
+ul.checklist li {
+    position: relative;
+    padding-left: 30px;
+    /* Space for checkbox */
+    margin-bottom: 5px;
+    cursor: pointer;
+    /* Clickable */
+}
+
+ul.checklist li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--text-muted);
+    border-radius: 4px;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+ul.checklist li.checked {
+    text-decoration: line-through;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+ul.checklist li.checked::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    /* Checkmark trick using plain CSS borders/content is simplest or SVG background */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    background-size: 80%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+white-space: pre-wrap;
+word-wrap: break-word;
+min-height: 300px;
 }
 
 /* NovaVision AI Button */
@@ -2658,42 +2705,110 @@ body.light-theme .btn-gradient-small:hover {
     }
 
     /* Transform toolbar into an elegant dropdown */
+    /* Transform toolbar into an elegant dropdown */
     .format-toolbar {
         display: none;
         flex-direction: column;
         position: absolute;
         top: 100%;
-        /* Just below the header */
         left: 12px;
         right: 12px;
         width: auto;
-        max-width: none;
         background: rgba(15, 23, 42, 0.98);
-        /* Más opaco para legibilidad */
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 20px;
-        padding: 20px;
-        gap: 15px;
+        padding: 10px;
+        gap: 8px;
         z-index: 1000;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
         animation: menuSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        max-height: 70vh;
+        max-height: 80vh;
         overflow-y: auto;
+    }
+
+    /* Accordion Styles */
+    .toolbar-section {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .toolbar-section-btn {
+        width: 100%;
+        text-align: left;
+        padding: 10px 15px;
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .toolbar-content {
+        padding: 10px;
+        display: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .toolbar-content.show {
+        display: block;
+    }
+
+    .toolbar-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+    }
+
+    /* Compact Inputs */
+    .select-premium.compact {
+        flex: 1;
+        /* Share space */
+        min-width: 0;
+        font-size: 0.8rem;
+        padding: 8px;
+    }
+
+    .color-picker-premium.compact-color {
+        width: 28% !important;
+        /* Requested width */
+        height: 38px;
+        flex-shrink: 0;
+        border-radius: 8px;
+    }
+
+    /* Button Text Small (for 'Lista') */
+    .btn-text-small {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .btn-text-small:hover,
+    .btn-text-small.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
     }
 
     /* Circular Large Color Pickers for Mobile */
     .format-toolbar input[type="color"] {
-        width: 100%;
-        height: 50px;
-        border-radius: 25px;
-        /* Semicircular (pill shape) si es ancho, o circular si cuadrado */
         padding: 0;
         border: 2px solid rgba(255, 255, 255, 0.2);
         background: transparent;
         cursor: pointer;
-        transition: transform 0.2s;
     }
 
     .format-toolbar input[type="color"]::-webkit-color-swatch-wrapper {
