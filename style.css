@@ -3811,6 +3811,7 @@ body.light-theme .btn-auth-secondary:hover {
 }
 
 /* On desktop, unwrap the accordion structure */
+/* On desktop, enforce strict organization */
 @media (min-width: 769px) {
     .format-toolbar {
         display: flex !important;
@@ -3820,52 +3821,87 @@ body.light-theme .btn-auth-secondary:hover {
         border: none;
         box-shadow: none;
         padding: 0;
-        width: auto;
+        width: 100%;
         max-height: none;
         overflow: visible;
         backdrop-filter: none;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0;
+        /* Managed by sections */
     }
 
     .toolbar-section {
         background: none;
         border: none;
-        display: contents;
-        /* Removes the container from the layout flow */
+        display: flex;
+        /* Keep grouping */
+        align-items: center;
+        padding-right: 12px;
+        margin-right: 12px;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        gap: 8px;
+    }
+
+    .toolbar-section:last-child {
+        border-right: none;
+        margin-right: 0;
     }
 
     .toolbar-section-btn {
         display: none !important;
-        /* Hide accordion headers */
     }
 
     .toolbar-content {
         display: flex !important;
-        /* Always show content */
         padding: 0;
         border: none;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
     }
 
     .toolbar-row {
-        gap: 5px;
+        gap: 8px;
     }
 
-    /* Revert compact inputs for desktop if needed, or keep them consistent */
+    /* Premium Selects for Desktop */
     .select-premium.compact {
         font-size: 0.85rem;
         padding: 6px 10px;
         width: auto;
+        min-width: 80px;
+        background: rgba(255, 255, 255, 0.03);
+        /* Subtle bg */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        height: 36px;
     }
 
+    /* Desktop Color Picker */
     .color-picker-premium.compact-color {
-        width: 32px !important;
-        height: 32px;
+        width: 36px !important;
+        height: 36px;
+        border-radius: 50%;
+        /* Circle look */
+        border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
+    /* Make 'Lista' text button look like icon button */
     .btn-text-small {
         font-size: 0.8rem;
-        padding: 6px 10px;
+        padding: 0 12px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+    }
+
+    .btn-text-small:hover {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
     }
 }
 
