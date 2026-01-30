@@ -808,6 +808,30 @@
             </div>
             <div class="modal-buttons">
                 <button id="cancel-resize-btn" class="btn-secondary">Cancelar</button>
+                <button id="confirm-resize-btn" class="btn-primary">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI API Key Modal -->
+    <div id="ai-key-modal" class="modal-overlay" hidden>
+        <div class="modal-content glass">
+            <h2>🔑 Configurar IA</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                NovaNotes usa Google Gemini para la inteligencia artificial. Necesitas tu propia clave API gratuita.
+            </p>
+            <ol
+                style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px; padding-left: 20px; line-height: 1.5;">
+                <li>Ve a <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                        style="color: var(--accent);">Google AI Studio</a>.</li>
+                <li>Inicia sesión con tu cuenta de Google.</li>
+                <li>Haz clic en "Create API Key".</li>
+                <li>Copia la clave y pégala abajo.</li>
+            </ol>
+            <input type="password" id="ai-api-key-input" class="password-input"
+                placeholder="Pega tu API Key aquí (AIzaSy...)" style="width: 100%; margin-bottom: 20px;">
+            <p id="ai-key-error" class="error-msg"></p>
+            <div class="modal-buttons">
                 <button id="close-ai-key-btn" class="btn-secondary">Cancelar</button>
                 <button id="save-ai-key-btn" class="btn-primary">Guardar Clave</button>
             </div>
