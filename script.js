@@ -578,14 +578,19 @@ class NoteApp {
         // Ocultar botón de cambiar contraseña (solo visible en bóveda privada)
         this.changePwdBtn.style.display = 'none';
 
-        // Format listeners with auto-close
+        // Format listeners with auto-close logic handled carefully
         this.titleFontSelect.onchange = (e) => { this.updateFormat('titleFont', e.target.value); this.closeToolbarMobile(); };
         this.titleSizeSelect.onchange = (e) => { this.updateFormat('titleSize', e.target.value); this.closeToolbarMobile(); };
-        this.titleColorPicker.onchange = (e) => { this.updateFormat('titleColor', e.target.value); this.closeToolbarMobile(); }; // Use onchange for final value
+
+        // Color pickers: update on input (realtime), close on change (final selection)
+        this.titleColorPicker.oninput = (e) => this.updateFormat('titleColor', e.target.value);
+        this.titleColorPicker.onchange = (e) => this.closeToolbarMobile();
 
         this.contentFontSelect.onchange = (e) => { this.updateFormat('contentFont', e.target.value); this.closeToolbarMobile(); };
         this.contentSizeSelect.onchange = (e) => { this.updateFormat('contentSize', e.target.value); this.closeToolbarMobile(); };
-        this.textColorPicker.onchange = (e) => { this.updateFormat('textColor', e.target.value); this.closeToolbarMobile(); };
+
+        this.textColorPicker.oninput = (e) => this.updateFormat('textColor', e.target.value);
+        this.textColorPicker.onchange = (e) => this.closeToolbarMobile();
 
 
         this.themeSelect.onchange = (e) => {
