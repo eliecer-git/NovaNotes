@@ -300,8 +300,8 @@ class AIManager {
     constructor(noteApp) {
         this.noteApp = noteApp; // Reference to main app for context
         this.API_KEY_KEY = 'novanotes_gemini_key';
-        // List of models to try in order of preference
-        this.MODELS_TO_TRY = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.0-pro'];
+        // List of models to try in order of preference (updated for 2025 naming)
+        this.MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'];
 
         // DOM Elements
         this.aiBtn = document.getElementById('ai-btn');
