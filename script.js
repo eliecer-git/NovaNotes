@@ -300,7 +300,7 @@ class AIManager {
     constructor(noteApp) {
         this.noteApp = noteApp; // Reference to main app for context
         this.API_KEY_KEY = 'novanotes_gemini_key';
-        this.MODEL_NAME = 'gemini-2.0-flash';
+        this.MODEL_NAME = 'gemini-1.5-flash';
 
         // DOM Elements
         this.aiBtn = document.getElementById('ai-btn');
@@ -500,22 +500,33 @@ class AIManager {
         5. Habla siempre en Español (o en el idioma que el usuario prefiera si lo cambia).
         `;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.MODEL_NAME}:generateContent?key=${key}`;
-
-        const payload = {
-            contents: [{
-                parts: [{
-                    text: systemInstruction + "\n\nUSUARIO DICE: " + prompt
+        // Helper to perform fetch
+        const performFetch = async (model) => {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+            const payload = {
+                contents: [{
+                    parts: [{
+                        text: systemInstruction + "\n\nUSUARIO DICE: " + prompt
+                    }]
                 }]
-            }]
-        };
-
-        try {
-            const response = await fetch(url, {
+            };
+            return fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+        };
+
+        try {
+            // Attempt 1: Preferred Model
+            let response = await performFetch(this.MODEL_NAME);
+
+            // Fallback Logic: If 404 (Not Found) or 400 (Bad Request), try older reliable model
+            if (!response.ok && (response.status === 404 || response.status === 400)) {
+                console.warn(`Model ${this.MODEL_NAME} failed, trying fallback to gemini-pro...`);
+                // Fallback to stable gemini-pro
+                response = await performFetch('gemini-pro');
+            }
 
             if (!response.ok) {
                 const errData = await response.json();
