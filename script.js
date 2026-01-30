@@ -300,7 +300,8 @@ class AIManager {
     constructor(noteApp) {
         this.noteApp = noteApp; // Reference to main app for context
         this.API_KEY_KEY = 'novanotes_gemini_key';
-        this.MODEL_NAME = 'gemini-1.5-flash';
+        // List of models to try in order of preference
+        this.MODELS_TO_TRY = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.0-pro'];
 
         // DOM Elements
         this.aiBtn = document.getElementById('ai-btn');
@@ -500,49 +501,61 @@ class AIManager {
         5. Habla siempre en Español (o en el idioma que el usuario prefiera si lo cambia).
         `;
 
-        // Helper to perform fetch
-        const performFetch = async (model) => {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-            const payload = {
-                contents: [{
-                    parts: [{
-                        text: systemInstruction + "\n\nUSUARIO DICE: " + prompt
+        let lastError = null;
+
+        for (const model of this.MODELS_TO_TRY) {
+            try {
+                // console.log(`Trying AI model: ${model}`); // Debug (optional)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                const payload = {
+                    contents: [{
+                        parts: [{
+                            text: systemInstruction + "\n\nUSUARIO DICE: " + prompt
+                        }]
                     }]
-                }]
-            };
-            return fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-        };
+                };
 
-        try {
-            // Attempt 1: Preferred Model
-            let response = await performFetch(this.MODEL_NAME);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-            // Fallback Logic: If 404 (Not Found) or 400 (Bad Request), try older reliable model
-            if (!response.ok && (response.status === 404 || response.status === 400)) {
-                console.warn(`Model ${this.MODEL_NAME} failed, trying fallback to gemini-pro...`);
-                // Fallback to stable gemini-pro
-                response = await performFetch('gemini-pro');
+                if (!response.ok) {
+                    // If it's a 404 (Not Found) or 400 (Bad Request), treat as model issue and continue to next
+                    if (response.status === 404 || response.status === 400) {
+                        const errData = await response.json().catch(() => ({}));
+                        const msg = errData.error?.message || response.statusText;
+                        console.warn(`Model ${model} failed (${response.status}): ${msg}`);
+                        lastError = new Error(`Model ${model} not found/supported: ${msg}`);
+                        continue; // Try next model
+                    }
+
+                    // If it's 429 (Quota), we might want to fail fast or try another depending on strategy.
+                    // For now, let's treat 429 as a hard stop or specific error, but loop could try others.
+                    // Usually quota is per project, not per model necessarily, but let's try next just in case.
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || 'Error en Google AI');
+                }
+
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!aiText) throw new Error('Respuesta vacía de la IA.');
+
+                // Success!
+                return aiText;
+
+            } catch (error) {
+                lastError = error;
+                // If it's not a model-availability error (like network fail), strictly we might want to stop.
+                // But simple retry logic is safe here.
+                console.error(`Error with model ${model}:`, error);
             }
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error?.message || 'Error en la petición a Google AI');
-            }
-
-            const data = await response.json();
-            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (!aiText) throw new Error('Respuesta vacía de la IA.');
-            return aiText;
-
-        } catch (error) {
-            console.error('Gemini API Error:', error);
-            throw error;
         }
+
+        // If loop finishes without returning
+        throw lastError || new Error('No se pudo conectar con ningún modelo de IA disponible. Verifica tu API Key.');
     }
 }
 
