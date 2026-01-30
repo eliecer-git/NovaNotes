@@ -257,9 +257,14 @@
                                         </svg>
                                     </button>
 
-                                    <!-- List Button as Text -->
-                                    <button id="btn-list" class="btn-text-small" title="Insertar Lista de Tareas">
-                                        Lista
+                                    <!-- List Button as Icon -->
+                                    <button id="btn-list" class="btn-icon-small" title="Insertar Lista de Tareas">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M9 11l3 3L22 4"></path>
+                                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                        </svg>
                                     </button>
 
                                     <div class="divider-v"></div>
@@ -296,24 +301,24 @@
                             </button>
                             <div class="toolbar-content">
                                 <div class="toolbar-row">
-                                    <select id="title-font-select" class="select-premium compact"
-                                        title="Fuente del Título">
-                                        <option value="Outfit, sans-serif">Outfit</option>
-                                        <option value="Inter, sans-serif">Inter</option>
-                                        <option value="Playfair Display, serif">Playfair</option>
-                                        <option value="Montserrat, sans-serif">Montserrat</option>
-                                        <option value="Poppins, sans-serif">Poppins</option>
-                                        <option value="Lora, serif">Lora</option>
-                                        <option value="Merriweather, serif">Merriweather</option>
-                                        <option value="Ubuntu, sans-serif">Ubuntu</option>
-                                        <option value="Fira Code, monospace">Fira Code</option>
-                                        <option value="Dancing Script, cursive">Cursiva</option>
+                                    <select id="title-font-select" class="select-premium compact" <select
+                                        id="title-font-select" class="select-premium compact" title="Fuente del Título">
+                                        <option value="Outfit, sans-serif">Outfit (Moderno)</option>
+                                        <option value="Inter, sans-serif">Inter (Estándar)</option>
+                                        <option value="Playfair Display, serif">Playfair (Elegante)</option>
+                                        <option value="Montserrat, sans-serif">Montserrat (Geométrico)</option>
+                                        <option value="Poppins, sans-serif">Poppins (Amigable)</option>
+                                        <option value="Lora, serif">Lora (Serif)</option>
+                                        <option value="Merriweather, serif">Merriweather (Editorial)</option>
+                                        <option value="Ubuntu, sans-serif">Ubuntu (Tech)</option>
+                                        <option value="Fira Code, monospace">Fira Code (Code)</option>
+                                        <option value="Dancing Script, cursive">Cursiva (Script)</option>
                                     </select>
                                     <select id="title-size-select" class="select-premium compact" title="Tamaño Título">
-                                        <option value="1.5rem">Pequ.</option>
-                                        <option value="2rem">Norm.</option>
-                                        <option value="2.5rem" selected>Gran.</option>
-                                        <option value="3.5rem">Gig.</option>
+                                        <option value="1.5rem">Título: Pequeño</option>
+                                        <option value="2rem">Título: Normal</option>
+                                        <option value="2.5rem" selected>Título: Grande</option>
+                                        <option value="3.5rem">Título: Gigante</option>
                                     </select>
                                     <input type="color" id="title-color-picker"
                                         class="color-picker-premium compact-color" title="Color del Título"
@@ -332,19 +337,19 @@
                                 <div class="toolbar-row">
                                     <select id="content-font-select" class="select-premium compact"
                                         title="Tipo de Letra del Cuerpo">
-                                        <option value="Inter, sans-serif">Inter</option>
-                                        <option value="Poppins, sans-serif">Poppins</option>
-                                        <option value="Lora, serif">Lora</option>
-                                        <option value="Merriweather, serif">Merriweather</option>
-                                        <option value="Ubuntu, sans-serif">Ubuntu</option>
-                                        <option value="Dancing Script, cursive">Cursiva</option>
+                                        <option value="Inter, sans-serif">Inter (Estándar)</option>
+                                        <option value="Poppins, sans-serif">Poppins (Amigable)</option>
+                                        <option value="Lora, serif">Lora (Serif)</option>
+                                        <option value="Merriweather, serif">Merriweather (Editorial)</option>
+                                        <option value="Ubuntu, sans-serif">Ubuntu (Tech)</option>
+                                        <option value="Dancing Script, cursive">Cursiva (Script)</option>
                                     </select>
                                     <select id="content-size-select" class="select-premium compact"
                                         title="Tamaño Contenido">
-                                        <option value="0.9rem">Pequ.</option>
-                                        <option value="1.15rem" selected>Norm.</option>
-                                        <option value="1.4rem">Gran.</option>
-                                        <option value="1.7rem">Extr.</option>
+                                        <option value="0.9rem">Texto: Pequeño</option>
+                                        <option value="1.15rem" selected>Texto: Normal</option>
+                                        <option value="1.4rem">Texto: Grande</option>
+                                        <option value="1.7rem">Texto: Extra</option>
                                     </select>
                                     <input type="color" id="text-color-picker"
                                         class="color-picker-premium compact-color" title="Color del Texto"
