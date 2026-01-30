@@ -2694,6 +2694,7 @@ min-height: 300px;
 
     /* Transform toolbar into an elegant dropdown */
     /* Transform toolbar into an elegant dropdown */
+    /* Transform toolbar into an elegant dropdown ONLY on mobile */
     .format-toolbar {
         display: none;
         flex-direction: column;
@@ -3801,8 +3802,79 @@ body.light-theme .btn-auth-secondary:hover {
     color: var(--text-primary);
 }
 
-/* Mostrar solo en móvil */
+/* Toolbar Desktop Defaults (Restoring original layout for desktop) */
+.format-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* On desktop, unwrap the accordion structure */
+@media (min-width: 769px) {
+    .format-toolbar {
+        display: flex !important;
+        flex-direction: row;
+        position: static;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        width: auto;
+        max-height: none;
+        overflow: visible;
+        backdrop-filter: none;
+    }
+
+    .toolbar-section {
+        background: none;
+        border: none;
+        display: contents;
+        /* Removes the container from the layout flow */
+    }
+
+    .toolbar-section-btn {
+        display: none !important;
+        /* Hide accordion headers */
+    }
+
+    .toolbar-content {
+        display: flex !important;
+        /* Always show content */
+        padding: 0;
+        border: none;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .toolbar-row {
+        gap: 5px;
+    }
+
+    /* Revert compact inputs for desktop if needed, or keep them consistent */
+    .select-premium.compact {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+        width: auto;
+    }
+
+    .color-picker-premium.compact-color {
+        width: 32px !important;
+        height: 32px;
+    }
+
+    .btn-text-small {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}
+
+/* Mobile Media Query starts here - styles applied ONLY to mobile */
 @media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+
     .btn-back-mobile {
         display: flex;
         align-items: center;
