@@ -324,8 +324,11 @@ class AIManager {
         if (this.aiBtn) {
             this.aiBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // Ensure we call the bound method or use arrow function
                 this.toggleChat();
             });
+        } else {
+            console.warn('AI Button (ai-btn) not found in DOM');
         }
 
         // Close Chat
