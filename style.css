@@ -3882,6 +3882,7 @@ body.light-theme .btn-auth-secondary:hover {
 
     .toolbar-row {
         gap: 6px;
+        flex-wrap: nowrap;
     }
 
     /* Premium Selects for Desktop */
