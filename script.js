@@ -300,7 +300,7 @@ class AIManager {
     constructor(noteApp) {
         this.noteApp = noteApp; // Reference to main app for context
         this.API_KEY_KEY = 'novanotes_gemini_key';
-        this.MODEL_NAME = 'gemini-1.5-flash';
+        this.MODEL_NAME = 'gemini-2.0-flash';
 
         // DOM Elements
         this.aiBtn = document.getElementById('ai-btn');
