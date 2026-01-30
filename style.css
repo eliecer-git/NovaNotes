@@ -2696,7 +2696,7 @@ min-height: 300px;
     /* Transform toolbar into an elegant dropdown */
     /* Transform toolbar into an elegant dropdown ONLY on mobile */
     .format-toolbar {
-        display: none;
+        display: none !important;
         flex-direction: column;
         position: absolute;
         top: 100%;
@@ -2814,7 +2814,7 @@ min-height: 300px;
     }
 
     .format-toolbar.show {
-        display: flex;
+        display: flex !important;
     }
 
     @keyframes menuSlideDown {
@@ -3804,12 +3804,7 @@ body.light-theme .btn-auth-secondary:hover {
 
 /* Toolbar Desktop Defaults (Restoring original layout for desktop) */
 /* Toolbar Desktop Defaults (Restoring original layout for desktop) */
-.format-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
+
 
 /* On desktop, unwrap the accordion structure */
 /* On desktop, enforce strict organization */
