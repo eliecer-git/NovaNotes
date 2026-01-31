@@ -4407,3 +4407,66 @@ body.light-theme .btn-auth-secondary:hover {
         content: '...';
     }
 }
+
+/* ======================== */
+/* SOCIAL SIGN-IN BUTTONS   */
+/* ======================== */
+
+.social-signin-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.btn-github-signin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    background: #24292e;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-github-signin:hover {
+    background: #2f363d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.btn-github-signin:active {
+    transform: translateY(0);
+}
+
+.btn-github-signin svg {
+    flex-shrink: 0;
+}
+
+.btn-github-signin.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn-github-signin.loading::after {
+    content: '...';
+    animation: dots 1.5s infinite;
+}
+
+/* Light theme adjustments */
+body.light-theme .btn-github-signin {
+    background: #24292e;
+    color: #ffffff;
+}
+
+body.light-theme .btn-github-signin:hover {
+    background: #1a1e22;
+}

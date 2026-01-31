@@ -32,6 +32,7 @@ class AuthManager {
         this.selectRegisterBtn = document.getElementById('select-register-btn');
         this.backToSelectorBtns = document.querySelectorAll('.btn-auth-back');
         this.googleSignInBtn = document.getElementById('google-signin-btn');
+        this.githubSignInBtn = document.getElementById('github-signin-btn');
 
         this.onLoginSuccess = null; // Callback when user logs in
         this.onLogout = null; // Callback when user logs out
@@ -77,6 +78,9 @@ class AuthManager {
 
         // Google Sign-In Button
         this.googleSignInBtn?.addEventListener('click', () => this.handleGoogleSignIn());
+
+        // GitHub Sign-In Button
+        this.githubSignInBtn?.addEventListener('click', () => this.handleGithubSignIn());
 
         // Password visibility toggles
         document.querySelectorAll('.password-input-wrapper .btn-toggle-pwd').forEach(btn => {
@@ -330,11 +334,84 @@ class AuthManager {
         }
     }
 
+    async handleGithubSignIn() {
+        // Check if Firebase is loaded
+        if (typeof window.signInWithGithub !== 'function') {
+            alert('Error: Firebase no está listo. Por favor, recarga la página.');
+            return;
+        }
+
+        // Show loading state
+        this.githubSignInBtn.classList.add('loading');
+        this.githubSignInBtn.disabled = true;
+
+        try {
+            const result = await window.signInWithGithub();
+            const user = result.user;
+
+            // Create or update local user from GitHub data
+            const users = this.getUsers();
+            let existingUser = users.find(u => u.email === user.email);
+
+            if (!existingUser) {
+                // Create new user from GitHub data
+                existingUser = {
+                    id: 'github_' + user.uid,
+                    name: user.displayName || user.email?.split('@')[0] || 'Usuario GitHub',
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    provider: 'github',
+                    createdAt: new Date().toISOString()
+                };
+                users.push(existingUser);
+                this.saveUsers(users);
+            } else {
+                // Update existing user with GitHub data if needed
+                existingUser.photoURL = user.photoURL;
+                existingUser.provider = 'github';
+                this.saveUsers(users);
+            }
+
+            // Create session
+            const session = {
+                userId: existingUser.id,
+                name: existingUser.name,
+                email: existingUser.email,
+                photoURL: existingUser.photoURL,
+                provider: 'github'
+            };
+            this.saveSession(session);
+
+            this.hideAuthModal();
+            this.updateUserUI(session);
+
+            if (this.onLoginSuccess) this.onLoginSuccess(session);
+
+        } catch (error) {
+            console.error('GitHub Sign-In Error:', error);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                // User closed the popup, no need to show error
+                return;
+            }
+
+            if (error.code === 'auth/account-exists-with-different-credential') {
+                alert('Ya existe una cuenta con este correo electrónico. Intenta iniciar sesión con Google o con tu correo y contraseña.');
+                return;
+            }
+
+            alert('Error al iniciar sesión con GitHub: ' + (error.message || 'Intenta de nuevo.'));
+        } finally {
+            this.githubSignInBtn.classList.remove('loading');
+            this.githubSignInBtn.disabled = false;
+        }
+    }
+
     logout() {
         if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-            // Also sign out from Firebase if it was a Google login
+            // Also sign out from Firebase if it was a Google or GitHub login
             const session = this.getSession();
-            if (session?.provider === 'google' && typeof window.signOutFirebase === 'function') {
+            if ((session?.provider === 'google' || session?.provider === 'github') && typeof window.signOutFirebase === 'function') {
                 window.signOutFirebase().catch(console.error);
             }
 
@@ -836,11 +913,25 @@ class NoteApp {
 
 
         // PWA Install Logic
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            this.deferredPrompt = e;
-            this.installBtn.style.display = 'flex';
-        });
+        // Check if already running as installed PWA
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true
+            || document.referrer.includes('android-app://');
+
+        if (isStandalone) {
+            // App is already installed and running as PWA, hide install button
+            this.installBtn.style.display = 'none';
+        } else {
+            // Only show install prompt if not already installed
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                this.deferredPrompt = e;
+                // Double-check it's not in standalone mode before showing
+                if (!window.matchMedia('(display-mode: standalone)').matches) {
+                    this.installBtn.style.display = 'flex';
+                }
+            });
+        }
 
         this.installBtn.addEventListener('click', async () => {
             if (this.deferredPrompt) {
@@ -856,6 +947,13 @@ class NoteApp {
         window.addEventListener('appinstalled', () => {
             this.installBtn.style.display = 'none';
             this.deferredPrompt = null;
+        });
+
+        // Also listen for display-mode changes (in case user uninstalls)
+        window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+            if (e.matches) {
+                this.installBtn.style.display = 'none';
+            }
         });
 
         // Info Modal Logic
