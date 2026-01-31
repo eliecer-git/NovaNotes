@@ -2845,31 +2845,59 @@ min-height: 300px;
 
     .format-toolbar .format-btn-group {
         justify-content: flex-start;
-        /* Left align */
-        gap: 12px;
-        /* Consistent gap */
+        gap: 10px;
         width: 100%;
         padding: 5px 0;
         flex-wrap: wrap;
     }
 
-    /* Left align row items too */
+    /* Stack items vertically like a list menu */
     .toolbar-row {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        width: 100%;
+    }
+
+    /* Full width items for list look */
+    .select-premium.compact {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        font-size: 0.95rem;
+        padding: 12px;
+        height: auto;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .select-premium.compact:hover,
+    .select-premium.compact:focus {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Color picker as a list item row */
+    .color-picker-premium.compact-color {
+        width: 100% !important;
+        height: 40px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Adjust buttons in vertical list */
+    .toolbar-row.actions-row {
+        display: flex;
+        /* Keep row for icon buttons to save space, or column if preferred */
+        flex-direction: row;
+        flex-wrap: wrap;
         justify-content: flex-start;
     }
 
-    /* Prevent full width stretching if user wants left align look */
-    .select-premium.compact {
-        flex: 0 1 auto;
-        /* Don't force full width */
-        min-width: 120px;
-        /* Minimum usable width */
-    }
-
-    .color-picker-premium.compact-color {
-        width: 40px !important;
-        /* Fixed small size */
-        flex: 0 0 auto;
+    .toolbar-row.actions-row .btn-icon {
+        width: 44px;
+        height: 44px;
+        /* Larger touch targets */
     }
 
     /* Ensure specific buttons are visible/hidden properly */
