@@ -1021,7 +1021,7 @@ class NoteApp {
                     const publicId = await window.publishNotePublicly(note);
                     if (publicId) {
                         const link = `${window.location.origin}${window.location.pathname}?publicNote=${publicId}`;
-                        this.shareContentText.value = `¡Enlace Público Creado!\n\n${link}\n\n(Cualquiera con este enlace podrá leer la nota)`;
+                        this.shareContentText.value = link;
                         this.createPublicLinkBtn.textContent = '✅ Enlace Generado';
                         // Optionally hide the button after success or keep for regen?
                     } else {
