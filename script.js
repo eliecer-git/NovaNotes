@@ -1147,13 +1147,34 @@ class NoteApp {
                 });
             }
 
-            // "Report Error" via email
+            // "Report Error" opens modal
             const helpEmailBtn = document.getElementById('help-email-btn');
-            if (helpEmailBtn) {
+            const reportModal = document.getElementById('report-error-modal');
+            const closeReportBtn = document.getElementById('close-report-modal-btn');
+            const copyEmailBtn = document.getElementById('copy-support-email-btn');
+
+            if (helpEmailBtn && reportModal) {
                 helpEmailBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.helpDropdownMenu.hidden = true;
-                    window.open('mailto:danieleliecerorduzbaron@gmail.com?subject=Reporte%20de%20Error%20-%20NovaNotes&body=Describe%20el%20error%20que%20encontraste:', '_self');
+                    reportModal.style.display = 'flex';
+                });
+            }
+
+            if (closeReportBtn && reportModal) {
+                closeReportBtn.addEventListener('click', () => {
+                    reportModal.style.display = 'none';
+                });
+            }
+
+            if (copyEmailBtn) {
+                copyEmailBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText('danieleliecerorduzbaron@gmail.com').then(() => {
+                        copyEmailBtn.textContent = '✅ ¡Copiado!';
+                        setTimeout(() => {
+                            copyEmailBtn.textContent = '📋 Copiar Correo';
+                        }, 2000);
+                    });
                 });
             }
         }
