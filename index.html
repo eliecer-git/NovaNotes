@@ -1105,23 +1105,23 @@
 
         .help-dropdown-menu {
             position: absolute;
-            bottom: 100%;
+            top: 100%;
             left: 0;
             right: 0;
-            margin-bottom: 8px;
+            margin-top: 8px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 8px;
             z-index: 100;
             min-width: 180px;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.2s ease-out;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.2s ease-out;
         }
 
-        @keyframes slideUp {
+        @keyframes slideDown {
             from {
-                transform: translateY(10px);
+                transform: translateY(-10px);
                 opacity: 0;
             }
 
