@@ -457,6 +457,8 @@ class AIManager {
     constructor(noteApp) {
         this.noteApp = noteApp; // Reference to main app for context
         this.API_KEY_KEY = 'novanotes_gemini_key';
+        this.HISTORY_KEY = 'novanotes_ai_messages';
+
         // List of models to try in order of preference (updated for 2025 naming)
         this.MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'];
 
@@ -464,6 +466,7 @@ class AIManager {
         this.aiBtn = document.getElementById('ai-btn');
         this.chatInterface = document.getElementById('ai-chat-interface');
         this.closeChatBtn = document.getElementById('close-ai-chat-btn');
+        this.clearHistoryBtn = document.getElementById('ai-clear-history-btn');
         this.keyModal = document.getElementById('ai-key-modal');
         this.keyInput = document.getElementById('ai-api-key-input');
         this.saveKeyBtn = document.getElementById('save-ai-key-btn');
@@ -475,6 +478,7 @@ class AIManager {
         this.keyError = document.getElementById('ai-key-error');
 
         this.initListeners();
+        this.loadHistory();
     }
 
     initListeners() {
@@ -482,7 +486,6 @@ class AIManager {
         if (this.aiBtn) {
             this.aiBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // Ensure we call the bound method or use arrow function
                 this.toggleChat();
             });
         } else {
@@ -494,6 +497,11 @@ class AIManager {
             this.closeChatBtn.addEventListener('click', () => {
                 this.chatInterface.hidden = true;
             });
+        }
+
+        // Clear History
+        if (this.clearHistoryBtn) {
+            this.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
         }
 
         // Settings (Key Configuration)
@@ -601,7 +609,7 @@ class AIManager {
             });
     }
 
-    appendMessage(type, text) {
+    appendMessage(type, text, save = true) {
         const div = document.createElement('div');
         div.className = `ai-message ${type}`;
 
@@ -614,7 +622,48 @@ class AIManager {
         div.innerHTML = formattedText;
         this.messagesContainer.appendChild(div);
         this.scrollToBottom();
+
+        if (save && !type.includes('error')) {
+            this.saveMessage(type, text);
+        }
+
         return div;
+    }
+
+    saveMessage(type, text) {
+        const history = this.getHistory();
+        history.push({ type, text, timestamp: Date.now() });
+        localStorage.setItem(this.HISTORY_KEY, JSON.stringify(history));
+    }
+
+    getHistory() {
+        try {
+            return JSON.parse(localStorage.getItem(this.HISTORY_KEY) || '[]');
+        } catch (e) { return []; }
+    }
+
+    loadHistory() {
+        const history = this.getHistory();
+        if (history.length > 0) {
+            // Remove initial welcome message if history exists
+            this.messagesContainer.innerHTML = '';
+            history.forEach(msg => {
+                this.appendMessage(msg.type, msg.text, false); // false = don't save again
+            });
+        }
+    }
+
+    clearHistory() {
+        if (confirm('¿Borrar todo el historial de chat con Nova?')) {
+            localStorage.removeItem(this.HISTORY_KEY);
+            this.messagesContainer.innerHTML = '';
+            // Add default welcome back
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'ai-message ai-welcome';
+            welcomeDiv.innerHTML = '¡Historial borrado! Soy Nova, tu asistente. ¿En qué puedo ayudarte?';
+            this.messagesContainer.appendChild(welcomeDiv);
+            this.saveMessage('ai-welcome', welcomeDiv.innerHTML); // Optional: save new welcome
+        }
     }
 
     appendLoading() {
