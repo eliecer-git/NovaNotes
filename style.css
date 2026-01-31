@@ -1447,6 +1447,23 @@ body.light-theme .tag-pill {
     font-style: italic;
 }
 
+/* Menu de colores de nota - Corregir recorte de círculos */
+#note-color-menu {
+    position: absolute !important;
+    bottom: calc(100% + 8px) !important;
+    right: 0 !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    z-index: 100 !important;
+    min-width: 120px !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
 /* Note Colors Palette (Dropdown or visual selector) */
 .color-swatch {
     width: 24px;
