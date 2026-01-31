@@ -307,6 +307,7 @@ class AuthManager {
             // Create session
             const session = {
                 userId: existingUser.id,
+                firebaseUid: user.uid, // Raw Firebase UID for Firestore
                 name: existingUser.name,
                 email: existingUser.email,
                 photoURL: existingUser.photoURL,
@@ -375,6 +376,7 @@ class AuthManager {
             // Create session
             const session = {
                 userId: existingUser.id,
+                firebaseUid: user.uid, // Raw Firebase UID for Firestore
                 name: existingUser.name,
                 email: existingUser.email,
                 photoURL: existingUser.photoURL,
@@ -723,9 +725,11 @@ class NoteApp {
      * @constructor
      * Initializes the application state, DOM references, and event listeners.
      * @param {string|null} userId - The ID of the current logged-in user
+     * @param {string|null} firebaseUid - The raw Firebase UID for Firestore operations
      */
-    constructor(userId = null) {
+    constructor(userId = null, firebaseUid = null) {
         this.currentUserId = userId;
+        this.firebaseUid = firebaseUid; // Used for Firestore cloud sync
         this.notes = this.loadUserNotes();
 
         this.activeNoteId = null;
@@ -2175,7 +2179,7 @@ class NoteApp {
      * Called automatically after local save
      */
     async syncToCloud() {
-        if (!this.currentUserId) return;
+        if (!this.firebaseUid) return;
 
         // Check if cloud functions are available
         if (typeof window.saveNotesToCloud !== 'function') {
@@ -2183,7 +2187,7 @@ class NoteApp {
         }
 
         try {
-            await window.saveNotesToCloud(this.currentUserId, this.notes);
+            await window.saveNotesToCloud(this.firebaseUid, this.notes);
             this.showSyncStatus('synced');
         } catch (error) {
             console.error('Cloud sync failed:', error);
@@ -2221,7 +2225,7 @@ class NoteApp {
      * Called on app initialization for logged-in users
      */
     async loadFromCloud() {
-        if (!this.currentUserId) return;
+        if (!this.firebaseUid) return;
 
         if (typeof window.loadNotesFromCloud !== 'function') {
             console.log('Cloud functions not ready yet');
@@ -2231,7 +2235,7 @@ class NoteApp {
         this.showSyncStatus('syncing');
 
         try {
-            const cloudNotes = await window.loadNotesFromCloud(this.currentUserId);
+            const cloudNotes = await window.loadNotesFromCloud(this.firebaseUid);
 
             if (cloudNotes !== null) {
                 const localNotes = this.loadUserNotes();
@@ -2846,8 +2850,8 @@ const auth = new AuthManager();
 const session = auth.checkAuth();
 
 if (session) {
-    // User is logged in - initialize app with their userId
-    app = new NoteApp(session.userId);
+    // User is logged in - initialize app with their userId and firebaseUid
+    app = new NoteApp(session.userId, session.firebaseUid);
     window.app = app;
 
     // Load notes from cloud after initialization
@@ -2860,7 +2864,7 @@ if (session) {
 
 // Handle login success - initialize app for the user
 auth.onLoginSuccess = async (session) => {
-    app = new NoteApp(session.userId);
+    app = new NoteApp(session.userId, session.firebaseUid);
     window.app = app;
 
     // Load and sync notes from cloud
