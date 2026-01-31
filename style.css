@@ -119,12 +119,26 @@ body.light-theme .format-toolbar {
 }
 
 body.light-theme select,
-body.light-theme input[type="color"],
 body.light-theme .input-premium,
 body.light-theme .btn-icon-small {
     background: #f5ecd0;
     border: 1px solid #c9b87a;
     color: #2d2a1f;
+}
+
+/* Color pickers en tema claro - más visibles */
+body.light-theme input[type="color"],
+body.light-theme .color-picker-premium {
+    background: #ffffff;
+    border: 2px solid #8b7355 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    min-width: 32px;
+    min-height: 32px;
+}
+
+body.light-theme .color-picker-premium:hover {
+    border-color: #6366f1 !important;
+    transform: scale(1.1);
 }
 
 body.light-theme .category-badge {
