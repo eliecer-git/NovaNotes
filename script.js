@@ -1064,16 +1064,29 @@ class NoteApp {
             }
         });
 
-        // Info Modal Logic
-        if (this.infoBtn) {
-            this.infoBtn.onclick = () => this.infoModal.hidden = false;
+        // Info Modal Logic - Secured
+        if (this.infoBtn && this.infoModal) {
+            this.infoBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.infoModal.hidden = false;
+                this.infoModal.style.display = 'flex'; // Ensure flex display
+            };
         }
-        if (this.closeInfoBtn) {
-            this.closeInfoBtn.onclick = () => this.infoModal.hidden = true;
+
+        if (this.closeInfoBtn && this.infoModal) {
+            this.closeInfoBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.infoModal.hidden = true;
+                this.infoModal.style.display = 'none';
+            };
         }
+
         if (this.infoModal) {
             this.infoModal.onclick = (e) => {
-                if (e.target === this.infoModal) this.infoModal.hidden = true;
+                if (e.target === this.infoModal) {
+                    this.infoModal.hidden = true;
+                    this.infoModal.style.display = 'none';
+                }
             };
         }
 
