@@ -2238,9 +2238,9 @@ class NoteApp {
                 actions.style.gap = '10px';
 
                 actions.innerHTML = `
-                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 4px 8px; border-color: var(--accent); color: var(--accent);" 
+                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 6px 10px; border-color: var(--accent); color: var(--accent); cursor: pointer; border-radius: 6px; background: rgba(99, 102, 241, 0.1);" 
                         onclick="event.stopPropagation(); app.restoreNote('${note.id}')">♻️ Restaurar</button>
-                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 4px 8px; border-color: #ef4444; color: #ef4444;" 
+                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 6px 10px; border-color: #ef4444; color: #ef4444; cursor: pointer; border-radius: 6px; background: rgba(239, 68, 68, 0.1);" 
                         onclick="event.stopPropagation(); app.deleteNote('${note.id}')">🗑️ Borrar</button>
                  `;
                 noteEl.querySelector('.note-info').appendChild(actions);
