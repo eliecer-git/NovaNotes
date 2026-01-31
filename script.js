@@ -459,13 +459,13 @@ class AIManager {
         this.API_KEY_KEY = 'novanotes_gemini_key';
         this.SESSIONS_KEY = 'novanotes_ai_sessions_v1';
 
-        // List of models to try in order of preference (updated for 2025 naming)
-        // Added 1.5 variants as fallback for quota issues
+        // List of models to try in order of preference
+        // Using models available in v1beta API
         this.MODELS_TO_TRY = [
             'gemini-2.0-flash',
             'gemini-2.0-flash-lite',
-            'gemini-1.5-flash',
-            'gemini-1.5-pro'
+            'gemini-1.5-flash-latest',
+            'gemini-1.5-pro-latest'
         ];
 
         // DOM Elements
