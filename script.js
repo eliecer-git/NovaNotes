@@ -839,6 +839,12 @@ class NoteApp {
         document.addEventListener('selectionchange', () => this.debouncedSelection());
         this.selectionColorPicker.oninput = (e) => this.applySelectionColor(e.target.value);
 
+        // Remove Highlight Button
+        this.removeHighlightBtn = document.getElementById('remove-highlight-btn');
+        if (this.removeHighlightBtn) {
+            this.removeHighlightBtn.onclick = () => this.removeHighlight();
+        }
+
         this.renderNotesList();
         this.updateStats();
 
@@ -1245,6 +1251,16 @@ class NoteApp {
         // Also support 'backColor' for some browsers if needed, but hiliteColor is standard for selection
         this.debouncedSaveAndRender();
         this.selectionToolbar.hidden = true; // Auto hide after selection
+        this.noteContentInput.focus();
+    }
+
+    removeHighlight() {
+        // Remove highlight by setting transparent background
+        document.execCommand('hiliteColor', false, 'transparent');
+        // Fallback for some browsers
+        document.execCommand('backColor', false, 'transparent');
+        this.debouncedSaveAndRender();
+        this.selectionToolbar.hidden = true;
         this.noteContentInput.focus();
     }
 
