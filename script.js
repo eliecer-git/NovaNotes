@@ -1985,6 +1985,8 @@ class NoteApp {
             this.saveNoteBtn.hidden = true;
             this.lastEditedText.textContent = 'Selecciona una nota para comenzar';
             document.body.classList.remove('editor-screen-active');
+            // Resetear el fondo/tema del editor al estado normal
+            this.applyTheme('none');
             return;
         }
 
