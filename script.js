@@ -31,6 +31,7 @@ class AuthManager {
         this.selectLoginBtn = document.getElementById('select-login-btn');
         this.selectRegisterBtn = document.getElementById('select-register-btn');
         this.backToSelectorBtns = document.querySelectorAll('.btn-auth-back');
+        this.googleSignInBtn = document.getElementById('google-signin-btn');
 
         this.onLoginSuccess = null; // Callback when user logs in
         this.onLogout = null; // Callback when user logs out
@@ -73,6 +74,9 @@ class AuthManager {
         this.backToSelectorBtns.forEach(btn => {
             btn.addEventListener('click', () => this.showAuthSelector());
         });
+
+        // Google Sign-In Button
+        this.googleSignInBtn?.addEventListener('click', () => this.handleGoogleSignIn());
 
         // Password visibility toggles
         document.querySelectorAll('.password-input-wrapper .btn-toggle-pwd').forEach(btn => {
@@ -258,8 +262,82 @@ class AuthManager {
         if (this.onLoginSuccess) this.onLoginSuccess(session);
     }
 
+    async handleGoogleSignIn() {
+        // Check if Firebase is loaded
+        if (typeof window.signInWithGoogle !== 'function') {
+            alert('Error: Firebase no está listo. Por favor, recarga la página.');
+            return;
+        }
+
+        // Show loading state
+        this.googleSignInBtn.classList.add('loading');
+        this.googleSignInBtn.disabled = true;
+
+        try {
+            const result = await window.signInWithGoogle();
+            const user = result.user;
+
+            // Create or update local user from Google data
+            const users = this.getUsers();
+            let existingUser = users.find(u => u.email === user.email);
+
+            if (!existingUser) {
+                // Create new user from Google data
+                existingUser = {
+                    id: 'google_' + user.uid,
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    provider: 'google',
+                    createdAt: new Date().toISOString()
+                };
+                users.push(existingUser);
+                this.saveUsers(users);
+            } else {
+                // Update existing user with Google data if needed
+                existingUser.photoURL = user.photoURL;
+                existingUser.provider = 'google';
+                this.saveUsers(users);
+            }
+
+            // Create session
+            const session = {
+                userId: existingUser.id,
+                name: existingUser.name,
+                email: existingUser.email,
+                photoURL: existingUser.photoURL,
+                provider: 'google'
+            };
+            this.saveSession(session);
+
+            this.hideAuthModal();
+            this.updateUserUI(session);
+
+            if (this.onLoginSuccess) this.onLoginSuccess(session);
+
+        } catch (error) {
+            console.error('Google Sign-In Error:', error);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                // User closed the popup, no need to show error
+                return;
+            }
+
+            alert('Error al iniciar sesión con Google: ' + (error.message || 'Intenta de nuevo.'));
+        } finally {
+            this.googleSignInBtn.classList.remove('loading');
+            this.googleSignInBtn.disabled = false;
+        }
+    }
+
     logout() {
         if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            // Also sign out from Firebase if it was a Google login
+            const session = this.getSession();
+            if (session?.provider === 'google' && typeof window.signOutFirebase === 'function') {
+                window.signOutFirebase().catch(console.error);
+            }
+
             this.clearSession();
             this.userGreetingBox.style.display = 'none';
             this.showAuthModal();

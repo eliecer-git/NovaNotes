@@ -705,6 +705,26 @@
                     <button id="select-login-btn" class="btn-auth-primary">Iniciar Sesión</button>
                     <button id="select-register-btn" class="btn-auth-secondary">Regístrate</button>
                 </div>
+                <div class="auth-divider">
+                    <span>o continúa con</span>
+                </div>
+                <button id="google-signin-btn" class="btn-google-signin">
+                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    Continuar con Google
+                </button>
             </div>
 
             <!-- Login Form -->
@@ -825,7 +845,7 @@
         <div class="modal-content glass">
             <h2>🔑 Configurar IA</h2>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
-                NovaNotes usa Google Gemini para la inteligencia artificial. Necesitas tu propia clave API gratuita.
+                NovaStarPro usa Google Gemini para la inteligencia artificial. Necesitas tu propia clave API gratuita.
             </p>
             <ol
                 style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px; padding-left: 20px; line-height: 1.5;">
@@ -849,7 +869,7 @@
     <div id="ai-chat-interface" class="ai-chat-interface glass" hidden>
         <div class="ai-chat-header">
             <div class="ai-header-title">
-                <span class="ai-sparkle">✨</span> Asistente Nova
+                <span class="ai-sparkle">✨</span> Asistente NovaStar
             </div>
             <div class="ai-header-actions">
                 <button id="ai-settings-btn" class="btn-icon-tiny" title="Configurar API Key">⚙️</button>
@@ -876,6 +896,34 @@
             </button>
         </div>
     </div>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSy82ytv5CK67wDbL0WgCNCJsszVKYwOcitE",
+            authDomain: "novastarpro-65bf7.firebaseapp.com",
+            projectId: "novastarpro-65bf7",
+            storageBucket: "novastarpro-65bf7.firebasestorage.app",
+            messagingSenderId: "712791340528",
+            appId: "1:712791340528:web:790f26d161fdac5a4a1935",
+            measurementId: "G-V7ZN3QDCBQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Make functions globally available
+        window.firebaseAuth = auth;
+        window.googleProvider = provider;
+        window.signInWithGoogle = () => signInWithPopup(auth, provider);
+        window.signOutFirebase = () => signOut(auth);
+        window.onFirebaseAuthStateChanged = (callback) => onAuthStateChanged(auth, callback);
+    </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 

@@ -4060,7 +4060,9 @@ body.light-theme .btn-auth-secondary:hover {
         width: 90%;
         max-width: none;
     }
-}/* ======================== */
+}
+
+/* ======================== */
 /* AI ASSISTANT STYLES      */
 /* ======================== */
 
@@ -4318,5 +4320,90 @@ body.light-theme .btn-auth-secondary:hover {
         left: 5%;
         bottom: 20px;
         height: 60vh;
+    }
+}
+
+/* ======================== */
+/* GOOGLE SIGN-IN BUTTON    */
+/* ======================== */
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    width: 100%;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.auth-divider span {
+    padding: 0 15px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.btn-google-signin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    background: #ffffff;
+    color: #1f1f1f;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-google-signin:hover {
+    background: #f8f8f8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-google-signin:active {
+    transform: translateY(0);
+}
+
+.btn-google-signin svg {
+    flex-shrink: 0;
+}
+
+.btn-google-signin.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn-google-signin.loading::after {
+    content: '...';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+
+    0%,
+    20% {
+        content: '.';
+    }
+
+    40% {
+        content: '..';
+    }
+
+    60%,
+    100% {
+        content: '...';
     }
 }
