@@ -457,7 +457,7 @@ class AIManager {
     constructor(noteApp) {
         this.noteApp = noteApp; // Reference to main app for context
         this.API_KEY_KEY = 'novanotes_gemini_key';
-        this.HISTORY_KEY = 'novanotes_ai_messages';
+        this.SESSIONS_KEY = 'novanotes_ai_sessions_v1';
 
         // List of models to try in order of preference (updated for 2025 naming)
         this.MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'];
@@ -466,7 +466,14 @@ class AIManager {
         this.aiBtn = document.getElementById('ai-btn');
         this.chatInterface = document.getElementById('ai-chat-interface');
         this.closeChatBtn = document.getElementById('close-ai-chat-btn');
-        this.clearHistoryBtn = document.getElementById('ai-clear-history-btn');
+
+        // History UI
+        this.historyToggleBtn = document.getElementById('ai-history-toggle-btn');
+        this.historySidebar = document.getElementById('ai-history-sidebar');
+        this.historyListContainer = document.getElementById('ai-history-list');
+        this.newChatBtn = document.getElementById('ai-new-chat-btn');
+        this.closeHistoryBtn = document.getElementById('ai-close-history-btn');
+
         this.keyModal = document.getElementById('ai-key-modal');
         this.keyInput = document.getElementById('ai-api-key-input');
         this.saveKeyBtn = document.getElementById('save-ai-key-btn');
@@ -477,8 +484,18 @@ class AIManager {
         this.messagesContainer = document.getElementById('ai-chat-messages');
         this.keyError = document.getElementById('ai-key-error');
 
+        // State
+        this.sessions = this.loadSessions();
+        this.currentSessionId = null;
+
         this.initListeners();
-        this.loadHistory();
+
+        // Load last session or start new
+        if (this.sessions.length > 0) {
+            this.loadSession(this.sessions[0].id); // Load most recent
+        } else {
+            this.createNewSession(false); // Start fresh without UI flash
+        }
     }
 
     initListeners() {
@@ -488,8 +505,27 @@ class AIManager {
                 e.stopPropagation();
                 this.toggleChat();
             });
-        } else {
-            console.warn('AI Button (ai-btn) not found in DOM');
+        }
+
+        // History Toggles
+        if (this.historyToggleBtn) {
+            this.historyToggleBtn.addEventListener('click', () => {
+                this.renderHistoryList();
+                this.historySidebar.hidden = !this.historySidebar.hidden;
+            });
+        }
+
+        if (this.closeHistoryBtn) {
+            this.closeHistoryBtn.addEventListener('click', () => {
+                this.historySidebar.hidden = true;
+            });
+        }
+
+        if (this.newChatBtn) {
+            this.newChatBtn.addEventListener('click', () => {
+                this.createNewSession();
+                this.historySidebar.hidden = true; // Auto close sidebar
+            });
         }
 
         // Close Chat
@@ -497,11 +533,6 @@ class AIManager {
             this.closeChatBtn.addEventListener('click', () => {
                 this.chatInterface.hidden = true;
             });
-        }
-
-        // Clear History
-        if (this.clearHistoryBtn) {
-            this.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
         }
 
         // Settings (Key Configuration)
@@ -531,6 +562,117 @@ class AIManager {
                 }
             });
         }
+    }
+
+    // --- Session Management ---
+
+    loadSessions() {
+        try {
+            const data = localStorage.getItem(this.SESSIONS_KEY);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('Error loading sessions', e);
+            return [];
+        }
+    }
+
+    saveSessions() {
+        localStorage.setItem(this.SESSIONS_KEY, JSON.stringify(this.sessions));
+    }
+
+    createNewSession(updateUI = true) {
+        const newSession = {
+            id: Date.now().toString(),
+            title: 'Nueva Conversación',
+            messages: [],
+            updatedAt: Date.now()
+        };
+
+        // Add welcome message
+        const welcomeMsg = { type: 'ai-welcome', text: '¡Hola! Soy Nova. ¿En qué puedo ayudarte hoy?', timestamp: Date.now() };
+        newSession.messages.push(welcomeMsg);
+
+        this.sessions.unshift(newSession); // Add to top
+        this.saveSessions();
+        this.loadSession(newSession.id);
+
+        if (updateUI) this.renderHistoryList();
+    }
+
+    loadSession(sessionId) {
+        const session = this.sessions.find(s => s.id === sessionId);
+        if (!session) return;
+
+        this.currentSessionId = sessionId;
+        this.messagesContainer.innerHTML = ''; // Clear view
+
+        session.messages.forEach(msg => {
+            this.appendMessageToView(msg.type, msg.text);
+        });
+
+        this.scrollToBottom();
+    }
+
+    deleteSession(sessionId) {
+        if (!confirm('¿Eliminar esta conversación?')) return;
+
+        this.sessions = this.sessions.filter(s => s.id !== sessionId);
+        this.saveSessions();
+        this.renderHistoryList();
+
+        // If deleted current session
+        if (this.currentSessionId === sessionId) {
+            if (this.sessions.length > 0) {
+                this.loadSession(this.sessions[0].id);
+            } else {
+                this.createNewSession();
+            }
+        }
+    }
+
+    updateCurrentSessionTitle(firstUserMessage) {
+        if (!this.currentSessionId) return;
+        const session = this.sessions.find(s => s.id === this.currentSessionId);
+        if (session && session.title === 'Nueva Conversación') {
+            // Simple truncation for title
+            session.title = firstUserMessage.length > 30 ? firstUserMessage.substring(0, 30) + '...' : firstUserMessage;
+            this.saveSessions();
+            this.renderHistoryList();
+        }
+    }
+
+    // --- UI Rendering ---
+
+    renderHistoryList() {
+        if (!this.historyListContainer) return;
+        this.historyListContainer.innerHTML = '';
+
+        if (this.sessions.length === 0) {
+            this.historyListContainer.innerHTML = '<div class="history-placeholder" style="text-align:center; padding: 20px; color: var(--text-muted);">No hay chats guardados</div>';
+            return;
+        }
+
+        this.sessions.forEach(session => {
+            const item = document.createElement('div');
+            item.className = `history-item ${session.id === this.currentSessionId ? 'active' : ''}`;
+
+            const dateStr = new Date(session.updatedAt).toLocaleDateString();
+
+            item.innerHTML = `
+                <div style="flex:1; overflow:hidden;" onclick="app.aiManager.switchSession('${session.id}')">
+                    <div class="history-title">${session.title}</div>
+                    <div class="history-date">${dateStr}</div>
+                </div>
+                <button class="history-delete-btn" onclick="app.aiManager.deleteSession('${session.id}')">🗑️</button>
+            `;
+            this.historyListContainer.appendChild(item);
+        });
+    }
+
+    // Bridge for onclick in HTML
+    switchSession(id) {
+        this.loadSession(id);
+        this.historySidebar.hidden = true; // optional: close on select
     }
 
     toggleChat() {
@@ -588,6 +730,12 @@ class AIManager {
         this.chatInput.value = '';
         this.chatInput.style.height = 'auto'; // Reset height if auto-expanding
 
+        // Save to current Session
+        if (!this.currentSessionId) this.createNewSession(false);
+
+        // Update title if it's the first message
+        this.updateCurrentSessionTitle(text);
+
         // Show user message
         this.appendMessage('user', text);
 
@@ -609,62 +757,42 @@ class AIManager {
             });
     }
 
-    appendMessage(type, text, save = true) {
+    appendMessage(type, text) {
+        // Save to data model
+        const session = this.sessions.find(s => s.id === this.currentSessionId);
+        if (session) {
+            session.messages.push({ type, text, timestamp: Date.now() });
+            session.updatedAt = Date.now();
+            // Move session to top
+            this.sessions = this.sessions.filter(s => s.id !== this.currentSessionId);
+            this.sessions.unshift(session);
+            this.saveSessions();
+        }
+
+        // Visual Append
+        this.appendMessageToView(type, text);
+    }
+
+    appendMessageToView(type, text) {
         const div = document.createElement('div');
         div.className = `ai-message ${type}`;
 
-        // Simple Markdown parsing (bold, code blocks)
-        let formattedText = text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\`\`\`(.*?)\`\`\`/gs, '<pre><code>$1</code></pre>')
-            .replace(/\n/g, '<br>');
+        let formattedText = text;
+
+        // Simple Markdown parsing (safety check for non-strings)
+        if (typeof text === 'string') {
+            formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\`\`\`(.*?)\`\`\`/gs, '<pre><code>$1</code></pre>')
+                .replace(/\n/g, '<br>');
+        }
 
         div.innerHTML = formattedText;
         this.messagesContainer.appendChild(div);
         this.scrollToBottom();
-
-        if (save && !type.includes('error')) {
-            this.saveMessage(type, text);
-        }
-
         return div;
     }
 
-    saveMessage(type, text) {
-        const history = this.getHistory();
-        history.push({ type, text, timestamp: Date.now() });
-        localStorage.setItem(this.HISTORY_KEY, JSON.stringify(history));
-    }
-
-    getHistory() {
-        try {
-            return JSON.parse(localStorage.getItem(this.HISTORY_KEY) || '[]');
-        } catch (e) { return []; }
-    }
-
-    loadHistory() {
-        const history = this.getHistory();
-        if (history.length > 0) {
-            // Remove initial welcome message if history exists
-            this.messagesContainer.innerHTML = '';
-            history.forEach(msg => {
-                this.appendMessage(msg.type, msg.text, false); // false = don't save again
-            });
-        }
-    }
-
-    clearHistory() {
-        if (confirm('¿Borrar todo el historial de chat con Nova?')) {
-            localStorage.removeItem(this.HISTORY_KEY);
-            this.messagesContainer.innerHTML = '';
-            // Add default welcome back
-            const welcomeDiv = document.createElement('div');
-            welcomeDiv.className = 'ai-message ai-welcome';
-            welcomeDiv.innerHTML = '¡Historial borrado! Soy Nova, tu asistente. ¿En qué puedo ayudarte?';
-            this.messagesContainer.appendChild(welcomeDiv);
-            this.saveMessage('ai-welcome', welcomeDiv.innerHTML); // Optional: save new welcome
-        }
-    }
 
     appendLoading() {
         const id = 'loading-' + Date.now();

@@ -1171,9 +1171,7 @@ body.light-theme .sort-option:hover {
     border-color: var(--text-secondary);
 }
 
-margin: 4px 0;
-padding: 0;
-}
+
 
 .category-menu {
     position: absolute;
@@ -1507,17 +1505,7 @@ body.light-theme .note-item.color-pink {
     background: rgba(251, 207, 232, 0.5);
 }
 
-position: fixed;
-top: 0;
-left: 0;
-width: 100vw;
-height: 100vh;
-background: #000;
-display: flex;
-align-items: center;
-justify-content: center;
-z-index: 200000;
-}
+
 
 /* Audio Player Styling */
 .custom-audio-player {
@@ -1584,19 +1572,7 @@ z-index: 200000;
     margin-left: 6px;
 }
 
-position: fixed;
-top: 0;
-left: 0;
-width: 100vw;
-height: 100vh;
-background: #000000;
-z-index: 999999;
-/* Por encima de TODO */
-display: flex;
-align-items: center;
-justify-content: center;
-animation: fadeIn 0.4s ease;
-}
+
 
 .master-lock-content {
     text-align: center;
@@ -2198,10 +2174,7 @@ ul.checklist li.checked::before {
     background-repeat: no-repeat;
 }
 
-white-space: pre-wrap;
-word-wrap: break-word;
-min-height: 300px;
-}
+
 
 /* NovaVision AI Button */
 .btn-ia {
