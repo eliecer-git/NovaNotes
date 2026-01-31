@@ -1064,6 +1064,19 @@ class NoteApp {
             }
         });
 
+        // Info Modal Logic
+        if (this.infoBtn) {
+            this.infoBtn.onclick = () => this.infoModal.hidden = false;
+        }
+        if (this.closeInfoBtn) {
+            this.closeInfoBtn.onclick = () => this.infoModal.hidden = true;
+        }
+        if (this.infoModal) {
+            this.infoModal.onclick = (e) => {
+                if (e.target === this.infoModal) this.infoModal.hidden = true;
+            };
+        }
+
         // Theme Toggle
         this.themeToggleBtn.onclick = () => this.toggleTheme();
         this.initTheme();
