@@ -460,7 +460,13 @@ class AIManager {
         this.SESSIONS_KEY = 'novanotes_ai_sessions_v1';
 
         // List of models to try in order of preference (updated for 2025 naming)
-        this.MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'];
+        // Added 1.5 variants as fallback for quota issues
+        this.MODELS_TO_TRY = [
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-lite',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro'
+        ];
 
         // DOM Elements
         this.aiBtn = document.getElementById('ai-btn');
@@ -856,18 +862,23 @@ class AIManager {
                 });
 
                 if (!response.ok) {
+                    // Handle Quota Exceeded (429) specifically -> Try next model
+                    if (response.status === 429) {
+                        console.warn(`Model ${model} hit rate limit (429). Trying next...`);
+                        lastError = new Error(`Límite de cuota excedido en ${model}.`);
+                        continue;
+                    }
+
                     // If it's a 404 (Not Found) or 400 (Bad Request), treat as model issue and continue to next
-                    if (response.status === 404 || response.status === 400) {
+                    if (response.status === 404 || response.status === 400 || response.status === 503) {
                         const errData = await response.json().catch(() => ({}));
                         const msg = errData.error?.message || response.statusText;
                         console.warn(`Model ${model} failed (${response.status}): ${msg}`);
-                        lastError = new Error(`Model ${model} not found/supported: ${msg}`);
+                        lastError = new Error(`Model ${model} issue: ${msg}`);
                         continue; // Try next model
                     }
 
-                    // If it's 429 (Quota), we might want to fail fast or try another depending on strategy.
-                    // For now, let's treat 429 as a hard stop or specific error, but loop could try others.
-                    // Usually quota is per project, not per model necessarily, but let's try next just in case.
+                    // Other errors
                     const errData = await response.json();
                     throw new Error(errData.error?.message || 'Error en Google AI');
                 }
@@ -882,13 +893,16 @@ class AIManager {
 
             } catch (error) {
                 lastError = error;
-                // If it's not a model-availability error (like network fail), strictly we might want to stop.
-                // But simple retry logic is safe here.
+                // If network fail, let's keep trying other models just in case
                 console.error(`Error with model ${model}:`, error);
             }
         }
 
         // If loop finishes without returning
+        if (lastError && lastError.message.includes('cuota')) {
+            throw new Error('El servicio de IA está muy ocupado (Límite de cuota gratuito). Por favor espera unos segundos e intenta nuevamente.');
+        }
+
         throw lastError || new Error('No se pudo conectar con ningún modelo de IA disponible. Verifica tu API Key.');
     }
 }
