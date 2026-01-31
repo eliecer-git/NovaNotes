@@ -817,10 +817,14 @@ class NoteApp {
 
         this.saveStatus = document.getElementById('save-status');
         this.mobileBackBtn = document.getElementById('mobile-back-btn');
+        this.shareNoteBtn = document.getElementById('share-note-btn'); // Share button
 
-        this.currentNoteFilter = 'public'; // 'public' o 'private'
+        this.currentNoteFilter = 'public'; // 'public', 'private', or 'trash'
         this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
         this.deferredPrompt = null;
+
+        // Cleanup trash on initialization
+        this.cleanupTrash();
 
 
         // Optimized Debouncing
@@ -960,21 +964,38 @@ class NoteApp {
             }
         });
 
-        // Info Modal Logic
-        this.infoBtn.onclick = () => {
-            this.infoModal.hidden = false;
-            this.infoModal.classList.remove('hidden');
-        };
-        this.closeInfoBtn.onclick = () => {
-            this.infoModal.hidden = true;
-            this.infoModal.classList.add('hidden');
-        };
-        this.infoModal.onclick = (e) => {
-            if (e.target === this.infoModal) {
-                this.infoModal.hidden = true;
-                this.infoModal.classList.add('hidden');
+        // Filters (Public / Private / Trash)
+        this.filterPublicBtn?.addEventListener('click', () => {
+            this.currentNoteFilter = 'public';
+            this.renderNotesList();
+            this.updateUIForFilter();
+            // Clear editor if trash note was selected
+            if (this.activeNoteId) this.setActiveNote(null);
+        });
+
+        this.filterPrivateBtn?.addEventListener('click', () => {
+            if (!this.isVaultUnlocked) {
+                this.masterLockModal.style.display = 'flex';
+                this.masterPwdInput.value = '';
+                this.masterPwdInput.focus();
+            } else {
+                this.currentNoteFilter = 'private';
+                this.renderNotesList();
+                this.updateUIForFilter();
             }
-        };
+            // Clear editor if trash note was selected
+            if (this.activeNoteId) this.setActiveNote(null);
+        });
+
+        this.filterTrashBtn?.addEventListener('click', () => {
+            this.currentNoteFilter = 'trash';
+            this.renderNotesList();
+            this.updateUIForFilter();
+            if (this.activeNoteId) this.setActiveNote(null);
+        });
+
+        // Share Note
+        this.shareNoteBtn?.addEventListener('click', () => this.shareCurrentNote());
 
         // Theme Toggle
         this.themeToggleBtn.onclick = () => this.toggleTheme();
@@ -1859,18 +1880,136 @@ class NoteApp {
         setTimeout(() => this.saveNoteBtn.textContent = 'Guardar', 1500);
     }
 
-    deleteNote() {
-        if (!this.activeNoteId) return;
-        if (confirm('¿Mover esta nota a la papelera?')) {
-            const note = this.notes.find(n => n.id === this.activeNoteId);
-            if (note) {
-                note.trashed = true;
-                note.trashedAt = new Date().toISOString();
-                this.saveToStorage();
-                this.setActiveNote(null);
+    deleteNote(noteId = null) {
+        const idToDelete = noteId || this.activeNoteId;
+        if (!idToDelete) return;
+
+        const noteIndex = this.notes.findIndex(n => n.id === idToDelete);
+        if (noteIndex === -1) return;
+
+        // If filtering by trash, DELETE PERMANENTLY
+        if (this.currentNoteFilter === 'trash') {
+            if (confirm('¿Estás seguro de que quieres eliminar esta nota permanentemente? Esta acción no se puede deshacer.')) {
+                this.notes.splice(noteIndex, 1);
+                this.activeNoteId = null;
                 this.renderNotesList();
-                this.updateStats();
+                this.showEditor(false); // Hide editor
+                this.saveToStorage();
+                this.showSyncStatus('synced');
             }
+        } else {
+            // Soft delete: Move to Trash
+            if (confirm('¿Mover esta nota a la papelera?')) {
+                const note = this.notes[noteIndex];
+                note.deletedAt = new Date().toISOString(); // Mark as deleted
+                note.isFavorite = false; // Remove favorite status
+                note.isPinned = false; // Remove pin
+
+                // If it was private, decide if it stays private or public in trash.
+                // Usually logical to just mark deleted.
+
+                this.activeNoteId = null;
+                this.renderNotesList();
+                this.showEditor(false);
+                this.saveToStorage();
+                this.showSyncStatus('synced');
+
+                // Show toast or small feedback
+                /* alert('Nota movida a la papelera'); */
+            }
+        }
+    }
+
+    updateUIForFilter() {
+        // Reset ALL active states
+        this.filterPublicBtn?.classList.remove('active');
+        this.filterPrivateBtn?.classList.remove('active');
+        this.filterTrashBtn?.classList.remove('active');
+
+        // Set active based on current filter
+        if (this.currentNoteFilter === 'public') {
+            this.filterPublicBtn?.classList.add('active');
+            this.masterLockModal.style.display = 'none'; // Ensure lock modal is hidden
+        } else if (this.currentNoteFilter === 'private') {
+            this.filterPrivateBtn?.classList.add('active');
+        } else if (this.currentNoteFilter === 'trash') {
+            this.filterTrashBtn?.classList.add('active');
+            this.masterLockModal.style.display = 'none';
+        }
+    }
+
+    /**
+     * Restore a note from trash
+     */
+    restoreNote(noteId) {
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            delete note.deletedAt;
+            this.activeNoteId = noteId;
+            // Switch to filter where note belongs? For now stay in trash view but remove item
+            this.saveToStorage();
+            this.renderNotesList();
+            // Optional: Switch filter automatically
+            // this.currentNoteFilter = note.isLocked ? 'private' : 'public';
+            // this.updateUIForFilter();
+        }
+    }
+
+    /**
+     * Delete notes older than 7 days from trash
+     */
+    cleanupTrash() {
+        if (!this.notes) return;
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const initialCount = this.notes.length;
+        this.notes = this.notes.filter(note => {
+            if (note.deletedAt) {
+                const deletedDate = new Date(note.deletedAt);
+                return deletedDate > sevenDaysAgo; // Keep only if deleted recently
+            }
+            return true;
+        });
+
+        if (this.notes.length !== initialCount) {
+            console.log(`🗑️ Cleaned up ${initialCount - this.notes.length} old notes from trash.`);
+            this.saveToStorage();
+        }
+    }
+
+    /**
+     * Share the current note using Web Share API
+     */
+    async shareCurrentNote() {
+        if (!this.activeNoteId) return;
+
+        const note = this.getNote(this.activeNoteId);
+        if (!note) return;
+
+        // Strip HTML for plain text sharing
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = note.content;
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+        const shareData = {
+            title: note.title || 'Nota sin título',
+            text: `${note.title}\n\n${plainText}\n\n(Compartido desde NovaStarPro)`,
+            // url: window.location.href // Optional: link to app
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+                console.log('Nota compartida exitosamente');
+            } catch (err) {
+                console.log('Error al compartir:', err);
+            }
+        } else {
+            // Fallback for desktop/unsupported browsers
+            alert('Copiar enlace no disponible. Texto copiado al portapapeles.');
+            navigator.clipboard.writeText(shareData.text);
         }
     }
 
@@ -1968,15 +2107,15 @@ class NoteApp {
             );
         } else {
             if (this.currentNoteFilter === 'trash') {
-                filteredNotes = this.notes.filter(n => n.trashed);
+                filteredNotes = this.notes.filter(n => n.deletedAt); // Use deletedAt
             } else if (this.currentNoteFilter === 'private') {
-                // Private = has password OR isPrivate flag
-                filteredNotes = this.notes.filter(n => (n.password || n.isPrivate) && !n.trashed);
+                // Private = has password OR isPrivate flag AND not deleted
+                filteredNotes = this.notes.filter(n => (n.password || n.isPrivate) && !n.deletedAt);
 
             } else {
                 // Public logic
                 filteredNotes = this.notes.filter(n =>
-                    !n.password && !n.isPrivate && !n.trashed && n.type !== 'folder'
+                    !n.password && !n.isPrivate && !n.deletedAt && n.type !== 'folder'
                 );
             }
         }
@@ -2079,13 +2218,33 @@ class NoteApp {
             if (this.currentNoteFilter === 'trash') {
                 const actions = document.createElement('div');
                 actions.className = 'trash-actions';
+                actions.style.marginTop = '8px';
+                actions.style.display = 'flex';
+                actions.style.gap = '10px';
+
                 actions.innerHTML = `
-                   <button class="btn-restore" onclick="event.stopPropagation(); app.restoreNote('${note.id}')">♻️ Restaurar</button>
-                   <button class="btn-delete-permanent" onclick="event.stopPropagation(); app.deletePermanently('${note.id}')">🗑️ Borrar</button>
+                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 4px 8px; border-color: var(--accent); color: var(--accent);" 
+                        onclick="event.stopPropagation(); app.restoreNote('${note.id}')">♻️ Restaurar</button>
+                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 4px 8px; border-color: #ef4444; color: #ef4444;" 
+                        onclick="event.stopPropagation(); app.deleteNote('${note.id}')">🗑️ Borrar</button>
                  `;
                 noteEl.querySelector('.note-info').appendChild(actions);
+
+                // Read-only view on click
+                noteEl.onclick = () => {
+                    this.setActiveNote(note.id);
+                    this.noteTitleInput.contentEditable = false;
+                    this.noteContentInput.contentEditable = false;
+                    this.lastEditedText.textContent = 'Nota en papelera (Solo lectura)';
+                    if (this.editorActions) this.editorActions.style.display = 'none';
+                };
             } else {
-                noteEl.onclick = () => this.setActiveNote(note.id);
+                noteEl.onclick = () => {
+                    this.setActiveNote(note.id);
+                    this.noteTitleInput.contentEditable = true;
+                    this.noteContentInput.contentEditable = true;
+                    if (this.editorActions) this.editorActions.style.display = 'flex';
+                };
             }
 
             this.notesList.appendChild(noteEl);
