@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | NovaStarPro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .admin-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #6366f1;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 15px;
+            transition: transform 0.2s;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-val {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .login-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .error {
+            color: #ef4444;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-card" id="login-view">
+        <h1>🔒 Acceso Restringido</h1>
+        <p style="margin-bottom: 20px; color: #64748b;">Este panel es solo para el administrador.</p>
+        <button class="login-btn" onclick="signIn()">Iniciar Sesión con Google</button>
+        <div id="login-error" class="error"></div>
+    </div>
+
+    <div class="admin-card" id="stats-view" style="display: none;">
+        <h1>📊 Estadísticas de App</h1>
+
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-val" id="visits-count">-</span>
+                <span class="stat-label">Visitas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val" id="downloads-count">-</span>
+                <span class="stat-label">Descargas</span>
+            </div>
+        </div>
+
+        <p style="font-size: 0.8rem; color: #94a3b8;">
+            Actualizado automáticamente.<br>
+            <a href="index.html"
+                style="color: #6366f1; text-decoration: none; margin-top: 10px; display: inline-block;">Volver a la
+                App</a>
+        </p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2ytv5CK67wDbL0WgGNCJrssZVKYwDqtE",
+            authDomain: "novastarpro-65bf7.firebaseapp.com",
+            projectId: "novastarpro-65bf7",
+            storageBucket: "novastarpro-65bf7.firebasestorage.app",
+            messagingSenderId: "712791340528",
+            appId: "1:712791340528:web:790f26d161fdac5a4a1935",
+            measurementId: "G-V7ZN3QDCBQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        const ADMIN_EMAIL = "danieleliecerorduzbaron@gmail.com";
+
+        window.signIn = () => {
+            signInWithPopup(auth, provider).catch(err => {
+                document.getElementById('login-error').textContent = err.message;
+            });
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (user.email === ADMIN_EMAIL) {
+                    showStats();
+                } else {
+                    document.getElementById('login-error').textContent = "Acceso denegado: No eres el administrador.";
+                    auth.signOut();
+                }
+            } else {
+                document.getElementById('login-view').style.display = 'block';
+                document.getElementById('stats-view').style.display = 'none';
+            }
+        });
+
+        function showStats() {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('stats-view').style.display = 'block';
+
+            // Escuchar cambios en tiempo real
+            onSnapshot(doc(db, "stats", "general"), (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    animateValue("visits-count", 0, data.visits || 0, 1000);
+                    animateValue("downloads-count", 0, data.installs || 0, 1000);
+                } else {
+                    document.getElementById('visits-count').textContent = "0";
+                    document.getElementById('downloads-count').textContent = "0";
+                }
+            });
+        }
+
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            const range = end - start;
+            let current = start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            const obj = document.getElementById(id);
+            const timer = setInterval(function () {
+                current += increment;
+                obj.innerHTML = current;
+                if (current == end) {
+                    clearInterval(timer);
+                }
+            }, Math.min(stepTime, 50)); // Cap speed
+            obj.innerHTML = end; // Fallback instant updates if large number
+        }
+    </script>
+</body>
+
+</html>
