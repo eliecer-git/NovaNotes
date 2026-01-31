@@ -1147,6 +1147,16 @@ class NoteApp {
                     }
                 });
             }
+
+            // "Report Error" via email
+            const helpEmailBtn = document.getElementById('help-email-btn');
+            if (helpEmailBtn) {
+                helpEmailBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.helpDropdownMenu.hidden = true;
+                    window.open('mailto:danieleliecerorduzbaron@gmail.com?subject=Reporte%20de%20Error%20-%20NovaNotes&body=Describe%20el%20error%20que%20encontraste:', '_self');
+                });
+            }
         }
 
 
