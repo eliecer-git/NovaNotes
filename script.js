@@ -1980,36 +1980,51 @@ class NoteApp {
     }
 
     /**
-     * Share the current note using Web Share API
+     * Share the current note using Web Share API or Clipboard
      */
     async shareCurrentNote() {
-        if (!this.activeNoteId) return;
+        if (!this.activeNoteId) {
+            alert('Primero selecciona una nota para compartir.');
+            return;
+        }
 
-        const note = this.getNote(this.activeNoteId);
+        const note = this.notes.find(n => n.id === this.activeNoteId);
         if (!note) return;
+
+        console.log('Intentando compartir nota:', note.title);
 
         // Strip HTML for plain text sharing
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = note.content;
-        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        let plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+        // Add title
+        const textToShare = `${note.title || 'Nota sin título'}\n\n${plainText}\n\n(Compartido desde NovaStarPro)`;
 
         const shareData = {
             title: note.title || 'Nota sin título',
-            text: `${note.title}\n\n${plainText}\n\n(Compartido desde NovaStarPro)`,
-            // url: window.location.href // Optional: link to app
+            text: textToShare,
         };
 
-        if (navigator.share) {
-            try {
+        try {
+            if (navigator.share && /mobile|android|iphone/i.test(navigator.userAgent)) {
+                // Prefer native share on mobile
                 await navigator.share(shareData);
-                console.log('Nota compartida exitosamente');
-            } catch (err) {
-                console.log('Error al compartir:', err);
+                console.log('Nota compartida exitosamente vía nativa');
+            } else {
+                // Fallback to clipboard on desktop or if share fails
+                await navigator.clipboard.writeText(textToShare);
+                alert('📋 El contenido de la nota ha sido copiado al portapapeles.\nPuedes pegarlo en cualquier chat o correo.');
             }
-        } else {
-            // Fallback for desktop/unsupported browsers
-            alert('Copiar enlace no disponible. Texto copiado al portapapeles.');
-            navigator.clipboard.writeText(shareData.text);
+        } catch (err) {
+            console.error('Error al compartir:', err);
+            // Fallback if native share fails unexpectedly
+            try {
+                await navigator.clipboard.writeText(textToShare);
+                alert('📋 Contenido copiado al portapapeles.');
+            } catch (clipboardErr) {
+                alert('No se pudo compartir automáticamente. Por favor selecciona el texto y cópialo manualmente.');
+            }
         }
     }
 
