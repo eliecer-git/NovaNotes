@@ -1448,15 +1448,20 @@ body.light-theme .tag-pill {
 }
 
 /* Menu de colores de nota - Corregir recorte de círculos */
+/* Menu de colores de nota - Corregir recorte de círculos */
 #note-color-menu {
     position: absolute !important;
-    bottom: calc(100% + 8px) !important;
+    top: calc(100% + 8px) !important;
+    /* Desplegar hacia abajo */
+    bottom: auto !important;
+    /* Resetear bottom */
     right: 0 !important;
     padding: 12px !important;
     border-radius: 12px !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 8px !important;
-    z-index: 100 !important;
+    z-index: 1000 !important;
+    /* Asegurar que esté encima de todo */
     min-width: 120px !important;
     border: 1px solid var(--border-color) !important;
     background: var(--card-bg) !important;
