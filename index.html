@@ -688,6 +688,25 @@
         </div>
     </div>
 
+    <!-- Modal Compartir -->
+    <div id="share-modal" class="modal-overlay" hidden>
+        <div class="modal glass" style="max-width: 500px; padding: 20px; border-radius: 16px; width: 90%;">
+            <h3 style="margin-bottom: 20px; font-size: 1.2rem;">📤 Compartir Nota</h3>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px;">Copia el contenido de tu
+                    nota para enviarlo:</p>
+                <textarea id="share-content-text" class="input-premium"
+                    style="min-height: 150px; font-size: 0.9rem; resize: none; width: 100%; border-radius: 12px; padding: 10px;"
+                    readonly></textarea>
+            </div>
+            <div class="modal-footer" style="gap: 10px; justify-content: flex-end; display: flex; margin-top: 15px;">
+                <button id="close-share-btn" class="btn-gradient"
+                    style="background: rgba(255, 255, 255, 0.1); box-shadow: none;">Salir</button>
+                <button id="copy-share-link-btn" class="btn-gradient">Copiar Contenido</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Autenticación -->
     <div id="auth-modal" class="auth-overlay">
         <div class="auth-container">
