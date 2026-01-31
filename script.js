@@ -838,6 +838,12 @@ class NoteApp {
         this.isRecording = false;
 
         this.reminderBtn = document.getElementById('reminder-btn');
+
+        // Share Modal Elements
+        this.shareModal = document.getElementById('share-modal');
+        this.shareContentText = document.getElementById('share-content-text');
+        this.closeShareBtn = document.getElementById('close-share-btn');
+        this.copyShareLinkBtn = document.getElementById('copy-share-link-btn');
         this.reminderModal = document.getElementById('reminder-modal');
         this.closeReminderBtn = document.getElementById('close-reminder-btn');
         this.reminderDateInput = document.getElementById('reminder-date-input');
@@ -994,8 +1000,33 @@ class NoteApp {
             if (this.activeNoteId) this.setActiveNote(null);
         });
 
-        // Share Note
+        // Share Note - Open Modal
         this.shareNoteBtn?.addEventListener('click', () => this.shareCurrentNote());
+
+        // Share Modal Listeners
+        this.closeShareBtn?.addEventListener('click', () => {
+            this.shareModal.hidden = true;
+            this.shareModal.classList.remove('flex'); // Assuming utility class or hidden attribute handles it
+            this.shareModal.style.display = 'none';
+        });
+
+        this.copyShareLinkBtn?.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(this.shareContentText.value);
+                const originalText = this.copyShareLinkBtn.textContent;
+                this.copyShareLinkBtn.textContent = '✅ Copiado';
+                setTimeout(() => this.copyShareLinkBtn.textContent = originalText, 2000);
+            } catch (err) {
+                alert('No se pudo copiar automáticamente.');
+            }
+        });
+
+        // Close on overlay click
+        this.shareModal?.addEventListener('click', (e) => {
+            if (e.target === this.shareModal) {
+                this.shareModal.style.display = 'none';
+            }
+        });
 
         // Theme Toggle
         this.themeToggleBtn.onclick = () => this.toggleTheme();
@@ -1309,7 +1340,7 @@ class NoteApp {
                 );
                 let currentWidth = pinchTargetImg.style.width || '100%';
                 initialPinchWidthPercent = parseInt(currentWidth) || 100;
-                // No llamamos a preventDefault para no romper el scroll normal, 
+                // No llamamos a preventDefault para no romper el scroll normal,
                 // a menos que estemos pinchando la imagen.
             }
         }, { passive: true });
@@ -1636,7 +1667,7 @@ class NoteApp {
             this.noteContentInput.innerHTML = note.content;
 
             // Restore Note Color logic (Visual bg wrapper or border)
-            // If uses "theme" (Canva style) or "color" (Simple color). 
+            // If uses "theme" (Canva style) or "color" (Simple color).
             // We'll prioritize 'theme' if set, else 'color'.
             this.themeSelect.value = note.theme || 'none';
             this.bgColorPicker.style.display = note.theme === 'custom' ? 'block' : 'none';
@@ -1832,9 +1863,9 @@ class NoteApp {
             const titleText = this.noteTitleInput.innerText || 'Nota sin título';
 
             // Preserve pin/icon if technically possible or just simple update
-            // For simplicity and robustness, we just update text. 
+            // For simplicity and robustness, we just update text.
             // Ideally we should just update the text node, but innerText write removes children.
-            // Let's rely on full re-render (debounced) for perfect structure, 
+            // Let's rely on full re-render (debounced) for perfect structure,
             // and for immediate preview just update text to show responsiveness.
             if (titleEl) titleEl.innerText = titleText;
             if (previewEl) previewEl.innerText = this.noteContentInput.innerText.substring(0, 40) || 'Sin contenido adicional...';
@@ -1991,41 +2022,16 @@ class NoteApp {
         const note = this.notes.find(n => n.id === this.activeNoteId);
         if (!note) return;
 
-        console.log('Intentando compartir nota:', note.title);
-
-        // Strip HTML for plain text sharing
+        // Populate Modal
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = note.content;
         let plainText = tempDiv.textContent || tempDiv.innerText || '';
 
-        // Add title
         const textToShare = `${note.title || 'Nota sin título'}\n\n${plainText}\n\n(Compartido desde NovaStarPro)`;
 
-        const shareData = {
-            title: note.title || 'Nota sin título',
-            text: textToShare,
-        };
-
-        try {
-            if (navigator.share && /mobile|android|iphone/i.test(navigator.userAgent)) {
-                // Prefer native share on mobile
-                await navigator.share(shareData);
-                console.log('Nota compartida exitosamente vía nativa');
-            } else {
-                // Fallback to clipboard on desktop or if share fails
-                await navigator.clipboard.writeText(textToShare);
-                alert('📋 El contenido de la nota ha sido copiado al portapapeles.\nPuedes pegarlo en cualquier chat o correo.');
-            }
-        } catch (err) {
-            console.error('Error al compartir:', err);
-            // Fallback if native share fails unexpectedly
-            try {
-                await navigator.clipboard.writeText(textToShare);
-                alert('📋 Contenido copiado al portapapeles.');
-            } catch (clipboardErr) {
-                alert('No se pudo compartir automáticamente. Por favor selecciona el texto y cópialo manualmente.');
-            }
-        }
+        this.shareContentText.value = textToShare;
+        this.shareModal.style.display = 'flex';
+        this.shareModal.hidden = false;
     }
 
     /**

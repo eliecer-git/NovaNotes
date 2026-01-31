@@ -4579,3 +4579,29 @@ body.light-theme .btn-github-signin {
 body.light-theme .btn-github-signin:hover {
     background: #1a1e22;
 }
+
+/* Botón con degradado específico para compartir */
+.btn-gradient {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(99, 102, 241, 0.4);
+}
+
+.btn-gradient:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
+    filter: brightness(1.1);
+}
+
+.btn-gradient:active {
+    transform: translateY(0);
+}
