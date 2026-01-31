@@ -91,7 +91,7 @@
                                     <span class="help-desc">Asistente IA</span>
                                 </div>
                             </button>
-                            <button id="help-email-btn" class="help-option">
+                            <button id="help-email-btn" class="help-option" onclick="openReportModal()">
                                 <span class="help-icon">📧</span>
                                 <div class="help-text">
                                     <span class="help-title">Reportar Error</span>
@@ -953,10 +953,11 @@
                     danieleliecerorduzbaron@gmail.com
                 </p>
             </div>
-            <button id="copy-support-email-btn" class="btn-primary" style="width: 100%; margin-bottom: 10px;">
+            <button id="copy-support-email-btn" class="btn-primary" style="width: 100%; margin-bottom: 10px;"
+                onclick="copySupportEmail()">
                 📋 Copiar Correo
             </button>
-            <button id="close-report-modal-btn" class="btn-secondary" style="width: 100%;">
+            <button id="close-report-modal-btn" class="btn-secondary" style="width: 100%;" onclick="closeReportModal()">
                 Cerrar
             </button>
         </div>

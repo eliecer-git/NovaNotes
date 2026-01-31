@@ -1156,7 +1156,8 @@ class NoteApp {
             if (helpEmailBtn && reportModal) {
                 helpEmailBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    this.helpDropdownMenu.hidden = true;
+                    e.stopPropagation();
+                    if (this.helpDropdownMenu) this.helpDropdownMenu.hidden = true;
                     reportModal.style.display = 'flex';
                 });
             }
@@ -1179,7 +1180,28 @@ class NoteApp {
             }
         }
 
+        // Also add global function as backup
+        window.openReportModal = function () {
+            const modal = document.getElementById('report-error-modal');
+            const dropdown = document.getElementById('help-dropdown-menu');
+            if (dropdown) dropdown.hidden = true;
+            if (modal) modal.style.display = 'flex';
+        };
 
+        window.closeReportModal = function () {
+            const modal = document.getElementById('report-error-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.copySupportEmail = function () {
+            navigator.clipboard.writeText('danieleliecerorduzbaron@gmail.com').then(() => {
+                const btn = document.getElementById('copy-support-email-btn');
+                if (btn) {
+                    btn.textContent = '✅ ¡Copiado!';
+                    setTimeout(() => { btn.textContent = '📋 Copiar Correo'; }, 2000);
+                }
+            });
+        };
         // PWA Install Logic
         // Check if already running as installed PWA
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches
