@@ -85,6 +85,28 @@
                     <button id="info-btn" class="btn-gradient-small" title="Información" style="flex: 1;">
                         ℹ️ Info
                     </button>
+                    <div class="help-dropdown-container" style="flex: 1; position: relative;">
+                        <button id="help-btn" class="btn-gradient-small" title="Ayuda" style="width: 100%;">
+                            ❓ Ayuda
+                        </button>
+                        <div id="help-dropdown-menu" class="help-dropdown-menu glass" hidden>
+                            <button id="help-ai-btn" class="help-option">
+                                <span class="help-icon">✨</span>
+                                <div class="help-text">
+                                    <span class="help-title">Hablar con Nova</span>
+                                    <span class="help-desc">Asistente IA</span>
+                                </div>
+                            </button>
+                            <button id="help-email-btn" class="help-option"
+                                onclick="window.location.href='mailto:danieleliecerorduzbaron@gmail.com?subject=Reporte de Error - NovaNotes&body=Describe el error que encontraste:'">
+                                <span class="help-icon">📧</span>
+                                <div class="help-text">
+                                    <span class="help-title">Reportar Error</span>
+                                    <span class="help-desc">Enviar correo</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1074,6 +1096,77 @@
             border-radius: 8px;
             color: var(--text-secondary);
             cursor: pointer;
+        }
+
+        /* Help Dropdown Styles */
+        .help-dropdown-container {
+            position: relative;
+        }
+
+        .help-dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            margin-bottom: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px;
+            z-index: 100;
+            min-width: 180px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.2s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .help-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: left;
+        }
+
+        .help-option:hover {
+            background: var(--bg-hover);
+        }
+
+        .help-icon {
+            font-size: 1.3rem;
+        }
+
+        .help-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .help-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .help-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
     </style>
     <!-- Firebase SDK -->

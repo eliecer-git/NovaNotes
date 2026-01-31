@@ -1091,6 +1091,11 @@ class NoteApp {
         this.confirmResizeBtn = document.getElementById('confirm-resize-btn');
         this.currentResizingImg = null;
 
+        // Help Dropdown
+        this.helpBtn = document.getElementById('help-btn');
+        this.helpDropdownMenu = document.getElementById('help-dropdown-menu');
+        this.helpAiBtn = document.getElementById('help-ai-btn');
+
         // Initialize AI Manager
         this.aiManager = new AIManager(this);
 
@@ -1118,6 +1123,31 @@ class NoteApp {
         this.saveNoteBtn.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
         this.fullscreenBtn.onclick = () => this.toggleFullscreen();
+
+        // Help Dropdown Toggle
+        if (this.helpBtn && this.helpDropdownMenu) {
+            this.helpBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.helpDropdownMenu.hidden = !this.helpDropdownMenu.hidden;
+            });
+
+            // Close on click outside
+            document.addEventListener('click', (e) => {
+                if (!this.helpBtn.contains(e.target) && !this.helpDropdownMenu.contains(e.target)) {
+                    this.helpDropdownMenu.hidden = true;
+                }
+            });
+
+            // "Talk to AI" opens the AI chat
+            if (this.helpAiBtn) {
+                this.helpAiBtn.addEventListener('click', () => {
+                    this.helpDropdownMenu.hidden = true;
+                    if (this.aiManager) {
+                        this.aiManager.toggleChat();
+                    }
+                });
+            }
+        }
 
 
         // PWA Install Logic
