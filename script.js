@@ -2257,10 +2257,9 @@ class NoteApp {
         if (this.currentNoteFilter === 'trash') {
             if (confirm('¿Estás seguro de que quieres eliminar esta nota permanentemente? Esta acción no se puede deshacer.')) {
                 this.notes.splice(noteIndex, 1);
-                this.activeNoteId = null;
-                this.renderNotesList();
-                this.showEditor(false); // Hide editor
                 this.saveToStorage();
+                this.renderNotesList();
+                this.setActiveNote(null); // Volver a inicio
                 this.showSyncStatus('synced');
             }
         } else {
@@ -2271,17 +2270,10 @@ class NoteApp {
                 note.isFavorite = false; // Remove favorite status
                 note.isPinned = false; // Remove pin
 
-                // If it was private, decide if it stays private or public in trash.
-                // Usually logical to just mark deleted.
-
-                this.activeNoteId = null;
-                this.renderNotesList();
-                this.showEditor(false);
                 this.saveToStorage();
+                this.renderNotesList();
+                this.setActiveNote(null); // Volver a inicio
                 this.showSyncStatus('synced');
-
-                // Show toast or small feedback
-                /* alert('Nota movida a la papelera'); */
             }
         }
     }
