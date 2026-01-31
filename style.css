@@ -2844,9 +2844,32 @@ min-height: 300px;
     }
 
     .format-toolbar .format-btn-group {
-        justify-content: space-around;
+        justify-content: flex-start;
+        /* Left align */
+        gap: 12px;
+        /* Consistent gap */
         width: 100%;
         padding: 5px 0;
+        flex-wrap: wrap;
+    }
+
+    /* Left align row items too */
+    .toolbar-row {
+        justify-content: flex-start;
+    }
+
+    /* Prevent full width stretching if user wants left align look */
+    .select-premium.compact {
+        flex: 0 1 auto;
+        /* Don't force full width */
+        min-width: 120px;
+        /* Minimum usable width */
+    }
+
+    .color-picker-premium.compact-color {
+        width: 40px !important;
+        /* Fixed small size */
+        flex: 0 0 auto;
     }
 
     /* Ensure specific buttons are visible/hidden properly */
