@@ -1386,15 +1386,26 @@
 
             const merged = new Map();
 
-            // Add cloud notes first (they have priority)
+            // 1. Agregar notas de la nube primero (Son la fuente de verdad primaria)
             cloudNotes.forEach(note => merged.set(note.id, note));
 
-            // Add local notes that don't exist in cloud (new local notes)
+            // 2. Revisar notas locales
+            // Heurística: Si una nota local NO está en la nube:
+            // - Si fue editada recientemente (ej. últimas 24h), asumimos que es una nota nueva/editada offline -> CONSERVAR
+            // - Si es antigua, asumimos que fue borrada en otro dispositivo -> DESCARTAR
+            const RESURRECTION_THRESHOLD = 24 * 60 * 60 * 1000; // 24 horas
+            const now = Date.now();
+
             localNotes.forEach(note => {
                 if (!merged.has(note.id)) {
-                    merged.set(note.id, note);
+                    // La nota local NO está en la nube.
+                    const lastUpdate = new Date(note.updatedAt || 0).getTime();
+                    // Solo conservarla si es reciente (posible trabajo offline)
+                    if ((now - lastUpdate) < RESURRECTION_THRESHOLD) {
+                        merged.set(note.id, note);
+                    }
                 } else {
-                    // If both exist, keep the most recently updated one
+                    // Si existe en ambos lados, quedarse con la más reciente
                     const cloudNote = merged.get(note.id);
                     const localDate = new Date(note.updatedAt || 0);
                     const cloudDate = new Date(cloudNote.updatedAt || 0);
@@ -1404,7 +1415,7 @@
                 }
             });
 
-            // Sort by updatedAt descending
+            // Ordenar por fecha de actualización descendente
             return Array.from(merged.values()).sort((a, b) =>
                 new Date(b.updatedAt) - new Date(a.updatedAt)
             );
