@@ -3337,6 +3337,9 @@ class NoteApp {
         }
     }
     async loadGuestNote(publicId) {
+        // Force mobile to show editor view
+        document.body.classList.add('editor-screen-active');
+
         // Hide sidebar and auth
         const sidebar = document.querySelector('.sidebar');
         if (sidebar) sidebar.style.display = 'none';
