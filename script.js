@@ -3051,7 +3051,13 @@ class NoteApp {
         const editorMain = document.querySelector('.editor-main');
         if (editorMain) editorMain.style.width = '100%';
 
-        if (this.authSelector) this.authSelector.style.display = 'none'; // Ensure Auth UI hidden
+        // CRITICAL: Hide the full Auth Modal Overlay
+        const authModal = document.getElementById('auth-modal');
+        if (authModal) {
+            authModal.style.display = 'none';
+            // Also force hide any other overlays if they exist
+            authModal.classList.add('hidden');
+        }
 
         // Show loading state in editor
         this.editorView.classList.remove('empty');
