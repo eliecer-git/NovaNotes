@@ -2160,22 +2160,121 @@ class NoteApp {
 
     /**
      * Save notes to localStorage for the current user
+     * Also syncs to cloud if user is logged in with Google/GitHub
      */
     saveToStorage() {
         const key = this.getNotesStorageKey();
         localStorage.setItem(key, JSON.stringify(this.notes));
+
+        // Sync to cloud if available
+        this.syncToCloud();
+    }
+
+    /**
+     * Sync notes to Firestore cloud storage
+     * Called automatically after local save
+     */
+    async syncToCloud() {
+        if (!this.currentUserId) return;
+
+        // Check if cloud functions are available
+        if (typeof window.saveNotesToCloud !== 'function') {
+            return;
+        }
+
+        try {
+            await window.saveNotesToCloud(this.currentUserId, this.notes);
+            this.showSyncStatus('synced');
+        } catch (error) {
+            console.error('Cloud sync failed:', error);
+            this.showSyncStatus('error');
+        }
+    }
+
+    /**
+     * Show sync status indicator
+     */
+    showSyncStatus(status) {
+        if (!this.saveStatus) return;
+
+        if (status === 'synced') {
+            this.saveStatus.textContent = '☁️ Sincronizado';
+            this.saveStatus.style.color = '#22c55e';
+        } else if (status === 'syncing') {
+            this.saveStatus.textContent = '⏳ Sincronizando...';
+            this.saveStatus.style.color = '#f59e0b';
+        } else if (status === 'error') {
+            this.saveStatus.textContent = '⚠️ Error de sincronización';
+            this.saveStatus.style.color = '#ef4444';
+        }
+
+        // Clear status after 3 seconds
+        setTimeout(() => {
+            if (this.saveStatus) {
+                this.saveStatus.textContent = '';
+            }
+        }, 3000);
+    }
+
+    /**
+     * Load notes from cloud and merge with local
+     * Called on app initialization for logged-in users
+     */
+    async loadFromCloud() {
+        if (!this.currentUserId) return;
+
+        if (typeof window.loadNotesFromCloud !== 'function') {
+            console.log('Cloud functions not ready yet');
+            return;
+        }
+
+        this.showSyncStatus('syncing');
+
+        try {
+            const cloudNotes = await window.loadNotesFromCloud(this.currentUserId);
+
+            if (cloudNotes !== null) {
+                const localNotes = this.loadUserNotes();
+
+                // Merge local and cloud notes
+                if (typeof window.mergeNotes === 'function') {
+                    this.notes = window.mergeNotes(localNotes, cloudNotes);
+                } else {
+                    // Fallback: prefer cloud if exists, otherwise local
+                    this.notes = cloudNotes.length > 0 ? cloudNotes : localNotes;
+                }
+
+                // Save merged notes back to both local and cloud
+                const key = this.getNotesStorageKey();
+                localStorage.setItem(key, JSON.stringify(this.notes));
+
+                // Render the updated notes
+                this.renderNotesList();
+                this.updateStats();
+
+                this.showSyncStatus('synced');
+                console.log('📱 Notes synchronized:', this.notes.length, 'total notes');
+            }
+        } catch (error) {
+            console.error('Failed to load from cloud:', error);
+            this.showSyncStatus('error');
+        }
     }
 
     /**
      * Switch to a different user (reload notes)
+     * Loads local notes first, then syncs with cloud
      */
-    switchUser(userId) {
+    async switchUser(userId) {
         this.currentUserId = userId;
         this.notes = this.loadUserNotes();
         this.activeNoteId = null;
         this.setActiveNote(null);
         this.renderNotesList();
         this.updateStats();
+
+        // Load and sync with cloud notes
+        await this.loadFromCloud();
     }
 
     formatDate(iso) {
@@ -2750,12 +2849,26 @@ if (session) {
     // User is logged in - initialize app with their userId
     app = new NoteApp(session.userId);
     window.app = app;
+
+    // Load notes from cloud after initialization
+    setTimeout(() => {
+        if (app && typeof app.loadFromCloud === 'function') {
+            app.loadFromCloud();
+        }
+    }, 500);
 }
 
 // Handle login success - initialize app for the user
-auth.onLoginSuccess = (session) => {
+auth.onLoginSuccess = async (session) => {
     app = new NoteApp(session.userId);
     window.app = app;
+
+    // Load and sync notes from cloud
+    setTimeout(() => {
+        if (app && typeof app.loadFromCloud === 'function') {
+            app.loadFromCloud();
+        }
+    }, 500);
 };
 
 // Handle logout - clear app reference
