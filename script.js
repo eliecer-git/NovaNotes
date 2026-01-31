@@ -460,12 +460,11 @@ class AIManager {
         this.SESSIONS_KEY = 'novanotes_ai_sessions_v1';
 
         // List of models to try in order of preference
-        // Using models available in v1beta API
+        // Only using models available in v1beta API (2025+)
         this.MODELS_TO_TRY = [
             'gemini-2.0-flash',
             'gemini-2.0-flash-lite',
-            'gemini-1.5-flash-latest',
-            'gemini-1.5-pro-latest'
+            'gemini-exp-1206'  // Experimental model as last resort
         ];
 
         // DOM Elements
@@ -899,11 +898,11 @@ class AIManager {
         }
 
         // If loop finishes without returning
-        if (lastError && lastError.message.includes('cuota')) {
-            throw new Error('El servicio de IA está muy ocupado (Límite de cuota gratuito). Por favor espera unos segundos e intenta nuevamente.');
+        if (lastError && (lastError.message.includes('cuota') || lastError.message.includes('429') || lastError.message.includes('rate limit'))) {
+            throw new Error('⏳ Límite de uso alcanzado. La API gratuita de Gemini tiene límites. Espera 20-30 segundos e intenta de nuevo.');
         }
 
-        throw lastError || new Error('No se pudo conectar con ningún modelo de IA disponible. Verifica tu API Key.');
+        throw lastError || new Error('No se pudo conectar con la IA. Verifica tu conexión a internet y tu API Key.');
     }
 }
 
