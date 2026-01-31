@@ -699,10 +699,15 @@
                     style="min-height: 150px; font-size: 0.9rem; resize: none; width: 100%; border-radius: 12px; padding: 10px;"
                     readonly></textarea>
             </div>
-            <div class="modal-footer" style="gap: 10px; justify-content: flex-end; display: flex; margin-top: 15px;">
+            <div class="modal-footer"
+                style="gap: 10px; justify-content: flex-end; display: flex; margin-top: 15px; flex-wrap: wrap;">
+                <button id="create-public-link-btn" class="btn-gradient"
+                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: 100%;">🌐 Generar
+                    Enlace Público</button>
+                <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 5px 0;"></div>
                 <button id="close-share-btn" class="btn-gradient"
                     style="background: rgba(255, 255, 255, 0.1); box-shadow: none;">Salir</button>
-                <button id="copy-share-link-btn" class="btn-gradient">Copiar Contenido</button>
+                <button id="copy-share-link-btn" class="btn-gradient">Copiar Enlace/Texto</button>
             </div>
         </div>
     </div>
@@ -1064,6 +1069,51 @@
             return Array.from(merged.values()).sort((a, b) =>
                 new Date(b.updatedAt) - new Date(a.updatedAt)
             );
+        };
+
+        /**
+         * Publish a note to the public_notes collection
+         * returns the public ID
+         */
+        window.publishNotePublicly = async (note) => {
+            try {
+                // Generate a unique ID or use note ID? Better to use a new auto-ID to avoid collisions/overwrite
+                // But if we want to update the SAME link, we should store the publicID in the local note.
+                // For now, let's create a NEW link every time for simplicity, or use note.id if unique enough.
+                // Let's use an auto-generated ID to be safe and allow multiple shares.
+                const publicRef = doc(collection(db, 'public_notes'));
+
+                const publicData = {
+                    title: note.title,
+                    content: note.content,
+                    createdAt: new Date().toISOString(),
+                    theme: note.theme || 'none',
+                    customBgColor: note.customBgColor || null
+                };
+
+                await setDoc(publicRef, publicData);
+                return publicRef.id;
+            } catch (error) {
+                console.error("Error publishing note:", error);
+                return null;
+            }
+        };
+
+        /**
+         * Load a public note by ID
+         */
+        window.loadPublicNote = async (publicId) => {
+            try {
+                const docRef = doc(db, 'public_notes', publicId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    return { id: docSnap.id, ...docSnap.data() };
+                }
+                return null;
+            } catch (error) {
+                console.error("Error loading public note:", error);
+                return null;
+            }
         };
 
         // Signal that Firebase is ready

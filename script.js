@@ -726,11 +726,13 @@ class NoteApp {
      * Initializes the application state, DOM references, and event listeners.
      * @param {string|null} userId - The ID of the current logged-in user
      * @param {string|null} firebaseUid - The raw Firebase UID for Firestore operations
+     * @param {boolean} isGuest - Whether the app is running in guest/public view mode
      */
-    constructor(userId = null, firebaseUid = null) {
+    constructor(userId = null, firebaseUid = null, isGuest = false) {
         this.currentUserId = userId;
         this.firebaseUid = firebaseUid; // Used for Firestore cloud sync
-        this.notes = this.loadUserNotes();
+        this.isGuest = isGuest;
+        this.notes = this.isGuest ? [] : this.loadUserNotes(); // Don't load local notes for guest
 
         this.activeNoteId = null;
         this.searchTerm = '';
@@ -844,6 +846,7 @@ class NoteApp {
         this.shareContentText = document.getElementById('share-content-text');
         this.closeShareBtn = document.getElementById('close-share-btn');
         this.copyShareLinkBtn = document.getElementById('copy-share-link-btn');
+        this.createPublicLinkBtn = document.getElementById('create-public-link-btn'); // New button
         this.reminderModal = document.getElementById('reminder-modal');
         this.closeReminderBtn = document.getElementById('close-reminder-btn');
         this.reminderDateInput = document.getElementById('reminder-date-input');
@@ -1002,6 +1005,39 @@ class NoteApp {
 
         // Share Note - Open Modal
         this.shareNoteBtn?.addEventListener('click', () => this.shareCurrentNote());
+
+        // Create Public Link Listener
+        this.createPublicLinkBtn?.addEventListener('click', async () => {
+            if (!this.activeNoteId) return;
+
+            const note = this.notes.find(n => n.id === this.activeNoteId);
+            if (!note) return;
+
+            this.createPublicLinkBtn.textContent = '⏳ Generando enlace...';
+            this.createPublicLinkBtn.disabled = true;
+
+            try {
+                if (typeof window.publishNotePublicly === 'function') {
+                    const publicId = await window.publishNotePublicly(note);
+                    if (publicId) {
+                        const link = `${window.location.origin}${window.location.pathname}?publicNote=${publicId}`;
+                        this.shareContentText.value = `¡Enlace Público Creado!\n\n${link}\n\n(Cualquiera con este enlace podrá leer la nota)`;
+                        this.createPublicLinkBtn.textContent = '✅ Enlace Generado';
+                        // Optionally hide the button after success or keep for regen?
+                    } else {
+                        throw new Error('ID nulo recibido');
+                    }
+                } else {
+                    alert('Error: Función de publicación no disponible. Recarga la página.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo generar el enlace. Verifica tu conexión.');
+                this.createPublicLinkBtn.textContent = '🌐 Generar Enlace Público';
+            } finally {
+                this.createPublicLinkBtn.disabled = false;
+            }
+        });
 
         // Share Modal Listeners
         this.closeShareBtn?.addEventListener('click', () => {
@@ -3007,6 +3043,92 @@ class NoteApp {
             default: return '📝';
         }
     }
+    async loadGuestNote(publicId) {
+        // Hide sidebar and auth
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+
+        const editorMain = document.querySelector('.editor-main');
+        if (editorMain) editorMain.style.width = '100%';
+
+        if (this.authSelector) this.authSelector.style.display = 'none'; // Ensure Auth UI hidden
+
+        // Show loading state in editor
+        this.editorView.classList.remove('empty');
+        this.editorFields.hidden = false;
+        this.emptyState.hidden = true;
+
+        this.noteTitleInput.innerText = 'Cargando nota compartida...';
+        this.noteContentInput.innerText = '';
+
+        try {
+            // Wait a bit for Firebase functions to be bound if race condition
+            if (typeof window.loadPublicNote !== 'function') {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            if (typeof window.loadPublicNote !== 'function') {
+                throw new Error('Firebase helpers not ready');
+            }
+
+            const noteData = await window.loadPublicNote(publicId);
+
+            if (noteData) {
+                // Mock a local note object
+                const note = {
+                    id: noteData.id,
+                    title: noteData.title,
+                    content: noteData.content,
+                    updatedAt: noteData.createdAt,
+                    theme: noteData.theme,
+                    customBgColor: noteData.customBgColor
+                };
+
+                this.notes = [note]; // Single note in memory
+                this.activeNoteId = note.id;
+
+                // Render
+                this.noteTitleInput.innerHTML = note.title || 'Sin título';
+                this.noteContentInput.innerHTML = note.content || '';
+
+                // Apply styles
+                this.applyTheme(note.theme || 'none', note.customBgColor);
+
+                // Read Only Mode
+                this.noteTitleInput.contentEditable = false;
+                this.noteContentInput.contentEditable = false;
+
+                // Hide toolbar editing tools and save button
+                if (this.formatToolbar) this.formatToolbar.style.display = 'none';
+                if (this.saveNoteBtn) this.saveNoteBtn.style.display = 'none';
+                if (this.deleteNoteBtn) this.deleteNoteBtn.style.display = 'none';
+
+                // Show a banner "You are viewing a shared note"
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; padding: 12px; text-align: center; margin-bottom: 20px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);';
+                banner.innerHTML = '👀 Estás viendo una nota pública de <b>NovaStarPro</b>';
+
+                // Add a "Create your own" button
+                const ctaBtn = document.createElement('button');
+                ctaBtn.innerText = 'Crear mis propias notas';
+                ctaBtn.style.cssText = 'margin-left: 15px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;';
+                ctaBtn.onclick = () => window.location.href = window.location.pathname; // Reload without params
+                banner.appendChild(ctaBtn);
+
+                this.editorFields.prepend(banner);
+
+            } else {
+                this.noteTitleInput.innerText = 'Error: Nota no encontrada';
+                this.noteContentInput.innerText = 'Es posible que el enlace haya expirado o sea inválido.';
+                this.noteContentInput.style.color = '#ef4444';
+            }
+        } catch (e) {
+            console.error(e);
+            this.noteTitleInput.innerText = 'Error de conexión';
+            this.noteContentInput.innerText = 'No se pudo conectar con el servidor de notas.';
+        }
+    }
+
     // --- AI Context Helper ---
     getActiveNoteContext() {
         if (!this.activeNoteId) {
@@ -3029,7 +3151,17 @@ const auth = new AuthManager();
 // Check authentication status first
 const session = auth.checkAuth();
 
-if (session) {
+// Check URL params for Shared Note
+const urlParams = new URLSearchParams(window.location.search);
+const publicNoteId = urlParams.get('publicNote');
+
+if (publicNoteId) {
+    // GUEST MODE
+    console.log('🚀 Starting in Guest Mode');
+    app = new NoteApp(null, null, true); // isGuest = true
+    window.app = app;
+    app.loadGuestNote(publicNoteId);
+} else if (session) {
     // User is logged in - initialize app with their userId and firebaseUid
     app = new NoteApp(session.userId, session.firebaseUid);
     window.app = app;
