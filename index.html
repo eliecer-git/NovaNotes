@@ -1469,61 +1469,34 @@
         };
 
         // ============================================
-        // ADMIN STATS TRACKING (Silencioso)
+        // ADMIN STATS TRACKING (Silencioso - Solo Descargas)
         // ============================================
 
         const STATS_DOC_ID = 'general';
         const STATS_COLLECTION = 'stats';
 
-        // 1. Rastreo de Visitas (Únicas por sesión)
-        async function trackVisit() {
-            // Evitar desarrollo local si se desea (opcional)
-            // if (window.location.hostname === 'localhost') return;
-
-            // Evitar contar reloads en la misma pestaña
-            if (sessionStorage.getItem('visit_tracked')) return;
-
+        // Rastreo de Instalaciones (PWA)
+        window.addEventListener('appinstalled', async () => {
             try {
                 const statsRef = doc(db, STATS_COLLECTION, STATS_DOC_ID);
-                // Usamos updateDoc con increment para atomicidad
-                // Si el documento no existe, setDoc lo creará (manejo de error)
+                // Si el documento no existe, lo creamos con installs: 1
                 try {
                     await updateDoc(statsRef, {
-                        visits: increment(1),
-                        last_visit: new Date().toISOString()
+                        installs: increment(1)
                     });
                 } catch (e) {
-                    // Si falla (ej. documento no existe), intentamos crearlo
                     if (e.code === 'not-found') {
                         await setDoc(statsRef, {
-                            visits: 1,
-                            installs: 0,
+                            installs: 1,
                             created_at: new Date().toISOString()
                         });
                     }
                 }
-                sessionStorage.setItem('visit_tracked', 'true');
-                console.log('App visit tracked silently.');
-            } catch (err) {
-                console.warn('Silent tracker error:', err);
-            }
-        }
-
-        // 2. Rastreo de Instalaciones (PWA)
-        window.addEventListener('appinstalled', async () => {
-            try {
-                const statsRef = doc(db, STATS_COLLECTION, STATS_DOC_ID);
-                await updateDoc(statsRef, {
-                    installs: increment(1)
-                });
                 console.log('App install tracked silently.');
             } catch (err) {
                 console.warn('Install tracker error:', err);
             }
         });
-
-        // Ejecutar tracking
-        trackVisit();
 
 
 

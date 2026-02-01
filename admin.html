@@ -106,14 +106,10 @@
     <div class="admin-card" id="stats-view" style="display: none;">
         <h1>📊 Estadísticas de App</h1>
 
-        <div class="stat-grid">
-            <div class="stat-item">
-                <span class="stat-val" id="visits-count">-</span>
-                <span class="stat-label">Visitas</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-val" id="downloads-count">-</span>
-                <span class="stat-label">Descargas</span>
+        <div class="stat-grid" style="grid-template-columns: 1fr;">
+            <div class="stat-item" style="padding: 2.5rem;">
+                <span style="font-size: 4rem; color: #6366f1;" class="stat-val" id="downloads-count">-</span>
+                <span class="stat-label" style="font-size: 1rem;">Total de Descargas</span>
             </div>
         </div>
 
@@ -175,10 +171,9 @@
             onSnapshot(doc(db, "stats", "general"), (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
-                    animateValue("visits-count", 0, data.visits || 0, 1000);
+                    // Solo mostramos descargas
                     animateValue("downloads-count", 0, data.installs || 0, 1000);
                 } else {
-                    document.getElementById('visits-count').textContent = "0";
                     document.getElementById('downloads-count').textContent = "0";
                 }
             });
