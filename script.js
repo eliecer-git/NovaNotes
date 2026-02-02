@@ -1770,10 +1770,11 @@ class NoteApp {
         // Delete button
         if (this.ctxDeleteBtn) {
             this.ctxDeleteBtn.addEventListener('click', () => {
+                const noteIdToDelete = this.longPressNoteId; // Save before closing
                 this.closeContextMenu();
                 // Small delay to allow menu to close before confirm dialog
                 setTimeout(() => {
-                    this.deleteNoteById(this.longPressNoteId);
+                    this.deleteNoteById(noteIdToDelete);
                 }, 100);
             });
         }
