@@ -3789,8 +3789,11 @@ class NoteApp {
     initVault() {
         // 1. Check if first time setup
         if (!this.vaultConfig) {
-            // Show onboarding after a small delay to not interrupt initial load
-            setTimeout(() => this.vaultOnboardingModal.hidden = false, 2000);
+            const hasSkipped = localStorage.getItem('nova_vault_onboarding_skipped');
+            if (!hasSkipped) {
+                // Show onboarding after a small delay to not interrupt initial load
+                setTimeout(() => this.vaultOnboardingModal.hidden = false, 2000);
+            }
         }
 
         // 2. Setup Listeners for Activation
@@ -3805,12 +3808,21 @@ class NoteApp {
         // 5. Setup Secret Bar Listeners
         this.setupVaultSecretBarListeners();
 
-        // 6. Panic Button (Esc)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isUltraVaultActive) {
-                this.exitUltraVault();
-            }
-        });
+        // 7. Sidebar Setup Listener
+        const setupBtn = document.getElementById('open-vault-setup-btn');
+        if (setupBtn) {
+            setupBtn.onclick = () => this.vaultOnboardingModal.hidden = false;
+        }
+
+        this.updateVaultSetupPromo();
+    }
+
+    updateVaultSetupPromo() {
+        const promo = document.getElementById('vault-setup-promo');
+        if (promo) {
+            // Mostrar promo solo si no hay configuración
+            promo.style.display = (!this.vaultConfig && this.user) ? 'block' : 'none';
+        }
     }
 
     loadVaultConfig() {
@@ -3877,7 +3889,17 @@ class NoteApp {
             this.saveVaultConfig(config);
             this.vaultOnboardingModal.hidden = true;
             this.showSyncStatus('Bóveda Lista 🔐');
+            this.updateVaultSetupPromo();
         };
+
+        const skipBtn = document.getElementById('skip-vault-btn');
+        if (skipBtn) {
+            skipBtn.onclick = () => {
+                this.vaultOnboardingModal.hidden = true;
+                // Opcionalmente podemos guardar un flag para que no aparezca más
+                localStorage.setItem('nova_vault_onboarding_skipped', 'true');
+            };
+        }
     }
 
     setupVaultAuthListeners() {
