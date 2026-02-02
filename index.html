@@ -763,7 +763,7 @@
                     <div class="step-info">
                         <strong>Activa el acceso oculto</strong>
                         <p>Elige cómo quieres que aparezca la puerta de entrada.</p>
-                        <select id="vault-trigger-select" class="input-premium">
+                        <select id="vault-trigger-select" class="input-premium vault-select">
                             <option value="taps-3">Tocar logo 3 veces (Rápido)</option>
                             <option value="taps-5" selected>Tocar logo 5 veces (Estándar)</option>
                             <option value="taps-7">Tocar logo 7 veces (Seguridad)</option>
@@ -773,6 +773,11 @@
                         <div id="custom-taps-container" style="display: none; margin-top: 10px;">
                             <input type="number" id="vault-custom-taps-input" class="input-premium"
                                 placeholder="Nº de toques (ej: 10)" min="3" max="50">
+                        </div>
+                        <div id="search-code-info" class="vault-code-info" style="display: none;">
+                            <p>📝 <strong>Instrucciones:</strong></p>
+                            <p>Escribe <code>###</code> en el buscador y presiona <strong>Enter</strong>.</p>
+                            <p>Aparecerá una barra secreta para ingresar tu clave de acceso.</p>
                         </div>
                     </div>
                 </div>

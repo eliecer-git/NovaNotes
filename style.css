@@ -4909,6 +4909,84 @@ body.light-theme .btn-github-signin:hover {
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Vault Select Dropdown - Dark Theme */
+.vault-select {
+    background: #1a1a2e !important;
+    color: white !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    padding: 12px 15px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236366f1' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    padding-right: 35px;
+}
+
+.vault-select:focus {
+    outline: none;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.vault-select option {
+    background: #1a1a2e;
+    color: white;
+    padding: 10px;
+}
+
+/* Vault Code Info Box */
+.vault-code-info {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    padding: 12px 15px;
+    margin-top: 12px;
+}
+
+.vault-code-info p {
+    margin: 0 0 5px 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.vault-code-info p:last-child {
+    margin-bottom: 0;
+}
+
+.vault-code-info code {
+    background: rgba(99, 102, 241, 0.3);
+    color: #a5b4fc;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Light theme */
+body.light-theme .vault-select {
+    background: #f5ecd0 !important;
+    color: #2d2a1f !important;
+    border-color: #c9b87a !important;
+}
+
+body.light-theme .vault-select option {
+    background: #f5ecd0;
+    color: #2d2a1f;
+}
+
+body.light-theme .vault-code-info {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+body.light-theme .vault-code-info code {
+    background: rgba(99, 102, 241, 0.2);
+    color: #4f46e5;
+}
+
 .step-num {
     background: var(--accent);
     color: white;

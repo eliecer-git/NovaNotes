@@ -3858,9 +3858,15 @@ class NoteApp {
     setupVaultOnboardingListeners() {
         if (!this.vaultOnboardingModal) return;
 
-        // Toggle custom taps input
+        // Toggle custom taps input and search code info
         this.vaultTriggerSelect.onchange = (e) => {
-            this.customTapsContainer.style.display = e.target.value === 'custom-taps' ? 'block' : 'none';
+            const value = e.target.value;
+            this.customTapsContainer.style.display = value === 'custom-taps' ? 'block' : 'none';
+
+            const searchCodeInfo = document.getElementById('search-code-info');
+            if (searchCodeInfo) {
+                searchCodeInfo.style.display = value === 'search-code' ? 'block' : 'none';
+            }
         };
 
         this.activateVaultBtn.onclick = () => {
