@@ -622,12 +622,71 @@ h2,
     transition: var(--transition);
     border: 1px solid transparent;
     background: var(--card-bg);
-    /* Fondo por defecto para que se vea el "botón" */
+    /* Layout para el botón de menú */
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    position: relative;
 }
 
+.note-item .note-info {
+    flex: 1;
+    min-width: 0;
+    /* Permite text-overflow en hijos */
+}
 
 .note-item:hover {
     background: var(--card-bg);
+}
+
+/* Note Menu Button (3 dots) */
+.note-menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.note-item:hover .note-menu-btn {
+    opacity: 1;
+}
+
+.note-menu-btn:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--accent);
+}
+
+.note-menu-btn:active {
+    transform: scale(0.9);
+}
+
+/* Always show on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .note-menu-btn {
+        opacity: 0.6;
+    }
+
+    .note-item:hover .note-menu-btn {
+        opacity: 0.6;
+    }
+}
+
+/* Light theme */
+body.light-theme .note-menu-btn {
+    color: #6b6452;
+}
+
+body.light-theme .note-menu-btn:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--accent);
 }
 
 /* Notes List */

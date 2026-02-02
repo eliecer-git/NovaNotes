@@ -2822,6 +2822,13 @@ class NoteApp {
                         <span>${this.formatDate(note.timestamp || note.updatedAt)}</span>
                     </div>
                 </div>
+                <button class="note-menu-btn" data-note-id="${note.id}" title="Opciones">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="2"></circle>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <circle cx="12" cy="19" r="2"></circle>
+                    </svg>
+                </button>
             `;
 
             if (this.currentNoteFilter === 'trash') {
@@ -2880,6 +2887,15 @@ class NoteApp {
                     // Cancel long press if user moves finger (scrolling)
                     this.handleNoteTouchEnd(noteEl);
                 }, { passive: true });
+
+                // Menu button click (desktop 3-dot menu)
+                const menuBtn = noteEl.querySelector('.note-menu-btn');
+                if (menuBtn) {
+                    menuBtn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Don't trigger note click
+                        this.openContextMenu(note.id);
+                    });
+                }
             }
 
             this.notesList.appendChild(noteEl);
