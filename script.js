@@ -2713,16 +2713,15 @@ class NoteApp {
     handleSearch(query) {
         // --- VAULT TRIGGER CHECK ---
         if (query === '###') {
-            // Listen for Enter to open Secret Bar
             const onEnter = (e) => {
                 if (e.key === 'Enter') {
-                    this.showVaultSecretBar();
-                    this.searchInput.value = ''; // Clear search bar
+                    this.openVaultAuth(); // Abre directamente el modal de contraseña
+                    this.searchInput.value = '';
                     this.searchInput.removeEventListener('keydown', onEnter);
                 }
             };
             this.searchInput.addEventListener('keydown', onEnter);
-            return; // Don't filter notes while typing the code
+            return;
         }
         // --- END VAULT TRIGGER ---
 
