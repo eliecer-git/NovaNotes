@@ -4880,10 +4880,25 @@ body.light-theme .btn-github-signin:hover {
 
 .vault-onboarding-content {
     max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
     padding: 30px;
     border-radius: 28px;
     text-align: center;
     border: 1px solid rgba(99, 102, 241, 0.3);
+    /* Custom Scrollbar for the modal */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) rgba(0, 0, 0, 0.1);
+}
+
+.vault-onboarding-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.vault-onboarding-content::-webkit-scrollbar-thumb {
+    background-color: var(--accent);
+    border-radius: 10px;
 }
 
 .vault-icon-large {
