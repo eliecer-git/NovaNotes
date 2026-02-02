@@ -4640,3 +4640,237 @@ body.light-theme .btn-github-signin:hover {
 .btn-gradient:active {
     transform: translateY(0);
 }
+
+/* ============================================
+   Context Menu (Long Press) - Mobile
+   ============================================ */
+.context-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 11, 16, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100001;
+    animation: fadeIn 0.2s ease;
+}
+
+.context-menu-content {
+    width: 100%;
+    max-width: 400px;
+    background: var(--sidebar-bg);
+    border-radius: 24px 24px 0 0;
+    padding: 20px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+    animation: slideUpContext 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUpContext {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.context-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.context-menu-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80%;
+}
+
+.context-menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.context-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.context-option:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--accent);
+}
+
+.context-option:active {
+    transform: scale(0.98);
+}
+
+.context-option.danger {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.context-option.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.ctx-icon {
+    font-size: 1.3rem;
+    width: 28px;
+    text-align: center;
+}
+
+.ctx-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.context-option.danger .ctx-label {
+    color: #ef4444;
+}
+
+.context-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 8px 0;
+}
+
+.context-option-group {
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.ctx-group-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 12px;
+}
+
+.ctx-color-palette {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 8px;
+}
+
+.ctx-color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.ctx-color-swatch:hover {
+    transform: scale(1.15);
+    border-color: white;
+}
+
+.ctx-color-swatch:active {
+    transform: scale(0.95);
+}
+
+.ctx-color-swatch.selected {
+    border-color: white;
+    box-shadow: 0 0 0 3px var(--accent);
+}
+
+/* Long press visual feedback on note item */
+.note-item.long-pressing {
+    transform: scale(0.97);
+    opacity: 0.8;
+    transition: all 0.15s ease;
+}
+
+/* Vibration indicator (visual pulse) */
+@keyframes pulsePress {
+    0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    }
+}
+
+.note-item.long-pressed {
+    animation: pulsePress 0.4s ease;
+}
+
+/* Light theme adjustments for context menu */
+body.light-theme .context-menu-content {
+    background: #f0e4be;
+    border: 1px solid #c9b87a;
+}
+
+body.light-theme .context-menu-header {
+    border-bottom-color: #c9b87a;
+}
+
+body.light-theme .context-menu-header h3 {
+    color: #2d2a1f;
+}
+
+body.light-theme .context-option {
+    background: #f5ecd0;
+    border-color: #c9b87a;
+}
+
+body.light-theme .context-option:hover {
+    background: #ebe0b8;
+    border-color: var(--accent);
+}
+
+body.light-theme .ctx-label {
+    color: #2d2a1f;
+}
+
+body.light-theme .context-option-group {
+    background: #f5ecd0;
+    border-color: #c9b87a;
+}
+
+body.light-theme .ctx-group-label {
+    color: #4a4637;
+}
+
+body.light-theme .context-divider {
+    background: #c9b87a;
+}

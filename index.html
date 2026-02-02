@@ -698,6 +698,52 @@
         </div>
     </div>
 
+    <!-- Modal Menú Contextual (Long Press) -->
+    <div id="note-context-menu" class="context-menu-overlay" hidden>
+        <div class="context-menu-content glass">
+            <div class="context-menu-header">
+                <h3 id="context-menu-title">Opciones de nota</h3>
+                <button id="close-context-menu-btn" class="btn-close">×</button>
+            </div>
+            <div class="context-menu-options">
+                <button id="ctx-favorite-btn" class="context-option">
+                    <span class="ctx-icon">⭐</span>
+                    <span class="ctx-label" id="ctx-favorite-label">Añadir a Favoritos</span>
+                </button>
+                <button id="ctx-pin-btn" class="context-option">
+                    <span class="ctx-icon">📌</span>
+                    <span class="ctx-label" id="ctx-pin-label">Fijar Arriba</span>
+                </button>
+                <div class="context-divider"></div>
+                <div class="context-option-group">
+                    <span class="ctx-group-label">🎨 Color de nota</span>
+                    <div class="ctx-color-palette">
+                        <div class="ctx-color-swatch" data-color="none" style="background:#334155;" title="Sin color">
+                        </div>
+                        <div class="ctx-color-swatch" data-color="red" style="background:#ef4444;" title="Rojo"></div>
+                        <div class="ctx-color-swatch" data-color="orange" style="background:#f97316;" title="Naranja">
+                        </div>
+                        <div class="ctx-color-swatch" data-color="yellow" style="background:#eab308;" title="Amarillo">
+                        </div>
+                        <div class="ctx-color-swatch" data-color="green" style="background:#22c55e;" title="Verde">
+                        </div>
+                        <div class="ctx-color-swatch" data-color="teal" style="background:#14b8a6;" title="Turquesa">
+                        </div>
+                        <div class="ctx-color-swatch" data-color="blue" style="background:#3b82f6;" title="Azul"></div>
+                        <div class="ctx-color-swatch" data-color="purple" style="background:#a855f7;" title="Morado">
+                        </div>
+                        <div class="ctx-color-swatch" data-color="pink" style="background:#ec4899;" title="Rosa"></div>
+                    </div>
+                </div>
+                <div class="context-divider"></div>
+                <button id="ctx-delete-btn" class="context-option danger">
+                    <span class="ctx-icon">🗑️</span>
+                    <span class="ctx-label">Eliminar Nota</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Recordatorio -->
     <div id="reminder-modal" class="modal-overlay" hidden>
         <div class="modal-content glass" style="max-width: 350px;">

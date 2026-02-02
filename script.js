@@ -1095,6 +1095,23 @@ class NoteApp {
         this.helpDropdownMenu = document.getElementById('help-dropdown-menu');
         this.helpAiBtn = document.getElementById('help-ai-btn');
 
+        // Context Menu (Long Press) Elements
+        this.contextMenu = document.getElementById('note-context-menu');
+        this.contextMenuTitle = document.getElementById('context-menu-title');
+        this.closeContextMenuBtn = document.getElementById('close-context-menu-btn');
+        this.ctxFavoriteBtn = document.getElementById('ctx-favorite-btn');
+        this.ctxFavoriteLabel = document.getElementById('ctx-favorite-label');
+        this.ctxPinBtn = document.getElementById('ctx-pin-btn');
+        this.ctxPinLabel = document.getElementById('ctx-pin-label');
+        this.ctxDeleteBtn = document.getElementById('ctx-delete-btn');
+        this.ctxColorSwatches = document.querySelectorAll('.ctx-color-swatch');
+
+        // Long Press State
+        this.longPressTimer = null;
+        this.longPressNoteId = null;
+        this.longPressDuration = 500; // ms
+        this.isLongPressing = false;
+
         // Initialize AI Manager
         this.aiManager = new AIManager(this);
 
@@ -1709,6 +1726,248 @@ class NoteApp {
                 initialPinchDistance = 0;
             }
         });
+
+        // ============================================
+        // Context Menu (Long Press) Initialization
+        // ============================================
+        this.initContextMenu();
+    }
+
+    /**
+     * Initializes the context menu for long press on note items (mobile)
+     */
+    initContextMenu() {
+        // Close context menu button
+        if (this.closeContextMenuBtn) {
+            this.closeContextMenuBtn.addEventListener('click', () => this.closeContextMenu());
+        }
+
+        // Close menu when clicking overlay
+        if (this.contextMenu) {
+            this.contextMenu.addEventListener('click', (e) => {
+                if (e.target === this.contextMenu) {
+                    this.closeContextMenu();
+                }
+            });
+        }
+
+        // Favorite button
+        if (this.ctxFavoriteBtn) {
+            this.ctxFavoriteBtn.addEventListener('click', () => {
+                this.toggleFavoriteById(this.longPressNoteId);
+                this.closeContextMenu();
+            });
+        }
+
+        // Pin button
+        if (this.ctxPinBtn) {
+            this.ctxPinBtn.addEventListener('click', () => {
+                this.togglePinById(this.longPressNoteId);
+                this.closeContextMenu();
+            });
+        }
+
+        // Delete button
+        if (this.ctxDeleteBtn) {
+            this.ctxDeleteBtn.addEventListener('click', () => {
+                this.closeContextMenu();
+                // Small delay to allow menu to close before confirm dialog
+                setTimeout(() => {
+                    this.deleteNoteById(this.longPressNoteId);
+                }, 100);
+            });
+        }
+
+        // Color swatches
+        this.ctxColorSwatches.forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                const color = e.target.getAttribute('data-color');
+                this.setNoteColorById(this.longPressNoteId, color);
+
+                // Update visual selection
+                this.ctxColorSwatches.forEach(s => s.classList.remove('selected'));
+                e.target.classList.add('selected');
+
+                // Small haptic feedback delay before closing
+                setTimeout(() => this.closeContextMenu(), 150);
+            });
+        });
+    }
+
+    /**
+     * Handles touch start for long press detection on note items
+     */
+    handleNoteTouchStart(noteId, noteEl, e) {
+        // Only single touch
+        if (e.touches.length !== 1) return;
+
+        this.isLongPressing = false;
+        this.longPressNoteId = noteId;
+
+        // Add visual feedback
+        noteEl.classList.add('long-pressing');
+
+        this.longPressTimer = setTimeout(() => {
+            this.isLongPressing = true;
+            noteEl.classList.remove('long-pressing');
+            noteEl.classList.add('long-pressed');
+
+            // Haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            this.openContextMenu(noteId);
+
+            // Remove animation class after it plays
+            setTimeout(() => noteEl.classList.remove('long-pressed'), 400);
+        }, this.longPressDuration);
+    }
+
+    /**
+     * Handles touch end/cancel to cancel long press
+     */
+    handleNoteTouchEnd(noteEl) {
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+        noteEl.classList.remove('long-pressing');
+    }
+
+    /**
+     * Opens the context menu for a specific note
+     */
+    openContextMenu(noteId) {
+        const note = this.notes.find(n => n.id === noteId);
+        if (!note) return;
+
+        this.longPressNoteId = noteId;
+
+        // Update menu title
+        if (this.contextMenuTitle) {
+            const title = note.title || 'Nota sin título';
+            this.contextMenuTitle.textContent = title.length > 25 ? title.substring(0, 25) + '...' : title;
+        }
+
+        // Update favorite button label
+        if (this.ctxFavoriteLabel) {
+            this.ctxFavoriteLabel.textContent = note.isFavorite ? 'Quitar de Favoritos' : 'Añadir a Favoritos';
+        }
+
+        // Update pin button label
+        if (this.ctxPinLabel) {
+            this.ctxPinLabel.textContent = note.pinned ? 'Desfijar' : 'Fijar Arriba';
+        }
+
+        // Update color selection
+        this.ctxColorSwatches.forEach(swatch => {
+            swatch.classList.remove('selected');
+            if (swatch.getAttribute('data-color') === (note.color || 'none')) {
+                swatch.classList.add('selected');
+            }
+        });
+
+        // Show menu
+        if (this.contextMenu) {
+            this.contextMenu.hidden = false;
+        }
+    }
+
+    /**
+     * Closes the context menu
+     */
+    closeContextMenu() {
+        if (this.contextMenu) {
+            this.contextMenu.hidden = true;
+        }
+        this.longPressNoteId = null;
+        this.isLongPressing = false;
+    }
+
+    /**
+     * Toggle favorite for a note by ID (used by context menu)
+     */
+    toggleFavoriteById(noteId) {
+        if (!noteId) return;
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            note.isFavorite = !note.isFavorite;
+            this.saveToStorage();
+            this.renderNotesList();
+
+            // Update main editor UI if this is the active note
+            if (noteId === this.activeNoteId) {
+                this.updateNoteMetaUI(note);
+            }
+        }
+    }
+
+    /**
+     * Toggle pin for a note by ID (used by context menu)
+     */
+    togglePinById(noteId) {
+        if (!noteId) return;
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            note.pinned = !note.pinned;
+            this.saveToStorage();
+            this.renderNotesList();
+
+            // Update main editor UI if this is the active note
+            if (noteId === this.activeNoteId && this.pinNoteBtn) {
+                this.pinNoteBtn.classList.toggle('pin-active', note.pinned);
+            }
+        }
+    }
+
+    /**
+     * Delete note by ID (used by context menu)
+     */
+    deleteNoteById(noteId) {
+        if (!noteId) return;
+
+        const noteIndex = this.notes.findIndex(n => n.id === noteId);
+        if (noteIndex === -1) return;
+
+        // If filtering by trash, DELETE PERMANENTLY
+        if (this.currentNoteFilter === 'trash') {
+            if (confirm('¿Eliminar esta nota permanentemente?')) {
+                this.notes.splice(noteIndex, 1);
+                this.saveToStorage();
+                this.renderNotesList();
+                if (noteId === this.activeNoteId) {
+                    this.setActiveNote(null);
+                }
+            }
+        } else {
+            // Soft delete: Move to Trash
+            if (confirm('¿Mover esta nota a la papelera?')) {
+                const note = this.notes[noteIndex];
+                note.deletedAt = new Date().toISOString();
+                note.isFavorite = false;
+                note.pinned = false;
+
+                this.saveToStorage();
+                this.renderNotesList();
+                if (noteId === this.activeNoteId) {
+                    this.setActiveNote(null);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set note color by ID (used by context menu)
+     */
+    setNoteColorById(noteId, color) {
+        if (!noteId) return;
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            note.color = color;
+            this.saveToStorage();
+            this.renderNotesList();
+        }
     }
 
     async initFeedback() {
@@ -2589,12 +2848,38 @@ class NoteApp {
                     if (this.editorActions) this.editorActions.style.display = 'none';
                 };
             } else {
-                noteEl.onclick = () => {
+                // Click handler
+                noteEl.onclick = (e) => {
+                    // Don't open note if long press was triggered
+                    if (this.isLongPressing) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.isLongPressing = false;
+                        return;
+                    }
                     this.setActiveNote(note.id);
                     this.noteTitleInput.contentEditable = true;
                     this.noteContentInput.contentEditable = true;
                     if (this.editorActions) this.editorActions.style.display = 'flex';
                 };
+
+                // Long press detection (touch events for mobile)
+                noteEl.addEventListener('touchstart', (e) => {
+                    this.handleNoteTouchStart(note.id, noteEl, e);
+                }, { passive: true });
+
+                noteEl.addEventListener('touchend', () => {
+                    this.handleNoteTouchEnd(noteEl);
+                }, { passive: true });
+
+                noteEl.addEventListener('touchcancel', () => {
+                    this.handleNoteTouchEnd(noteEl);
+                }, { passive: true });
+
+                noteEl.addEventListener('touchmove', () => {
+                    // Cancel long press if user moves finger (scrolling)
+                    this.handleNoteTouchEnd(noteEl);
+                }, { passive: true });
             }
 
             this.notesList.appendChild(noteEl);
