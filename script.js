@@ -3862,140 +3862,58 @@ class NoteApp {
         this.vaultTriggerSelect.onchange = (e) => {
             const value = e.target.value;
             this.customTapsContainer.style.display = value === 'custom-taps' ? 'block' : 'none';
-
-            const searchCodeInfo = document.getElementById('search-code-info');
-            if (searchCodeInfo) {
-                searchCodeInfo.style.display = value === 'search-code' ? 'block' : 'none';
-            }
         };
 
         this.activateVaultBtn.onclick = () => {
             const config = {
                 triggerType: this.vaultTriggerSelect.value,
-                customTaps: parseInt(document.getElementById('vault-custom-taps-input').value) || 5,
-                accessKey: document.getElementById('vault-access-key-input').value || 'nova',
-                pass1: document.getElementById('vault-pass1-setup').value,
-                pass2: document.getElementById('vault-pass2-setup').value
+                pass1: document.getElementById('vault-pass1-setup').value
             };
 
-            if (!config.pass1 || !config.pass2) {
-                alert('Debes definir ambas contraseñas para la bóveda.');
+            if (!config.pass1) {
+                alert('Debes definir una contraseña para la bóveda.');
                 return;
             }
 
             this.saveVaultConfig(config);
             this.vaultOnboardingModal.hidden = true;
-            this.showSyncStatus('Vault Activated 🔐');
-
-            // Welcome haptic
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            this.showSyncStatus('Bóveda Lista 🔐');
         };
     }
 
     setupVaultAuthListeners() {
-        const step1 = document.getElementById('vault-auth-step1');
-        const step2 = document.getElementById('vault-auth-step2');
         const inputP1 = document.getElementById('vault-input-p1');
-        const inputP2 = document.getElementById('vault-input-p2');
-        const nextBtn = document.getElementById('vault-next-p2-btn');
         const verifyBtn = document.getElementById('vault-verify-btn');
-        const backBtn = document.getElementById('vault-back-p1-btn');
         const closeBtn = document.getElementById('close-vault-auth-btn');
-        const recoveryBtn = document.getElementById('vault-master-recovery-btn');
-
-        nextBtn.onclick = () => {
-            if (inputP1.value === this.vaultConfig.pass1) {
-                step1.style.display = 'none';
-                step2.style.display = 'block';
-                inputP2.focus();
-            } else {
-                this.handleVaultAuthFailure();
-            }
-        };
 
         verifyBtn.onclick = () => {
-            if (inputP2.value === this.vaultConfig.pass2) {
+            if (inputP1.value === this.vaultConfig.pass1) {
                 this.enterUltraVault();
             } else {
                 this.handleVaultAuthFailure();
             }
         };
 
-        backBtn.onclick = () => {
-            step2.style.display = 'none';
-            step1.style.display = 'block';
+        inputP1.onkeydown = (e) => {
+            if (e.key === 'Enter') verifyBtn.click();
         };
 
         closeBtn.onclick = () => this.vaultAuthModal.hidden = true;
-
-        recoveryBtn.onclick = () => {
-            const masterPwd = prompt('Ingresa tu Contraseña Maestra de NovaNotes para resetear la Bóveda:');
-            // Assuming Master Password is saved in a certain key or handle via AuthManager
-            // For now, let's check against the master lock password if set
-            const stored = localStorage.getItem('master_vault_password');
-            if (masterPwd === stored) {
-                alert('Identidad confirmada. Por favor, reconfigura tus claves.');
-                this.vaultConfig = null;
-                localStorage.removeItem('nova_vault_config');
-                this.vaultAuthModal.hidden = true;
-                this.vaultOnboardingModal.hidden = false;
-            } else {
-                alert('Contraseña Maestra incorrecta.');
-            }
-        };
     }
 
     setupVaultSecretBarListeners() {
-        const input = document.getElementById('vault-secret-bar-input');
-        const enterBtn = document.getElementById('vault-secret-bar-enter');
-        const closeBtn = document.getElementById('vault-secret-bar-close');
-
-        enterBtn.onclick = () => {
-            if (input.value === this.vaultConfig.accessKey) {
-                this.vaultSecretBar.style.display = 'none';
-                input.value = '';
-                this.openVaultAuth();
-            } else {
-                alert('Clave de Acceso incorrecta.');
-                input.value = '';
-            }
-        };
-
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter') enterBtn.click();
-        };
-
-        closeBtn.onclick = () => {
-            this.vaultSecretBar.style.display = 'none';
-            input.value = '';
-        };
+        // En la versión simplificada, el buscador ### activa directamente el modal de contraseña real
     }
 
     handleVaultAuthFailure() {
         this.vaultAttempts++;
         const indicator = document.getElementById('vault-error-indicator');
-        const count = document.getElementById('vault-attempts-count');
-        const recovery = document.getElementById('vault-recovery-option');
+        if (indicator) indicator.style.display = 'inline-block';
 
-        indicator.style.display = 'inline-block';
-        count.textContent = this.vaultAttempts;
-
-        if (this.vaultAttempts >= 3) {
-            // DECOY MODE TRIGGER!
-            this.enterDecoyMode();
-        }
-
-        if (this.vaultAttempts >= 2) {
-            recovery.style.display = 'block';
-        }
-
-        // Shake animation
         this.vaultAuthModal.querySelector('.vault-auth-content').classList.add('shake');
         setTimeout(() => this.vaultAuthModal.querySelector('.vault-auth-content').classList.remove('shake'), 400);
 
-        // Clear inputs
         document.getElementById('vault-input-p1').value = '';
-        document.getElementById('vault-input-p2').value = '';
     }
 
     openVaultAuth() {
@@ -4005,15 +3923,10 @@ class NoteApp {
         }
 
         this.vaultAttempts = 0;
-        document.getElementById('vault-error-indicator').style.display = 'none';
-        document.getElementById('vault-recovery-option').style.display = 'none';
+        const indicator = document.getElementById('vault-error-indicator');
+        if (indicator) indicator.style.display = 'none';
 
-        // Reset steps
-        document.getElementById('vault-auth-step1').style.display = 'block';
-        document.getElementById('vault-auth-step2').style.display = 'none';
         document.getElementById('vault-input-p1').value = '';
-        document.getElementById('vault-input-p2').value = '';
-
         this.vaultAuthModal.hidden = false;
         document.getElementById('vault-input-p1').focus();
     }
