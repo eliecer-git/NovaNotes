@@ -1133,7 +1133,7 @@ class NoteApp {
     }
 
     init() {
-        // Ultra Secret Vault Initialization
+
 
 
         this.newNoteBtn.addEventListener('click', () => this.createNewNote());
@@ -2693,19 +2693,7 @@ class NoteApp {
     }
 
     handleSearch(query) {
-        // --- VAULT TRIGGER CHECK ---
-        if (query === '###') {
-            const onEnter = (e) => {
-                if (e.key === 'Enter') {
-                    this.openVaultAuth(); // Abre directamente el modal de contraseña
-                    this.searchInput.value = '';
-                    this.searchInput.removeEventListener('keydown', onEnter);
-                }
-            };
-            this.searchInput.addEventListener('keydown', onEnter);
-            return;
-        }
-        // --- END VAULT TRIGGER ---
+
 
         this.searchTerm = query.toLowerCase();
         this.renderNotesList();
