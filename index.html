@@ -150,16 +150,7 @@
                 </button>
             </div>
 
-            <!-- Promo para configurar bóveda (solo visible si no está configurada) -->
-            <div id="vault-setup-promo" class="vault-setup-promo" style="display: none;">
-                <button id="open-vault-setup-btn" class="btn-vault-setup">
-                    <span class="vault-shield">🛡️</span>
-                    <div class="vault-promo-text">
-                        <strong>Bóveda Secreta</strong>
-                        <span>Habilitar ahora</span>
-                    </div>
-                </button>
-            </div>
+
 
             <div class="sort-container">
                 <div class="custom-sort-dropdown" id="custom-sort-dropdown">
@@ -759,77 +750,7 @@
          ULTRA SECRET VAULT COMPONENTS
     ============================================ -->
 
-    <!-- 1. Modal de Configuración Inicial (Onboarding) Simplificado -->
-    <div id="vault-onboarding-modal" class="modal-overlay" hidden>
-        <div class="modal-content glass vault-onboarding-content">
-            <div class="vault-welcome-header">
-                <div class="vault-icon-large">🛡️</div>
-                <h2>Privacidad al Máximo</h2>
-                <p>Crea un espacio invisible para tus notas más personales.</p>
-            </div>
 
-            <div class="vault-info-bullets" style="text-align: left; margin: 20px 0; font-size: 0.9rem;">
-                <div style="margin-bottom: 10px;">✨ <strong>Invisible:</strong> Tus notas secretas no aparecerán en la
-                    lista normal.</div>
-                <div style="margin-bottom: 10px;">🤫 <strong>Secreto:</strong> Nadie sabrá que tienes una bóveda
-                    activada.</div>
-                <div style="margin-bottom: 10px;">🛠️ <strong>Rápido:</strong> Accede en segundos con un gesto oculto.
-                </div>
-            </div>
-
-            <div class="vault-steps">
-                <div class="vault-step-item">
-                    <span class="step-num">1</span>
-                    <div class="step-info">
-                        <strong>¿Cómo quieres entrar?</strong>
-                        <select id="vault-trigger-select" class="input-premium vault-select">
-                            <option value="taps-5" selected>Tocar logo 5 veces</option>
-                            <option value="taps-3">Tocar logo 3 veces</option>
-                            <option value="search-code">Escribir ### en buscador</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="vault-step-item">
-                    <span class="step-num">2</span>
-                    <div class="step-info">
-                        <strong>Tu Contraseña Única</strong>
-                        <input type="password" id="vault-pass1-setup" class="input-premium"
-                            placeholder="Contraseña de la Bóveda">
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-top: 25px;">
-                <button id="activate-vault-btn" class="btn-primary vault-prime-btn" style="flex: 2;">Activar
-                    Bóveda</button>
-                <button id="skip-vault-btn" class="btn-text"
-                    style="flex: 1; color: var(--text-secondary);">Ignorar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Modal de Autenticación Único -->
-    <div id="vault-auth-modal" class="modal-overlay" hidden>
-        <div class="modal-content glass vault-auth-content">
-            <div class="auth-vault-header">
-                <span class="vault-status-icon">🔒</span>
-                <h3>Bóveda Bloqueada</h3>
-                <div id="vault-error-indicator" class="error-badge" style="display: none;">Clave incorrecta</div>
-            </div>
-
-            <div id="vault-auth-step1" class="vault-auth-step">
-                <p>Ingresa tu contraseña</p>
-                <input type="password" id="vault-input-p1" class="input-premium" placeholder="••••••••">
-                <button id="vault-verify-btn" class="btn-primary"
-                    style="margin-top: 15px; width: 100%;">Desbloquear</button>
-            </div>
-
-            <button id="close-vault-auth-btn" class="btn-close" style="top: 15px; right: 15px;">×</button>
-        </div>
-    </div>
-
-    <!-- El acceso secreto ahora abre directamente el modal de autenticación real -->
 
     <!-- Modal Recordatorio -->
     <div id="reminder-modal" class="modal-overlay" hidden>

@@ -1029,25 +1029,7 @@ class NoteApp {
         this.audioChunks = [];
         this.isRecording = false;
 
-        // --- ULTRA SECRET VAULT STATE ---
-        this.isUltraVaultActive = false;
-        this.isDecoyMode = false;
-        this.vaultAttempts = 0;
-        this.logoClickCount = 0;
-        this.logoClickTimer = null;
-        this.vaultConfig = this.loadVaultConfig();
-        this.decoyNotes = this.generateDecoyNotes();
 
-        // Vault DOM Elements
-        this.vaultOnboardingModal = document.getElementById('vault-onboarding-modal');
-        this.vaultAuthModal = document.getElementById('vault-auth-modal');
-        this.vaultSecretBar = document.getElementById('vault-secret-bar');
-        this.vaultTriggerSelect = document.getElementById('vault-trigger-select');
-        this.customTapsContainer = document.getElementById('custom-taps-container');
-        this.activateVaultBtn = document.getElementById('activate-vault-btn');
-        this.vaultLogo = document.querySelector('.logo'); // Make sure we have the logo selector
-
-        // --- END VAULT STATE ---
 
         this.reminderBtn = document.getElementById('reminder-btn');
 
@@ -1152,7 +1134,7 @@ class NoteApp {
 
     init() {
         // Ultra Secret Vault Initialization
-        this.initVault();
+
 
         this.newNoteBtn.addEventListener('click', () => this.createNewNote());
 
@@ -2747,35 +2729,22 @@ class NoteApp {
 
         let filteredNotes = [];
 
-        // --- VAULT LOGIC IN RENDERING ---
-        if (this.isUltraVaultActive) {
-            if (this.isDecoyMode) {
-                // MODO SEÑUELO: Mostrar las notas falsas
-                filteredNotes = this.decoyNotes;
-            } else {
-                // MODO REAL: Mostrar solo notas secretas
-                filteredNotes = this.notes.filter(n => n.isSecret && !n.deletedAt);
-            }
-        } else if (this.searchTerm) {
-            // Buscador normal (excluye notas de la bóveda para que sean invisibles)
+        if (this.searchTerm) {
             filteredNotes = this.notes.filter(note =>
-                !note.isSecret &&
-                (note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                    this.getRawText(note.content).toLowerCase().includes(this.searchTerm.toLowerCase()))
+            (note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                this.getRawText(note.content).toLowerCase().includes(this.searchTerm.toLowerCase()))
             );
         } else {
             if (this.currentNoteFilter === 'trash') {
                 filteredNotes = this.notes.filter(n => n.deletedAt);
             } else if (this.currentNoteFilter === 'private') {
-                filteredNotes = this.notes.filter(n => !n.isSecret && (n.password || n.isPrivate) && !n.deletedAt);
+                filteredNotes = this.notes.filter(n => (n.password || n.isPrivate) && !n.deletedAt);
             } else {
-                // Public logic (Exclude secret notes!)
                 filteredNotes = this.notes.filter(n =>
-                    !n.isSecret && !n.password && !n.isPrivate && !n.deletedAt && n.type !== 'folder'
+                    !n.password && !n.isPrivate && !n.deletedAt && n.type !== 'folder'
                 );
             }
         }
-        // --- END VAULT LOGIC ---
 
         // Sort
         const sortMode = this.currentSortValue || 'date-desc';
@@ -3808,238 +3777,20 @@ class NoteApp {
         // 5. Setup Secret Bar Listeners
         this.setupVaultSecretBarListeners();
 
-        // 7. Sidebar Setup Listener
-        const setupBtn = document.getElementById('open-vault-setup-btn');
-        if (setupBtn) {
-            setupBtn.onclick = () => this.vaultOnboardingModal.hidden = false;
-        }
 
-        this.updateVaultSetupPromo();
-    }
 
-    updateVaultSetupPromo() {
-        const promo = document.getElementById('vault-setup-promo');
-        if (promo) {
-            // Mostrar promo solo si no hay configuración
-            promo.style.display = (!this.vaultConfig && this.user) ? 'block' : 'none';
-        }
-    }
-
-    loadVaultConfig() {
-        const config = localStorage.getItem('nova_vault_config');
-        return config ? JSON.parse(config) : null;
-    }
-
-    saveVaultConfig(config) {
-        localStorage.setItem('nova_vault_config', JSON.stringify(config));
-        this.vaultConfig = config;
-    }
-
-    setupVaultActivationListeners() {
-        // Logo Multi-Tap
-        if (this.vaultLogo) {
-            this.vaultLogo.addEventListener('click', () => {
-                if (!this.vaultConfig) return;
-
-                const requiredTaps = this.vaultConfig.triggerType === 'custom-taps'
-                    ? this.vaultConfig.customTaps
-                    : parseInt(this.vaultConfig.triggerType.split('-')[1]);
-
-                this.logoClickCount++;
-                clearTimeout(this.logoClickTimer);
-
-                this.logoClickTimer = setTimeout(() => {
-                    if (this.logoClickCount >= requiredTaps) {
-                        this.openVaultAuth();
-                    }
-                    this.logoClickCount = 0;
-                }, 400); // 400ms between taps
-            });
-        }
-
-        // Global Keyboard Shortcut (Ctrl+Shift+V)
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey && e.key === 'V') {
-                e.preventDefault();
-                if (this.vaultConfig) this.openVaultAuth();
+        // --- AI Context Helper ---
+        getActiveNoteContext() {
+            if (!this.activeNoteId) {
+                return { title: 'Ninguna (Interfaz vacía)', content: '' };
             }
-        });
-    }
-
-    setupVaultOnboardingListeners() {
-        if (!this.vaultOnboardingModal) return;
-
-        // Toggle custom taps input and search code info
-        this.vaultTriggerSelect.onchange = (e) => {
-            const value = e.target.value;
-            this.customTapsContainer.style.display = value === 'custom-taps' ? 'block' : 'none';
-        };
-
-        this.activateVaultBtn.onclick = () => {
-            const config = {
-                triggerType: this.vaultTriggerSelect.value,
-                pass1: document.getElementById('vault-pass1-setup').value
-            };
-
-            if (!config.pass1) {
-                alert('Debes definir una contraseña para la bóveda.');
-                return;
-            }
-
-            this.saveVaultConfig(config);
-            this.vaultOnboardingModal.hidden = true;
-            this.showSyncStatus('Bóveda Lista 🔐');
-            this.updateVaultSetupPromo();
-        };
-
-        const skipBtn = document.getElementById('skip-vault-btn');
-        if (skipBtn) {
-            skipBtn.onclick = () => {
-                this.vaultOnboardingModal.hidden = true;
-                // Opcionalmente podemos guardar un flag para que no aparezca más
-                localStorage.setItem('nova_vault_onboarding_skipped', 'true');
+            // Use innerText to get full visible text (Note: getRawText truncates to 45 chars by default!)
+            return {
+                title: this.noteTitleInput.innerText || '',
+                content: this.noteContentInput.innerText || ''
             };
         }
     }
-
-    setupVaultAuthListeners() {
-        const inputP1 = document.getElementById('vault-input-p1');
-        const verifyBtn = document.getElementById('vault-verify-btn');
-        const closeBtn = document.getElementById('close-vault-auth-btn');
-
-        verifyBtn.onclick = () => {
-            if (inputP1.value === this.vaultConfig.pass1) {
-                this.enterUltraVault();
-            } else {
-                this.handleVaultAuthFailure();
-            }
-        };
-
-        inputP1.onkeydown = (e) => {
-            if (e.key === 'Enter') verifyBtn.click();
-        };
-
-        closeBtn.onclick = () => this.vaultAuthModal.hidden = true;
-    }
-
-    setupVaultSecretBarListeners() {
-        // En la versión simplificada, el buscador ### activa directamente el modal de contraseña real
-    }
-
-    handleVaultAuthFailure() {
-        this.vaultAttempts++;
-        const indicator = document.getElementById('vault-error-indicator');
-        if (indicator) indicator.style.display = 'inline-block';
-
-        this.vaultAuthModal.querySelector('.vault-auth-content').classList.add('shake');
-        setTimeout(() => this.vaultAuthModal.querySelector('.vault-auth-content').classList.remove('shake'), 400);
-
-        document.getElementById('vault-input-p1').value = '';
-    }
-
-    openVaultAuth() {
-        if (this.isUltraVaultActive) {
-            this.exitUltraVault();
-            return;
-        }
-
-        this.vaultAttempts = 0;
-        const indicator = document.getElementById('vault-error-indicator');
-        if (indicator) indicator.style.display = 'none';
-
-        document.getElementById('vault-input-p1').value = '';
-        this.vaultAuthModal.hidden = false;
-        document.getElementById('vault-input-p1').focus();
-    }
-
-    enterUltraVault() {
-        this.isUltraVaultActive = true;
-        this.isDecoyMode = false;
-        this.vaultAuthModal.hidden = true;
-        this.setGhostMode(true);
-        this.renderNotesList();
-        this.showSyncStatus('Bóveda Abierta ✅');
-
-        // Visual indicator that we are in Vault
-        this.appContainer.classList.add('vault-active-border');
-    }
-
-    enterDecoyMode() {
-        this.isUltraVaultActive = true;
-        this.isDecoyMode = true;
-        this.vaultAuthModal.hidden = true;
-        this.setGhostMode(true);
-        this.renderNotesList();
-        this.showSyncStatus('Identidad Confirmada'); // Fake success
-
-        console.warn('⚠️ DECOY MODE ACTIVATED');
-    }
-
-    exitUltraVault() {
-        this.isUltraVaultActive = false;
-        this.isDecoyMode = false;
-        this.setGhostMode(false);
-        this.renderNotesList();
-        this.appContainer.classList.remove('vault-active-border');
-        this.showSyncStatus('Bóveda Cerrada 🔒');
-    }
-
-    setGhostMode(active) {
-        if (active) {
-            this._originalTitle = document.title;
-            document.title = "Configuración de Sistema";
-        } else {
-            document.title = this._originalTitle || "NovaNotes";
-        }
-    }
-
-    showVaultSecretBar() {
-        if (!this.vaultConfig) return;
-        this.vaultSecretBar.style.display = 'block';
-        document.getElementById('vault-secret-bar-input').focus();
-    }
-
-    generateDecoyNotes() {
-        return [
-            {
-                id: 'decoy-1',
-                title: '🔑 Claves Bancarias (No tocar)',
-                content: '<p><b>Ahorros:</b> 4412-8874 (Clave: 9918)</p><p><b>Corriente:</b> 1102-3341 (Clave: 0052)</p>',
-                timestamp: new Date().toISOString(),
-                isSecret: true,
-                decoy: true
-            },
-            {
-                id: 'decoy-2',
-                title: '🛒 Lista de Compras Pendiente',
-                content: '<p>- Pan Tajado</p><p>- Leche Deslactosada</p><p>- Detergente</p><p>- Papel Higiénico</p>',
-                timestamp: new Date().toISOString(),
-                isSecret: true,
-                decoy: true
-            },
-            {
-                id: 'decoy-3',
-                title: '📧 Cuentas Viejas',
-                content: '<p><b>Hotmail:</b> carlitosperez99@hotmail.com (Pass: perez123)</p>',
-                timestamp: new Date().toISOString(),
-                isSecret: true,
-                decoy: true
-            }
-        ];
-    }
-
-    // --- AI Context Helper ---
-    getActiveNoteContext() {
-        if (!this.activeNoteId) {
-            return { title: 'Ninguna (Interfaz vacía)', content: '' };
-        }
-        // Use innerText to get full visible text (Note: getRawText truncates to 45 chars by default!)
-        return {
-            title: this.noteTitleInput.innerText || '',
-            content: this.noteContentInput.innerText || ''
-        };
-    }
-}
 
 /**
  * Inicialización global del motor de novaStarPro con autenticación
