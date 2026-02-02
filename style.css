@@ -4874,6 +4874,232 @@ body.light-theme .btn-github-signin:hover {
     transition: all 0.15s ease;
 }
 
+/* ============================================
+   ULTRA SECRET VAULT STYLES
+   ============================================ */
+
+.vault-onboarding-content {
+    max-width: 500px;
+    padding: 30px;
+    border-radius: 28px;
+    text-align: center;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.vault-icon-large {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+}
+
+.vault-steps {
+    text-align: left;
+    margin: 25px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.vault-step-item {
+    display: flex;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.step-num {
+    background: var(--accent);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-info strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.step-info p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.vault-warning-box {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.vault-warning-box p {
+    font-size: 0.8rem;
+    color: #fca5a5;
+    margin: 0;
+}
+
+.vault-prime-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+/* Authentication Modal */
+.vault-auth-content {
+    max-width: 360px;
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.auth-vault-header {
+    margin-bottom: 25px;
+}
+
+.vault-status-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.error-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-top: 5px;
+    font-weight: bold;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Secret Search Bar */
+.vault-secret-bar {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000000;
+    width: 90%;
+    max-width: 500px;
+    animation: slideDownSecret 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes slideDownSecret {
+    from {
+        transform: translate(-50%, -100px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.secret-bar-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: 1px solid var(--accent);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+.secret-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.secret-bar-content input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    width: 100%;
+    outline: none;
+}
+
+#vault-secret-bar-enter {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#vault-secret-bar-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Decoy Note Style (Optional identifier) */
+.note-item.decoy-note {
+    border-right: 2px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Light theme support */
+body.light-theme .vault-step-item {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-theme .vault-secret-bar .secret-bar-content {
+    background: #ffffff;
+    border-color: var(--accent);
+}
+
+body.light-theme .secret-bar-content input {
+    color: #333;
+}
+
 /* Vibration indicator (visual pulse) */
 @keyframes pulsePress {
     0% {
@@ -4932,4 +5158,37 @@ body.light-theme .ctx-group-label {
 
 body.light-theme .context-divider {
     background: #c9b87a;
+}
+
+/* Vault Active Visual Indicator */
+.vault-active-border {
+    box-shadow: inset 0 0 0 3px rgba(168, 85, 247, 0.6), 0 0 30px rgba(168, 85, 247, 0.2);
+    border-radius: 16px;
+}
+
+.vault-active-border::before {
+    content: '🔓 BÓVEDA ACTIVA';
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    z-index: 10000;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
