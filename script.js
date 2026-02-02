@@ -3749,48 +3749,17 @@ class NoteApp {
         }
     }
 
-    // --- ULTRA SECRET VAULT METHODS ---
-
-    /**
-     * Initializes the Vault system, triggers onboarding if first time, 
-     * otherwise sets up activation listeners.
-     */
-    initVault() {
-        // 1. Check if first time setup
-        if (!this.vaultConfig) {
-            const hasSkipped = localStorage.getItem('nova_vault_onboarding_skipped');
-            if (!hasSkipped) {
-                // Show onboarding after a small delay to not interrupt initial load
-                setTimeout(() => this.vaultOnboardingModal.hidden = false, 2000);
-            }
+    // --- AI Context Helper ---
+    getActiveNoteContext() {
+        if (!this.activeNoteId) {
+            return { title: 'Ninguna (Interfaz vacía)', content: '' };
         }
-
-        // 2. Setup Listeners for Activation
-        this.setupVaultActivationListeners();
-
-        // 3. Setup Onboarding Listeners
-        this.setupVaultOnboardingListeners();
-
-        // 4. Setup Auth Listeners
-        this.setupVaultAuthListeners();
-
-        // 5. Setup Secret Bar Listeners
-        this.setupVaultSecretBarListeners();
-
-
-
-        // --- AI Context Helper ---
-        getActiveNoteContext() {
-            if (!this.activeNoteId) {
-                return { title: 'Ninguna (Interfaz vacía)', content: '' };
-            }
-            // Use innerText to get full visible text (Note: getRawText truncates to 45 chars by default!)
-            return {
-                title: this.noteTitleInput.innerText || '',
-                content: this.noteContentInput.innerText || ''
-            };
-        }
+        return {
+            title: this.noteTitleInput.innerText || '',
+            content: this.noteContentInput.innerText || ''
+        };
     }
+}
 
 /**
  * Inicialización global del motor de novaStarPro con autenticación
