@@ -1011,6 +1011,10 @@ class NoteApp {
         this.mobileBackBtn = document.getElementById('mobile-back-btn');
         this.shareNoteBtn = document.getElementById('share-note-btn'); // Share button
 
+        // Vaciar Papelera
+        this.emptyTrashBtn = document.getElementById('empty-trash-btn');
+        this.emptyTrashContainer = document.getElementById('empty-trash-container');
+
         this.currentNoteFilter = 'public'; // 'public', 'private', or 'trash'
         this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
         this.deferredPrompt = null;
@@ -1507,6 +1511,7 @@ class NoteApp {
         this.filterPublicBtn.onclick = () => this.setFilter('public');
         this.filterPrivateBtn.onclick = () => this.enterPrivateVault();
         this.filterTrashBtn.onclick = () => this.setFilter('trash');
+        this.emptyTrashBtn.onclick = () => this.emptyTrash();
 
         // Bloqueo de Enter en password maestro
         this.masterPwdInput.onkeydown = (e) => { if (e.key === 'Enter') this.verifyMasterPassword(); };
@@ -3201,6 +3206,11 @@ class NoteApp {
         // Mostrar botón de cambiar contraseña solo en la bóveda privada
         this.changePwdBtn.style.display = (filter === 'private') ? 'flex' : 'none';
 
+        // Mostrar contenedor de vaciar papelera solo en la papelera
+        if (this.emptyTrashContainer) {
+            this.emptyTrashContainer.style.display = (filter === 'trash') ? 'block' : 'none';
+        }
+
         this.setActiveNote(null);
         this.renderNotesList();
     }
@@ -3341,6 +3351,21 @@ class NoteApp {
         setTimeout(() => {
             this.closeChangePwdModal();
         }, 1500);
+    }
+
+    /**
+     * Elimina permanentemente todas las notas de la papelera
+     */
+    emptyTrash() {
+        const trashNotes = this.notes.filter(n => n.deletedAt);
+        if (trashNotes.length === 0) return;
+
+        if (confirm(`¿Estás seguro de que quieres eliminar permanentemente ${trashNotes.length} notas? Esta acción no se puede deshacer.`)) {
+            this.notes = this.notes.filter(n => !n.deletedAt);
+            this.saveToStorage();
+            this.renderNotesList();
+            this.showFeedback('🗑️ Papelera vaciada correctamente');
+        }
     }
 
     /**
