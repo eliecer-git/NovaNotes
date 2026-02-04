@@ -1540,6 +1540,8 @@ class NoteApp {
         // Formato de Texto
         // Format Toolbar Buttons
         const formatButtons = [
+            { id: 'btn-undo', cmd: 'undo' },
+            { id: 'btn-redo', cmd: 'redo' },
             { id: 'btn-bold', cmd: 'bold' },
             { id: 'btn-italic', cmd: 'italic' },
             { id: 'btn-underline', cmd: 'underline' }
