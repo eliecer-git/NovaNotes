@@ -472,10 +472,10 @@
                                         </svg>
                                     </button>
 
-                                    <!-- Added buttons from second row -->
-                                    <button id="export-pdf-btn" class="btn-icon" title="Exportar a PDF"><svg width="20"
-                                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <button id="export-pdf-btn" class="btn-icon" title="Exportar a PDF">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                             <polyline points="14 2 14 8 20 8"></polyline>
                                         </svg>
@@ -485,27 +485,41 @@
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                             stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                            <path d="M3 3v5h5"></path>
+                                            <path d="M12 7v5l4 2"></path>
                                         </svg>
                                     </button>
-                                    <line x1="12" y1="18" x2="12" y2="12"></line>
-                                    <line x1="9" y1="15" x2="15" y2="15"></line>
-                                    </svg></button>
-                                    <button id="voice-note-btn" class="btn-icon" title="Nota de Voz"><svg width="20"
-                                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+                                    <button id="btn-sketch" class="btn-icon" title="Dibujar / Canvas">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M12 20h9"></path>
+                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <button id="voice-note-btn" class="btn-icon" title="Nota de Voz">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                                             <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                                             <line x1="12" y1="19" x2="12" y2="23"></line>
                                             <line x1="8" y1="23" x2="16" y2="23"></line>
-                                        </svg></button>
-                                    <button id="reminder-btn" class="btn-icon" title="Recordatorio"><svg width="20"
-                                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <polyline points="12 6 12 12 16 14"></polyline>
-                                        </svg></button>
+                                        </svg>
+                                    </button>
+
+                                    <button id="reminder-btn" class="btn-icon" title="Recordatorio">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                        </svg>
+                                    </button>
+
                                     <button id="ai-btn" class="btn-icon" title="Asistente AI">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -517,6 +531,7 @@
                                             <path d="m11 12 4 4"></path>
                                         </svg>
                                     </button>
+
                                     <button id="share-note-btn" class="btn-icon" title="Compartir Nota">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -529,9 +544,15 @@
                                         </svg>
                                     </button>
 
-                                    <div class="theme-picker-group">
+                                </div> <!-- End of actions-row -->
+
+                                <!-- Theme Section Moved for better spacing -->
+                                <div class="toolbar-row theme-row"
+                                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">Estilo:</span>
+                                    <div class="theme-picker-group" style="flex: 1; display: flex; gap: 8px;">
                                         <select id="theme-select" class="select-premium" title="Fondo del Editor"
-                                            style="max-width: 130px;">
+                                            style="width: 100%;">
                                             <option value="none">Fondo Normal</option>
                                             <option value="sunset">Sunset</option>
                                             <option value="ocean">Ocean</option>
@@ -544,7 +565,7 @@
                                             title="Color Fondo" value="#0d0f16" style="display: none;">
                                     </div>
                                 </div>
-                            </div>
+                            </div> <!-- End of toolbar-content -->
                         </div>
 
                     </div>
@@ -650,7 +671,7 @@
                     <p><strong>Papelera:</strong> Recupera notas borradas o vacía la papelera permanentemente.</p>
                 </div>
                 <div class="info-item">
-                    <span class="info-icon">📜</span>
+                    <span class="info-icon">🔄</span>
                     <p><strong>Historial:</strong> Accede a versiones anteriores de tus notas y restáuralas si es
                         necesario.</p>
                 </div>

@@ -2922,9 +2922,15 @@ ul.checklist li.checked::before {
 
     .toolbar-row {
         display: flex;
-        gap: 8px;
+        flex-wrap: wrap;
+        gap: 6px;
         align-items: center;
         width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .actions-row {
+        padding: 5px 0;
     }
 
     /* Compact Inputs */
