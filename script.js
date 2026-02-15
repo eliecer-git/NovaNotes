@@ -1457,6 +1457,59 @@ class NoteApp {
         };
         this.noteContentInput.onpaste = (e) => this.handlePaste(e);
 
+        // Fix for inherited strikethrough when exiting checked list items
+        this.noteContentInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    let node = range.startContainer;
+
+                    // Check if we're inside a list item
+                    while (node && node !== this.noteContentInput) {
+                        if (node.nodeName === 'LI') {
+                            // Check if this LI is in a checklist
+                            const ul = node.parentElement;
+                            if (ul && ul.classList.contains('checklist')) {
+                                // Let default behavior create the new line
+                                setTimeout(() => {
+                                    // After Enter is processed, clean up any inherited styles
+                                    const newSelection = window.getSelection();
+                                    if (newSelection.rangeCount > 0) {
+                                        const newRange = newSelection.getRangeAt(0);
+                                        let currentNode = newRange.startContainer;
+
+                                        // Navigate up to find if we're still in a list or outside
+                                        let inList = false;
+                                        let tempNode = currentNode;
+                                        while (tempNode && tempNode !== this.noteContentInput) {
+                                            if (tempNode.nodeName === 'UL' || tempNode.nodeName === 'OL') {
+                                                inList = true;
+                                                break;
+                                            }
+                                            tempNode = tempNode.parentNode;
+                                        }
+
+                                        // If we're outside the list, remove text-decoration
+                                        if (!inList && currentNode.parentElement) {
+                                            const parent = currentNode.parentElement;
+                                            if (parent.style.textDecoration) {
+                                                parent.style.textDecoration = 'none';
+                                            }
+                                            // Also use execCommand to ensure clean formatting
+                                            document.execCommand('removeFormat', false, null);
+                                        }
+                                    }
+                                }, 10);
+                            }
+                            break;
+                        }
+                        node = node.parentNode;
+                    }
+                }
+            }
+        };
+
         this.noteTitleInput.onblur = () => this.updatePlaceholderState();
         this.noteContentInput.onblur = () => this.updatePlaceholderState();
 
