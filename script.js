@@ -463,8 +463,9 @@ class AIManager {
         // Only using models available in v1beta API (2025+)
         this.MODELS_TO_TRY = [
             'gemini-2.0-flash',
-            'gemini-2.0-flash-lite',
-            'gemini-exp-1206'  // Experimental model as last resort
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-8b',
+            'gemini-2.0-flash-lite'
         ];
 
         // DOM Elements
@@ -924,7 +925,7 @@ class AIManager {
         }
 
         if (lastError && (lastError.message.includes('cuota') || lastError.message.includes('429'))) {
-            throw new Error('⏳ Límite alcanzado. Espera unos segundos.');
+            throw new Error('⏳ Límite de cuota alcanzado. La versión gratuita de Gemini tiene límites por minuto y por día. Si sigue fallando después de esperar, es posible que hayas agotado tus créditos gratuitos por hoy.');
         }
 
         throw lastError || new Error('No se pudo conectar con la IA.');
