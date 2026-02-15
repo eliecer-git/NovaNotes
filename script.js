@@ -774,6 +774,19 @@ class AIManager {
             this.saveSessions();
         }
 
+        // Action Detection [ACTION:WRITE_TO_NOTE|TITLE:...|CONTENT:...]
+        if (type === 'ai' && text.includes('[ACTION:WRITE_TO_NOTE')) {
+            const actionMatch = text.match(/\[ACTION:WRITE_TO_NOTE\|TITLE:(.*?)\|CONTENT:(.*?)\]/s);
+            if (actionMatch) {
+                const title = actionMatch[1].trim();
+                const content = actionMatch[2].trim();
+                // Execute action
+                this.noteApp.writeFromAI(title, content);
+                // Clean the text for display (remove the action block)
+                text = text.replace(/\[ACTION:WRITE_TO_NOTE.*?\]/s, '').trim();
+            }
+        }
+
         // Visual Append
         this.appendMessageToView(type, text);
     }
@@ -793,6 +806,27 @@ class AIManager {
         }
 
         div.innerHTML = formattedText;
+
+        // Add "Insert into Note" button for AI messages
+        if (type === 'ai') {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'ai-msg-actions';
+            actionsDiv.style.cssText = 'display: flex; gap: 8px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;';
+
+            const insertBtn = document.createElement('button');
+            insertBtn.innerHTML = '📝 Insertar en nota';
+            insertBtn.style.cssText = 'background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #818cf8; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;';
+            insertBtn.onclick = () => {
+                // Get title from first line or summary
+                const lines = text.split('\n').filter(l => l.trim() !== '');
+                const suggestedTitle = lines[0].length < 40 ? lines[0] : 'Respuesta de Nova';
+                this.noteApp.writeFromAI(suggestedTitle, text);
+            };
+
+            actionsDiv.appendChild(insertBtn);
+            div.appendChild(actionsDiv);
+        }
+
         this.messagesContainer.appendChild(div);
         this.scrollToBottom();
         return div;
@@ -823,7 +857,7 @@ class AIManager {
         const key = this.getKey();
         if (!key) throw new Error('No hay API Key configurada.');
 
-        const systemInstruction = `Eres Nova, un asistente inteligente integrado en una aplicación de notas.
+        const systemInstruction = `Eres Nova, un asistente inteligente integrado en una aplicación de notas profesional.
         El usuario está editando una nota.
         
         CONTEXTO DE LA NOTA ACTUAL (Puede estar vacío):
@@ -832,19 +866,20 @@ class AIManager {
         CONTENIDO: ${context.content}
         ---
 
-        INSTRUCCIONES:
+        INSTRUCCIONES CRÍTICAS:
         1. Responde de manera concisa y útil.
-        2. Si el usuario te pide resumir, usa el contexto proporcionado.
-        3. Si te pide redactar, genera el texto directamente.
-        4. Eres servicial, amigable y profesional.
-        5. Habla siempre en Español (o en el idioma que el usuario prefiera si lo cambia).
+        2. Si el usuario te pide explícitamente "pon esto en mi nota", "escríbelo", "pásalo a la nota" o similar sobre un tema que acabas de explicar o que te pide redactar, DEBES incluir al final de tu mensaje un bloque técnico con este formato:
+           [ACTION:WRITE_TO_NOTE|TITLE:Título Corto|CONTENT:Texto completo de la nota]
+        3. Para el CONTENT del bloque anterior: si parece una lista de elementos, usa el formato "- Elemento" para cada línea.
+        4. No uses el bloque técnico a menos que el usuario pida explícitamente guardar/escribir en la nota.
+        5. Habla siempre en Español de forma profesional y amigable.
+        6. Si el usuario te pide investigar algo (ej: "hablame de los zorros"), da la información normal. Solo si después dice "ponlo en mi nota", genera el bloque.
         `;
 
         let lastError = null;
 
         for (const model of this.MODELS_TO_TRY) {
             try {
-                // console.log(`Trying AI model: ${model}`); // Debug (optional)
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
                 const payload = {
                     contents: [{
@@ -861,23 +896,16 @@ class AIManager {
                 });
 
                 if (!response.ok) {
-                    // Handle Quota Exceeded (429) specifically -> Try next model
                     if (response.status === 429) {
-                        console.warn(`Model ${model} hit rate limit (429). Trying next...`);
                         lastError = new Error(`Límite de cuota excedido en ${model}.`);
                         continue;
                     }
-
-                    // If it's a 404 (Not Found) or 400 (Bad Request), treat as model issue and continue to next
                     if (response.status === 404 || response.status === 400 || response.status === 503) {
                         const errData = await response.json().catch(() => ({}));
                         const msg = errData.error?.message || response.statusText;
-                        console.warn(`Model ${model} failed (${response.status}): ${msg}`);
-                        lastError = new Error(`Model ${model} issue: ${msg}`);
-                        continue; // Try next model
+                        lastError = new Error(`Model ${model} error: ${msg}`);
+                        continue;
                     }
-
-                    // Other errors
                     const errData = await response.json();
                     throw new Error(errData.error?.message || 'Error en Google AI');
                 }
@@ -887,22 +915,19 @@ class AIManager {
 
                 if (!aiText) throw new Error('Respuesta vacía de la IA.');
 
-                // Success!
                 return aiText;
 
             } catch (error) {
                 lastError = error;
-                // If network fail, let's keep trying other models just in case
                 console.error(`Error with model ${model}:`, error);
             }
         }
 
-        // If loop finishes without returning
-        if (lastError && (lastError.message.includes('cuota') || lastError.message.includes('429') || lastError.message.includes('rate limit'))) {
-            throw new Error('⏳ Límite de uso alcanzado. La API gratuita de Gemini tiene límites. Espera 20-30 segundos e intenta de nuevo.');
+        if (lastError && (lastError.message.includes('cuota') || lastError.message.includes('429'))) {
+            throw new Error('⏳ Límite alcanzado. Espera unos segundos.');
         }
 
-        throw lastError || new Error('No se pudo conectar con la IA. Verifica tu conexión a internet y tu API Key.');
+        throw lastError || new Error('No se pudo conectar con la IA.');
     }
 }
 
@@ -3122,9 +3147,15 @@ class NoteApp {
     }
 
     handlePaste(e) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const pastedText = clipboardData.getData('text');
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+
+        // Check for images first (existing logic)
+        let hasImage = false;
         for (let item of items) {
             if (item.type.indexOf('image') !== -1) {
+                hasImage = true;
                 e.preventDefault();
                 const blob = item.getAsFile();
                 const reader = new FileReader();
@@ -3132,6 +3163,46 @@ class NoteApp {
                     this.insertImage(event.target.result);
                 };
                 reader.readAsDataURL(blob);
+            }
+        }
+
+        // Automatic List Detection (Option A)
+        if (!hasImage && pastedText) {
+            const lines = pastedText.split('\n').filter(line => line.trim() !== '');
+            // Pattern for lists: Starts with -, *, •, 1., 1), etc.
+            const listPattern = /^(\s*[-*•]|\s*\d+[.)])\s+/;
+
+            const isList = lines.length > 1 && lines.every(line => listPattern.test(line));
+
+            if (isList) {
+                e.preventDefault();
+                // Create a checklist structure
+                const ul = document.createElement('ul');
+                ul.className = 'checklist';
+
+                lines.forEach(line => {
+                    const li = document.createElement('li');
+                    // Remove the bullet/number point
+                    li.textContent = line.replace(listPattern, '').trim();
+                    ul.appendChild(li);
+                });
+
+                // Insert at cursor
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    range.deleteContents();
+                    range.insertNode(ul);
+
+                    // Move cursor after the ul
+                    range.setStartAfter(ul);
+                    range.setEndAfter(ul);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+
+                this.debouncedSaveAndRender();
+                return;
             }
         }
     }
@@ -3882,6 +3953,100 @@ class NoteApp {
             title: this.noteTitleInput.innerText || '',
             content: this.noteContentInput.innerText || ''
         };
+    }
+
+    /**
+     * Escribe contenido generado por la IA directamente en la nota activa o crea una nueva.
+     */
+    writeFromAI(title, content) {
+        // Si no hay nota activa, crear una
+        if (!this.activeNoteId) {
+            this.createNewNote();
+        }
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            if (title) note.title = title;
+
+            // Detección y formateo de listas en el contenido de la IA
+            const lines = content.split('\n');
+            const listPattern = /^(\s*[-*•]|\s*\d+[.)])\s+/;
+            const hasList = lines.some(l => listPattern.test(l));
+
+            if (hasList) {
+                let html = '';
+                let inList = false;
+
+                lines.forEach(line => {
+                    if (listPattern.test(line)) {
+                        if (!inList) {
+                            html += '<ul class="checklist">';
+                            inList = true;
+                        }
+                        html += `<li>${line.replace(listPattern, '').trim()}</li>`;
+                    } else {
+                        if (inList) {
+                            html += '</ul>';
+                            inList = false;
+                        }
+                        if (line.trim() !== '') {
+                            html += `<div>${line}</div>`;
+                        } else {
+                            html += '<br>';
+                        }
+                    }
+                });
+                if (inList) html += '</ul>';
+                note.content = html;
+            } else {
+                note.content = content.replace(/\n/g, '<br>');
+            }
+
+            note.updatedAt = new Date().toISOString();
+            this.saveToStorage();
+
+            // Actualizar UI
+            this.setActiveNote(note.id);
+            this.renderNotesList();
+            this.showNotification('✨ Nova ha escrito en tu nota');
+        }
+    }
+
+    /**
+     * Muestra una notificación visual elegante (Toast)
+     */
+    showNotification(message) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'nova-toast';
+        toast.style.cssText = `
+            background: rgba(17, 19, 26, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
+        `;
+        toast.innerHTML = `<span>🚀</span> ${message}`;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px) scale(0.9)';
+            toast.style.transition = 'all 0.4s ease';
+            setTimeout(() => toast.remove(), 400);
+        }, 3000);
     }
 }
 
