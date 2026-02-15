@@ -3167,41 +3167,33 @@ class NoteApp {
             }
         }
 
-        // Automatic List Detection (Option A)
-        if (!hasImage && pastedText) {
-            const lines = pastedText.split('\n').filter(line => line.trim() !== '');
-            // Pattern for lists: Starts with -, *, •, 1., 1), etc.
-            const listPattern = /^(\s*[-*•]|\s*\d+[.)])\s+/;
+        if (hasImage) return;
 
-            const isList = lines.length > 1 && lines.every(line => listPattern.test(line));
+        // Automatic List Detection (Option A) - Robust Version
+        if (pastedText) {
+            const lines = pastedText.split('\n').map(l => l.trim()).filter(line => line !== '');
+            // Pattern for lists: Starts with -, *, •, 1., 1), etc. (space after optional)
+            const listPattern = /^([-*•]|\d+[.)])(\s+)?/;
+
+            // If most lines match a list pattern, we treat it as a list
+            const matchCount = lines.filter(line => listPattern.test(line)).length;
+            const isList = lines.length >= 1 && (matchCount / lines.length >= 0.7);
 
             if (isList) {
                 e.preventDefault();
-                // Create a checklist structure
-                const ul = document.createElement('ul');
-                ul.className = 'checklist';
 
+                // Create a checklist structure HTML
+                let listHtml = '<ul class="checklist">';
                 lines.forEach(line => {
-                    const li = document.createElement('li');
-                    // Remove the bullet/number point
-                    li.textContent = line.replace(listPattern, '').trim();
-                    ul.appendChild(li);
+                    const content = line.replace(listPattern, '').trim();
+                    if (content) {
+                        listHtml += `<li>${content}</li>`;
+                    }
                 });
+                listHtml += '</ul><br>';
 
-                // Insert at cursor
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    range.deleteContents();
-                    range.insertNode(ul);
-
-                    // Move cursor after the ul
-                    range.setStartAfter(ul);
-                    range.setEndAfter(ul);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-
+                // Insert using execCommand for better cursor/undo handling
+                document.execCommand('insertHTML', false, listHtml);
                 this.debouncedSaveAndRender();
                 return;
             }
