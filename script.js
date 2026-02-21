@@ -1031,13 +1031,6 @@ class NoteApp {
         this.pinNoteBtn = document.getElementById('pin-note-btn');
         // Export PDF
         this.exportPdfBtn = document.getElementById('export-pdf-btn');
-        // Note History
-        this.noteHistoryBtn = document.getElementById('note-history-btn');
-        this.noteHistoryModal = document.getElementById('note-history-modal');
-        this.closeHistoryBtn = document.getElementById('close-history-btn');
-        this.historyList = document.getElementById('history-list');
-
-
         this.saveStatus = document.getElementById('save-status');
         this.mobileBackBtn = document.getElementById('mobile-back-btn');
         this.shareNoteBtn = document.getElementById('share-note-btn'); // Share button
@@ -1604,11 +1597,7 @@ class NoteApp {
         if (this.changePwdBtn) this.changePwdBtn.onclick = () => this.openChangePwdModal();
         if (this.closeChangePwdBtn) this.closeChangePwdBtn.onclick = () => this.closeChangePwdModal();
         this.saveNewPwdBtn.onclick = () => this.saveNewPassword();
-        this.noteHistoryBtn.onclick = () => this.openHistoryModal();
-        this.closeHistoryBtn.onclick = () => this.noteHistoryModal.hidden = true;
-        this.noteHistoryModal.onclick = (e) => {
-            if (e.target === this.noteHistoryModal) this.noteHistoryModal.hidden = true;
-        };
+
         this.changePwdModal.onclick = (e) => {
             if (e.target === this.changePwdModal) this.closeChangePwdModal();
         };
@@ -2589,8 +2578,7 @@ class NoteApp {
         this.saveToStorage();
         this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
 
-        // Guardar versión en historial si ha pasado suficiente tiempo
-        this.saveVersionToHistory(note);
+
 
         // Mostrar estado de salvado
         setTimeout(() => {
@@ -3500,101 +3488,7 @@ class NoteApp {
         }
     }
 
-    /**
-     * Guarda una versión de la nota en el historial si ha pasado más de 10 minutos desde el último guardado
-     */
-    saveVersionToHistory(note) {
-        if (!note.history) note.history = [];
 
-        const now = new Date().getTime();
-        const lastVersion = note.history[0]; // La versión 0 es la más reciente
-
-        // Guardar versión si no hay historial o si han pasado más de 10 minutos (600,000 ms)
-        if (!lastVersion || (now - new Date(lastVersion.timestamp).getTime() > 600000)) {
-            const version = {
-                title: note.title,
-                content: note.content,
-                timestamp: new Date().toISOString()
-            };
-
-            note.history.unshift(version); // Añadir al principio
-
-            // Limitar a las últimas 10 versiones
-            if (note.history.length > 10) {
-                note.history.pop();
-            }
-
-            this.saveToStorage();
-        }
-    }
-
-    /**
-     * Abre el modal de historial y renderiza las versiones
-     */
-    openHistoryModal() {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (!note) return;
-
-        this.renderHistoryList(note);
-        this.noteHistoryModal.hidden = false;
-    }
-
-    /**
-     * Renderiza la lista de versiones anteriores
-     */
-    renderHistoryList(note) {
-        this.historyList.innerHTML = '';
-        const history = note.history || [];
-
-        if (history.length === 0) {
-            this.historyList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No hay versiones anteriores guardadas aún.</p>';
-            return;
-        }
-
-        history.forEach((version, index) => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-
-            const previewText = this.getRawText(version.content).substring(0, 50) + '...';
-
-            item.innerHTML = `
-                <div class="history-info">
-                    <span class="history-date">${this.formatDate(version.timestamp)}</span>
-                    <span class="history-preview">${previewText}</span>
-                </div>
-                <button class="btn-restore" data-index="${index}">Restaurar</button>
-            `;
-
-            const restoreBtn = item.querySelector('.btn-restore');
-            restoreBtn.onclick = () => this.restoreVersion(note, index);
-
-            this.historyList.appendChild(item);
-        });
-    }
-
-    /**
-     * Restaura una versión específica del historial
-     */
-    restoreVersion(note, index) {
-        const version = note.history[index];
-        if (!version) return;
-
-        if (confirm('¿Estás seguro de que quieres restaurar esta versión? Se perderán los cambios actuales no guardados en una versión.')) {
-            // Guardar el estado actual antes de restaurar (opcional, pero recomendado)
-            this.saveVersionToHistory(note);
-
-            note.title = version.title;
-            note.content = version.content;
-            note.updatedAt = new Date().toISOString();
-
-            this.setActiveNote(note.id); // Recargar en el editor
-            this.saveToStorage();
-            this.renderNotesList();
-            this.noteHistoryModal.hidden = true;
-            this.showFeedback('✅ Versión restaurada correctamente');
-        }
-    }
 
     /**
      * Fija o desfija la nota activa
