@@ -1,0 +1,15 @@
+{
+    "version": 2,
+    "name": "novastarpro",
+    "cleanUrls": true,
+    "rewrites": [
+        {
+            "source": "/sw.js",
+            "destination": "/sw.js"
+        },
+        {
+            "source": "/manifest.json",
+            "destination": "/manifest.json"
+        }
+    ]
+}
