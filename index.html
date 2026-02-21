@@ -1410,7 +1410,7 @@
         // Firebase configuration
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, increment, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, increment, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB2ytv5CK67wDbL0WgGNCJrssZVKYwDqtE",
@@ -1621,6 +1621,74 @@
         });
 
 
+
+        // ============================================
+        // REAL-TIME SYNC - onSnapshot listener
+        // ============================================
+
+        let _unsubscribeSync = null;
+        let _lastLocalSaveTimestamp = 0;
+
+        /**
+         * Start listening to real-time changes for a user's notes.
+         * When another device saves, this callback fires and updates the local app.
+         * @param {string} userId - Firebase UID
+         * @param {function} onNotesChanged - Callback with (notes, lastUpdated)
+         * @returns {function} Unsubscribe function
+         */
+        window.listenToCloudChanges = (userId, onNotesChanged) => {
+            if (!userId) return () => { };
+
+            // Stop any previous listener
+            if (_unsubscribeSync) {
+                _unsubscribeSync();
+                _unsubscribeSync = null;
+            }
+
+            const userNotesRef = doc(db, 'users', userId);
+
+            _unsubscribeSync = onSnapshot(userNotesRef, (docSnap) => {
+                if (!docSnap.exists()) return;
+
+                const data = docSnap.data();
+                const cloudTimestamp = data.lastUpdated || '';
+
+                // Anti-echo: ignore changes that we just made ourselves
+                // Compare timestamps - if the cloud timestamp matches our last save, skip
+                const cloudTime = new Date(cloudTimestamp).getTime();
+                if (Math.abs(cloudTime - _lastLocalSaveTimestamp) < 2000) {
+                    // This change came from us, ignore
+                    return;
+                }
+
+                console.log('🔄 Real-time sync: changes detected from another device');
+                if (onNotesChanged && data.notes) {
+                    onNotesChanged(data.notes, cloudTimestamp);
+                }
+            }, (error) => {
+                console.error('❌ Real-time sync error:', error);
+            });
+
+            return _unsubscribeSync;
+        };
+
+        /**
+         * Stop listening to real-time changes
+         */
+        window.stopCloudListener = () => {
+            if (_unsubscribeSync) {
+                _unsubscribeSync();
+                _unsubscribeSync = null;
+                console.log('🔇 Real-time sync stopped');
+            }
+        };
+
+        /**
+         * Mark a timestamp as "our own save" to prevent echo
+         */
+        window.markLocalSave = () => {
+            _lastLocalSaveTimestamp = Date.now();
+        };
 
         // Signal that Firebase is ready
         window.firebaseReady = true;

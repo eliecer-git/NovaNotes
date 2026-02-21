@@ -1,4 +1,4 @@
-const CACHE_NAME = 'novastarpro-v34';
+const CACHE_NAME = 'novastarpro-v35';
 const ASSETS = [
     './',
     './index.html',
@@ -7,11 +7,31 @@ const ASSETS = [
     './manifest.json'
 ];
 
+// External resources to cache (fonts, libraries)
+const EXTERNAL_ASSETS = [
+    'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Fira+Code:wght@400;500&family=Montserrat:wght@400;700&family=Lora:ital,wght@0,400;1,400;1,700&family=Poppins:wght@300;400;600&family=Merriweather:wght@400;700&family=Ubuntu:wght@400;500&family=Dancing+Script:wght@400;700&display=swap',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+];
+
 self.addEventListener('install', (e) => {
-    self.skipWaiting(); // Forzar a que el nuevo SW tome el control
+    self.skipWaiting();
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS);
+            // Cache local assets first (critical)
+            return cache.addAll(ASSETS).then(() => {
+                // Try to cache external assets (non-blocking)
+                return Promise.allSettled(
+                    EXTERNAL_ASSETS.map(url =>
+                        fetch(url).then(response => {
+                            if (response.ok) {
+                                return cache.put(url, response);
+                            }
+                        }).catch(() => {
+                            console.log('Could not cache:', url);
+                        })
+                    )
+                );
+            });
         })
     );
 });
@@ -19,7 +39,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
     e.waitUntil(
         Promise.all([
-            self.clients.claim(), // Tomar control de las pestañas inmediatamente
+            self.clients.claim(),
             caches.keys().then((keys) => {
                 return Promise.all(
                     keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
@@ -29,14 +49,20 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// Estrategia: Cache First, falling back to network (para assets)
-// Estrategia: Network First, falling back to cache (para HTML / navegación)
 self.addEventListener('fetch', (e) => {
-    // Ignorar peticiones que no sean GET o que sean a esquemas no soportados
+    // Ignore non-GET or non-HTTP requests
     if (e.request.method !== 'GET' || !e.request.url.startsWith('http')) return;
 
-    // Estrategia específica para navegación (HTML): Network First
-    // Intentamos red primero para tener siempre la última versión, si falla, caché.
+    // Never cache Firebase/API requests - always go to network
+    if (e.request.url.includes('googleapis.com/v1') ||
+        e.request.url.includes('firestore.googleapis.com') ||
+        e.request.url.includes('identitytoolkit') ||
+        e.request.url.includes('securetoken') ||
+        e.request.url.includes('generativelanguage.googleapis.com')) {
+        return;
+    }
+
+    // Navigation requests (HTML): Network First
     if (e.request.mode === 'navigate') {
         e.respondWith(
             fetch(e.request)
@@ -49,7 +75,6 @@ self.addEventListener('fetch', (e) => {
                 .catch(() => {
                     return caches.match(e.request).then((cachedResponse) => {
                         if (cachedResponse) return cachedResponse;
-                        // Si no hay caché y no hay red, mostrar página offline (si existiera)
                         return caches.match('./index.html');
                     });
                 })
@@ -57,24 +82,47 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // Estrategia para recursos estáticos (CSS, JS, Imágenes): Stale-While-Revalidate
-    // Sirve del caché inmediatamente, pero actualiza en segundo plano
+    // Google Fonts: Cache First (they rarely change)
+    if (e.request.url.includes('fonts.googleapis.com') ||
+        e.request.url.includes('fonts.gstatic.com')) {
+        e.respondWith(
+            caches.match(e.request).then((cachedResponse) => {
+                if (cachedResponse) return cachedResponse;
+                return fetch(e.request).then((response) => {
+                    if (response.ok) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+                    }
+                    return response;
+                }).catch(() => {
+                    // If font fails, return nothing (browser will use fallback)
+                    return new Response('', { status: 204 });
+                });
+            })
+        );
+        return;
+    }
+
+    // Static assets: Stale-While-Revalidate
     e.respondWith(
         caches.match(e.request).then((cachedResponse) => {
             const fetchPromise = fetch(e.request).then((networkResponse) => {
-                // Verificar respuesta válida
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                if (!networkResponse || networkResponse.status !== 200) {
                     return networkResponse;
                 }
-                // Actualizar caché
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(e.request, responseToCache);
-                });
+                // Only cache same-origin or CORS responses
+                if (networkResponse.type === 'basic' || networkResponse.type === 'cors') {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(e.request, responseToCache);
+                    });
+                }
                 return networkResponse;
+            }).catch(() => {
+                // Network failed, return cache if available
+                return cachedResponse;
             });
 
-            // Devolver caché si existe, sino esperar a la red
             return cachedResponse || fetchPromise;
         })
     );

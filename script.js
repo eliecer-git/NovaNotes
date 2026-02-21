@@ -3089,6 +3089,10 @@ class NoteApp {
         }
 
         try {
+            // Mark this as our own save to prevent echo from onSnapshot
+            if (typeof window.markLocalSave === 'function') {
+                window.markLocalSave();
+            }
             await window.saveNotesToCloud(this.firebaseUid, this.notes);
             this.showSyncStatus('synced');
         } catch (error) {
@@ -3161,9 +3165,61 @@ class NoteApp {
                 this.showSyncStatus('synced');
                 console.log('📱 Notes synchronized:', this.notes.length, 'total notes');
             }
+
+            // Start real-time listener for changes from other devices
+            this.startRealtimeSync();
+
         } catch (error) {
             console.error('Failed to load from cloud:', error);
             this.showSyncStatus('error');
+        }
+    }
+
+    /**
+     * Start listening for real-time changes from other devices
+     * Uses Firestore onSnapshot to detect when notes change in the cloud
+     */
+    startRealtimeSync() {
+        if (!this.firebaseUid) return;
+        if (typeof window.listenToCloudChanges !== 'function') return;
+
+        window.listenToCloudChanges(this.firebaseUid, (cloudNotes, lastUpdated) => {
+            console.log('🔄 Received', cloudNotes.length, 'notes from another device');
+
+            // Update local notes with cloud data
+            this.notes = cloudNotes;
+
+            // Save to localStorage
+            const key = this.getNotesStorageKey();
+            localStorage.setItem(key, JSON.stringify(this.notes));
+
+            // Re-render UI
+            this.renderNotesList();
+            this.updateStats();
+
+            // If we have an active note, refresh its content in the editor
+            if (this.activeNoteId) {
+                const updatedNote = this.notes.find(n => n.id === this.activeNoteId);
+                if (updatedNote) {
+                    this.noteTitleInput.innerHTML = updatedNote.title || '';
+                    this.noteContentInput.innerHTML = updatedNote.content || '';
+                    this.lastEditedText.textContent = `Editado: ${this.formatDate(updatedNote.updatedAt)}`;
+                }
+            }
+
+            this.showSyncStatus('synced');
+            this.showFeedback('🔄 Notas sincronizadas desde otro dispositivo');
+        });
+
+        console.log('👂 Real-time sync listener active');
+    }
+
+    /**
+     * Stop real-time sync listener (called on logout)
+     */
+    stopRealtimeSync() {
+        if (typeof window.stopCloudListener === 'function') {
+            window.stopCloudListener();
         }
     }
 
@@ -4076,6 +4132,9 @@ auth.onLoginSuccess = async (session) => {
 
 // Handle logout - clear app reference
 auth.onLogout = () => {
+    if (app && typeof app.stopRealtimeSync === 'function') {
+        app.stopRealtimeSync();
+    }
     app = null;
     window.app = null;
 };
