@@ -596,9 +596,14 @@ h2,
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 8px;
+    padding: 10px;
     border-radius: 8px;
     transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
 }
 
 .btn-delete:hover {
@@ -4149,18 +4154,33 @@ body.light-theme .btn-auth-secondary:hover {
     /* Icon Buttons on Desktop - Improved */
     .btn-icon-small,
     .btn-icon {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
-        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--text-muted);
         transition: all 0.2s;
-        border: 1px solid transparent;
-        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
         cursor: pointer;
+    }
+
+    .btn-icon:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-1px);
+    }
+
+    /* Actions Row buttons even larger */
+    .actions-row .btn-icon {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 12px;
     }
 
     .btn-icon-small svg,
