@@ -541,6 +541,30 @@
                                         </svg>
                                     </button>
 
+                                    <!-- Save & Delete buttons (Desktop only) -->
+                                    <div class="divider-v desktop-only"></div>
+                                    <button id="save-note-btn" class="btn-icon desktop-only btn-toolbar-save"
+                                        title="Guardar cambios" hidden>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z">
+                                            </path>
+                                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                            <polyline points="7 3 7 8 15 8"></polyline>
+                                        </svg>
+                                    </button>
+                                    <button id="delete-note-btn" class="btn-icon desktop-only btn-toolbar-delete"
+                                        title="Eliminar nota" hidden>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M3 6h18"></path>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+
                                 </div> <!-- End of actions-row -->
 
                                 <!-- Theme Section Moved for better spacing -->
@@ -574,15 +598,7 @@
                             <circle cx="12" cy="19" r="1"></circle>
                         </svg>
                     </button>
-                    <button id="delete-note-btn" class="btn-icon btn-delete" title="Eliminar nota" hidden>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                    <button id="save-note-btn" class="btn-secondary" title="Guardar cambios" hidden>Guardar</button>
+
                 </div>
             </div>
 
