@@ -3474,6 +3474,45 @@ class NoteApp {
     }
 
     /**
+     * Shows a temporary toast-style feedback message at the bottom of the screen.
+     * @param {string} message - The message to display
+     * @param {number} duration - Duration in ms (default 2500)
+     */
+    showFeedback(message, duration = 2500) {
+        // Remove any existing feedback
+        const existing = document.querySelector('.app-feedback-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'app-feedback-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 40, 0.95);
+            color: #f8fafc;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 999999;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            animation: slideUp 0.3s ease;
+            pointer-events: none;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    /**
      * Elimina permanentemente todas las notas de la papelera
      */
     emptyTrash() {
@@ -3703,7 +3742,7 @@ class NoteApp {
         if (Notification.permission === "granted") {
             const notif = new Notification("⏰ Recordatorio de novaStarPro", {
                 body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
-                icon: 'icons/icon-192x192.png', // Ensure this path exists or uses default
+                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzBhMGIxMCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMjEwIiBzdHJva2U9IiM4YjVjZjYiIHN0cm9rZS13aWR0aD0iMTAiIHN0cm9rZS1kYXNoYXJyYXk9IjQwIDYwIiBvcGFjaXR5PSIwLjUiLz48cGF0aCBkPSJNMTYwIDQwMFYxMTJMMzUyIDQwMFYxMTIiIHN0cm9rZT0iIzhiNWNmNiIgc3Ryb2tlLXdpZHRoPSIzMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+',
                 requireInteraction: true
             });
             notif.onclick = () => {
