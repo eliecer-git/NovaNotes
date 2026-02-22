@@ -1982,6 +1982,12 @@ body.light-theme .btn-gradient-small:hover {
     z-index: 50;
 }
 
+.editor-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .last-edited {
     font-size: 0.85rem;
     color: var(--text-muted);

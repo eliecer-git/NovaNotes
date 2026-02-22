@@ -250,6 +250,25 @@
                     <span id="last-edited" class="last-edited">Selecciona una nota para comenzar</span>
                     <span id="save-status" class="save-status"></span>
                 </div>
+                <div class="editor-header-buttons">
+                    <button id="save-note-btn" class="btn-secondary" title="Guardar cambios" hidden>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Guardar
+                    </button>
+                    <button id="delete-note-btn" class="btn-icon btn-toolbar-delete" title="Eliminar nota" hidden>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
                 <div class="editor-actions">
                     <div class="format-toolbar" id="format-toolbar">
 
@@ -401,65 +420,6 @@
                                     <input type="color" id="text-color-picker"
                                         class="color-picker-premium compact-color" title="Color del Texto"
                                         value="#94a3b8">
-
-                                    <!-- Save & Delete buttons moved here to fill the gap in first row -->
-                                    <div class="divider-v desktop-only"></div>
-                                    <button id="save-note-btn" class="btn-secondary desktop-only"
-                                        title="Guardar cambios" hidden>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z">
-                                            </path>
-                                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                                            <polyline points="7 3 7 8 15 8"></polyline>
-                                        </svg>
-                                        Guardar
-                                    </button>
-                                    <button id="delete-note-btn" class="btn-icon desktop-only btn-toolbar-delete"
-                                        title="Eliminar nota" hidden>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path d="M3 6h18"></path>
-                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                        </svg>
-                                    </button>
-
-                                    <!-- Added buttons to Row 1 -->
-                                    <div class="divider-v desktop-only"></div>
-                                    <button id="star-note-btn" class="btn-icon desktop-only"
-                                        title="Marcar como Favorito">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <polygon
-                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                                            </polygon>
-                                        </svg>
-                                    </button>
-                                    <button id="pin-note-btn" class="btn-icon desktop-only" title="Fijar Nota">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <line x1="12" y1="17" x2="12" y2="22"></line>
-                                            <path
-                                                d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z">
-                                            </path>
-                                        </svg>
-                                    </button>
-                                    <button id="share-note-btn" class="btn-icon desktop-only" title="Compartir Nota">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <circle cx="18" cy="5" r="3"></circle>
-                                            <circle cx="6" cy="12" r="3"></circle>
-                                            <circle cx="18" cy="19" r="3"></circle>
-                                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                                        </svg>
-                                    </button>
                                     <button id="lock-note-btn" class="btn-icon desktop-only" title="Proteger Nota">
                                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -553,16 +513,36 @@
                                         </button>
                                     </div>
 
-                                    <!-- Pin Note button moved to Row 1 -->
-
-
-                                    <!-- Note color and fullscreen moved to Row 1 for desktop -->
-
-
-                                    <!-- Export PDF button moved to Row 1 -->
-
-
-
+                                    <button id="star-note-btn" class="btn-icon" title="Marcar como Favorito">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                    </button>
+                                    <button id="pin-note-btn" class="btn-icon" title="Fijar Nota">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <line x1="12" y1="17" x2="12" y2="22"></line>
+                                            <path
+                                                d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button id="share-note-btn" class="btn-icon" title="Compartir Nota">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <circle cx="18" cy="5" r="3"></circle>
+                                            <circle cx="6" cy="12" r="3"></circle>
+                                            <circle cx="18" cy="19" r="3"></circle>
+                                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                        </svg>
+                                    </button>
 
                                     <button id="voice-note-btn" class="btn-icon" title="Nota de Voz">
                                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
