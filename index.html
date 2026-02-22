@@ -577,12 +577,20 @@
 
                                     <!-- AI button moved to Row 1 -->
                                 </div> <!-- End of actions-row -->
+                            </div> <!-- End of toolbar-content -->
+                        </div>
 
+                        <!-- Sección Fondos -->
+                        <div class="toolbar-section">
+                            <button class="toolbar-section-btn"
+                                onclick="this.nextElementSibling.classList.toggle('show')">
+                                Fondos ▼
+                            </button>
+                            <div class="toolbar-content">
                                 <!-- Theme Section - Visual Grid -->
-                                <div class="toolbar-row theme-row"
-                                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);">
+                                <div class="theme-row" style="padding: 10px 0;">
                                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                        <span style="font-size: 0.8rem; color: var(--text-muted);">Estilo:</span>
+                                        <span style="font-size: 0.8rem; color: var(--text-muted);">Seleccionado:</span>
                                         <span id="theme-name-label"
                                             style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Normal</span>
                                     </div>
@@ -654,52 +662,52 @@
                                         title="Color Fondo" value="#0d0f16" style="display: none;">
                                     <input type="file" id="bg-image-input" accept="image/*" style="display: none;">
                                 </div>
-                            </div> <!-- End of toolbar-content -->
+                            </div>
                         </div>
-
                     </div>
-                    <button id="mobile-menu-btn" class="mobile-menu-btn" title="Opciones de Formato">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="12" cy="5" r="1"></circle>
-                            <circle cx="12" cy="19" r="1"></circle>
-                        </svg>
-                    </button>
 
                 </div>
+                <button id="mobile-menu-btn" class="mobile-menu-btn" title="Opciones de Formato">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+
             </div>
+    </div>
 
-            <div id="editor-view" class="editor-view empty">
-                <div class="empty-state">
-                    <div class="empty-illustration">✍️</div>
-                    <h2>Comienza tu historia</h2>
-                    <p>Crea una nueva nota o selecciona una existente para editar.</p>
-                </div>
+    <div id="editor-view" class="editor-view empty">
+        <div class="empty-state">
+            <div class="empty-illustration">✍️</div>
+            <h2>Comienza tu historia</h2>
+            <p>Crea una nueva nota o selecciona una existente para editar.</p>
+        </div>
 
-                <div class="editor-fields" hidden>
-                    <div id="note-title" class="input-title" contenteditable="true"
-                        data-placeholder="Título de la nota...">
-                    </div>
-                    <!-- Cambiado de textarea a div para soportar colores por palabra -->
-                    <div id="note-content" class="input-content" contenteditable="true"
-                        data-placeholder="Empieza a escribir tu historia..."></div>
-
-                    <!-- Barra flotante de color para selección -->
-                    <div id="selection-toolbar" class="selection-toolbar glass" hidden>
-                        <input type="color" id="selection-color-picker" title="Color de selección">
-                        <span class="toolbar-label">Resaltar</span>
-                        <button id="remove-highlight-btn" class="btn-icon-small" title="Quitar resaltado">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+        <div class="editor-fields" hidden>
+            <div id="note-title" class="input-title" contenteditable="true" data-placeholder="Título de la nota...">
             </div>
-        </main>
+            <!-- Cambiado de textarea a div para soportar colores por palabra -->
+            <div id="note-content" class="input-content" contenteditable="true"
+                data-placeholder="Empieza a escribir tu historia..."></div>
+
+            <!-- Barra flotante de color para selección -->
+            <div id="selection-toolbar" class="selection-toolbar glass" hidden>
+                <input type="color" id="selection-color-picker" title="Color de selección">
+                <span class="toolbar-label">Resaltar</span>
+                <button id="remove-highlight-btn" class="btn-icon-small" title="Quitar resaltado">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    </main>
     </div>
 
     <!-- Modal de Información -->
