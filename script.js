@@ -2335,6 +2335,13 @@ class NoteApp {
         };
         this.notes.unshift(newNote);
         this.saveToStorage();
+
+        // Si estamos en papelera o privados, cambiar a vista pública para ver la nueva nota
+        if (this.currentNoteFilter !== 'public') {
+            this.currentNoteFilter = 'public';
+            this.updateUIForFilter();
+        }
+
         this.setActiveNote(newNote.id);
         this.renderNotesList();
         this.renderNotesList();
@@ -2376,6 +2383,11 @@ class NoteApp {
 
             // Show toolbar
             if (this.editorActions) this.editorActions.style.display = 'flex';
+
+            // Asegurar que sean editables (por si veníamos de la papelera)
+            this.noteTitleInput.contentEditable = "true";
+            this.noteContentInput.contentEditable = "true";
+
             this.noteTitleInput.innerHTML = note.title;
             this.noteContentInput.innerHTML = note.content;
 

@@ -814,20 +814,11 @@ body.light-theme .note-menu-btn:hover {
     /* Reduced margin */
 }
 
-/* Placeholder visibility fix: Hide when focused or not empty */
-.input-content:focus::before {
-    display: none;
-    opacity: 0;
-    content: none;
-}
+/* Placeholder visibility fix: Solo ocultar si tiene contenido */
 
-/* Solo mostrar placeholder si está REALMENTE vacío y no hay hijos como <br> innecesarios, y NO tiene foco */
-.input-content:empty:not(:focus)::before {
-    content: attr(data-placeholder);
-    color: var(--text-muted);
-    pointer-events: none;
-    display: block;
-}
+
+/* Placeholder manejado por reglas consolidadas más abajo */
+
 
 .note-item.active {
     background: rgba(99, 102, 241, 0.1);
@@ -2415,16 +2406,14 @@ body.light-theme .btn-gradient-small:hover {
     position: absolute;
     top: 0;
     left: 0;
-    font-style: italic;
+    font-style: normal;
+    /* Cambiado de italic para que se vea más limpio */
     opacity: 0.5;
     display: block;
 }
 
-/* Ocultar placeholder al enfocar o si tiene contenido real */
-.input-title:focus:before,
-.input-content:focus:before {
-    display: none !important;
-}
+/* Ocultar placeholder solo si tiene contenido real handled by :empty and is-empty class */
+
 
 .input-title {
     background: none;
