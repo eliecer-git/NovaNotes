@@ -2412,6 +2412,12 @@ body.light-theme .btn-gradient-small:hover {
     display: block;
 }
 
+/* Ocultar placeholder al enfocar (para que el usuario sienta que puede escribir) */
+.input-title:focus:before,
+.input-content:focus:before {
+    display: none !important;
+}
+
 /* Ocultar placeholder solo si tiene contenido real handled by :empty and is-empty class */
 
 
