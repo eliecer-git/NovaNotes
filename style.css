@@ -992,6 +992,142 @@ body.light-theme .note-menu-btn:hover {
     background-repeat: no-repeat !important;
 }
 
+/* Theme Visual Picker Gallery */
+.theme-visual-panel {
+    padding: 15px;
+    border-radius: 16px;
+    margin-top: 5px;
+    border: 1px solid var(--glass-border);
+    animation: slideDown 0.3s ease-out;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.theme-swatch {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.theme-swatch:hover {
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.theme-swatch.active {
+    border-color: var(--accent);
+    transform: scale(1.05);
+}
+
+.theme-swatch.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.theme-custom-actions {
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 12px;
+    justify-content: center;
+}
+
+.theme-swatch.swatch-none {
+    background: #0d0f16;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-swatch.swatch-sunset {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.theme-swatch.swatch-ocean {
+    background: linear-gradient(135deg, #2af598 0%, #009efd 100%);
+}
+
+.theme-swatch.swatch-emerald {
+    background: linear-gradient(135deg, #348f50 0%, #56b4d3 100%);
+}
+
+.theme-swatch.swatch-royal {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.theme-swatch.swatch-midnight {
+    background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+}
+
+.theme-swatch.swatch-aurora {
+    background: linear-gradient(135deg, #0f0c29 0%, #24243e 100%);
+}
+
+.theme-swatch.swatch-cherry {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+.theme-swatch.swatch-volcano {
+    background: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
+}
+
+.theme-swatch.swatch-arctic {
+    background: linear-gradient(135deg, #e6dada 0%, #274046 100%);
+}
+
+.theme-swatch.swatch-nebula {
+    background: linear-gradient(135deg, #6441A5 0%, #2a0845 100%);
+}
+
+.theme-swatch.swatch-golden {
+    background: linear-gradient(135deg, #F09819 0%, #EDDE5D 100%);
+}
+
+.theme-swatch.swatch-lavender {
+    background: linear-gradient(135deg, #C9D6FF 0%, #a18cd1 100%);
+}
+
+.theme-swatch.swatch-tropical {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.theme-swatch.swatch-neon {
+    background: linear-gradient(135deg, #000000 0%, #0f9b0f 100%);
+}
+
+.theme-swatch.swatch-rose-gold {
+    background: linear-gradient(135deg, #f4c4f3 0%, #fc67fa 100%);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Readability adjustments removed to allow manual color control */
 
 /* Security Blur */

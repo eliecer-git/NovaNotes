@@ -580,31 +580,56 @@
                                 <div class="toolbar-row theme-row"
                                     style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
                                     <span style="font-size: 0.8rem; color: var(--text-muted);">Estilo:</span>
-                                    <div class="theme-picker-group" style="flex: 1; display: flex; gap: 8px;">
-                                        <select id="theme-select" class="select-premium" title="Fondo del Editor"
-                                            style="width: 100%;">
-                                            <option value="none">Fondo Normal</option>
-                                            <option value="sunset">🌅 Sunset</option>
-                                            <option value="ocean">🌊 Ocean</option>
-                                            <option value="emerald">🌲 Forest</option>
-                                            <option value="royal">👑 Royal</option>
-                                            <option value="midnight">🌙 Night</option>
-                                            <option value="aurora">🌌 Aurora</option>
-                                            <option value="cherry">🌸 Cherry</option>
-                                            <option value="volcano">🌋 Volcano</option>
-                                            <option value="arctic">❄️ Arctic</option>
-                                            <option value="nebula">🪐 Nebula</option>
-                                            <option value="golden">✨ Golden</option>
-                                            <option value="lavender">💜 Lavender</option>
-                                            <option value="tropical">🏝️ Tropical</option>
-                                            <option value="neon">💚 Neon</option>
-                                            <option value="rose-gold">🌹 Rose Gold</option>
-                                            <option value="custom">🎨 Color Sólido</option>
-                                            <option value="gallery">🖼️ Imagen de Galería</option>
+                                    <div class="theme-picker-group"
+                                        style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                                        <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                            <button id="theme-gallery-btn" class="btn-gradient-small"
+                                                style="width: 100%; justify-content: space-between;">
+                                                <span>🎨 Galería de Fondos</span>
+                                                <span id="current-theme-name"
+                                                    style="font-size: 0.75rem; opacity: 0.7;">Normal</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Panel de Temas Visuales (Oculto por defecto) -->
+                                        <div id="theme-visual-panel" class="theme-visual-panel glass"
+                                            style="display: none;">
+                                            <div class="theme-grid" id="theme-grid">
+                                                <!-- Las miniaturas se cargarán dinámicamente desde JS -->
+                                            </div>
+                                            <div class="theme-custom-actions">
+                                                <button id="custom-bg-btn" class="btn-icon-small"
+                                                    title="Color Personalizado">🎨</button>
+                                                <button id="gallery-bg-btn" class="btn-icon-small"
+                                                    title="Imagen de Galería">🖼️</button>
+                                                <input type="color" id="bg-color-picker" class="color-picker-premium"
+                                                    value="#0d0f16" style="display: none;">
+                                                <input type="file" id="bg-image-input" accept="image/*"
+                                                    style="display: none;">
+                                            </div>
+                                        </div>
+
+                                        <!-- Hidden select for compatibility if needed -->
+                                        <select id="theme-select" style="display: none;">
+                                            <option value="none">none</option>
+                                            <option value="sunset">sunset</option>
+                                            <option value="ocean">ocean</option>
+                                            <option value="emerald">emerald</option>
+                                            <option value="royal">royal</option>
+                                            <option value="midnight">midnight</option>
+                                            <option value="aurora">aurora</option>
+                                            <option value="cherry">cherry</option>
+                                            <option value="volcano">volcano</option>
+                                            <option value="arctic">arctic</option>
+                                            <option value="nebula">nebula</option>
+                                            <option value="golden">golden</option>
+                                            <option value="lavender">lavender</option>
+                                            <option value="tropical">tropical</option>
+                                            <option value="neon">neon</option>
+                                            <option value="rose-gold">rose-gold</option>
+                                            <option value="custom">custom</option>
+                                            <option value="gallery">gallery</option>
                                         </select>
-                                        <input type="color" id="bg-color-picker" class="color-picker-premium"
-                                            title="Color Fondo" value="#0d0f16" style="display: none;">
-                                        <input type="file" id="bg-image-input" accept="image/*" style="display: none;">
                                     </div>
                                 </div>
                             </div> <!-- End of toolbar-content -->

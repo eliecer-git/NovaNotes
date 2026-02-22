@@ -1002,6 +1002,14 @@ class NoteApp {
         this.pwdError = document.getElementById('pwd-error');
         this.bgColorPicker = document.getElementById('bg-color-picker');
         this.bgImageInput = document.getElementById('bg-image-input');
+
+        // Theme Visual Picker
+        this.themeGalleryBtn = document.getElementById('theme-gallery-btn');
+        this.themeVisualPanel = document.getElementById('theme-visual-panel');
+        this.themeGrid = document.getElementById('theme-grid');
+        this.currentThemeName = document.getElementById('current-theme-name');
+        this.customBgBtn = document.getElementById('custom-bg-btn');
+        this.galleryBgBtn = document.getElementById('gallery-bg-btn');
         this.categoryModal = document.getElementById('category-modal');
 
         this.installBtn = document.getElementById('pwa-install-btn');
@@ -1035,6 +1043,8 @@ class NoteApp {
         // Export PDF
         this.exportPdfBtn = document.getElementById('export-pdf-btn');
         this.saveStatus = document.getElementById('save-status');
+
+        this.initThemeGallery();
         this.mobileBackBtn = document.getElementById('mobile-back-btn');
         this.shareNoteBtn = document.getElementById('share-note-btn'); // Share button
 
@@ -1544,50 +1554,7 @@ class NoteApp {
         this.textColorPicker.onchange = (e) => this.closeToolbarMobile();
 
 
-        this.themeSelect.onchange = (e) => {
-            if (!this.activeNoteId) return;
-            const note = this.notes.find(n => n.id === this.activeNoteId);
-            if (note) {
-                note.theme = e.target.value;
-                this.bgColorPicker.style.display = 'none';
-                if (e.target.value === 'custom') {
-                    this.bgColorPicker.style.display = 'block';
-                    this.bgColorPicker.click();
-                } else if (e.target.value === 'gallery') {
-                    this.bgImageInput.click();
-                    return; // Wait for file selection
-                }
-                this.applyTheme(note.theme, note.customBgColor, note.bgImage);
-                this.saveToStorage();
-            }
-        };
-
-        this.bgColorPicker.oninput = (e) => {
-            if (!this.activeNoteId) return;
-            const note = this.notes.find(n => n.id === this.activeNoteId);
-            if (note) {
-                note.customBgColor = e.target.value;
-                this.applyTheme('custom', note.customBgColor);
-                this.saveToStorage();
-            }
-        };
-
-        this.bgImageInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file || !this.activeNoteId) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const note = this.notes.find(n => n.id === this.activeNoteId);
-                if (note) {
-                    note.theme = 'gallery';
-                    note.bgImage = ev.target.result;
-                    this.applyTheme('gallery', null, note.bgImage);
-                    this.saveToStorage();
-                }
-            };
-            reader.readAsDataURL(file);
-            e.target.value = ''; // Reset
-        };
+        // Los listeners de temas ahora se manejan en initThemeGallery()
 
         this.lockNoteBtn.onclick = () => this.handleLockClick();
         this.pinNoteBtn.onclick = () => this.togglePin();
@@ -2082,6 +2049,103 @@ class NoteApp {
             note.color = color;
             this.saveToStorage();
             this.renderNotesList();
+        }
+    }
+
+    initThemeGallery() {
+        const themes = [
+            { id: 'none', label: 'Normal' },
+            { id: 'sunset', label: 'Sunset' },
+            { id: 'ocean', label: 'Ocean' },
+            { id: 'emerald', label: 'Forest' },
+            { id: 'royal', label: 'Royal' },
+            { id: 'midnight', label: 'Night' },
+            { id: 'aurora', label: 'Aurora' },
+            { id: 'cherry', label: 'Cherry' },
+            { id: 'volcano', label: 'Volcano' },
+            { id: 'arctic', label: 'Arctic' },
+            { id: 'nebula', label: 'Nebula' },
+            { id: 'golden', label: 'Golden' },
+            { id: 'lavender', label: 'Lavender' },
+            { id: 'tropical', label: 'Tropical' },
+            { id: 'neon', label: 'Neon' },
+            { id: 'rose-gold', label: 'Rose Gold' }
+        ];
+
+        // Populate Grid
+        if (this.themeGrid) {
+            this.themeGrid.innerHTML = '';
+            themes.forEach(theme => {
+                const swatch = document.createElement('div');
+                swatch.className = `theme-swatch swatch-${theme.id}`;
+                swatch.title = theme.label;
+                swatch.onclick = () => this.handleThemeChange(theme.id);
+                this.themeGrid.appendChild(swatch);
+            });
+        }
+
+        // Listeners
+        if (this.themeGalleryBtn) {
+            this.themeGalleryBtn.onclick = () => {
+                const isHidden = this.themeVisualPanel.style.display === 'none';
+                this.themeVisualPanel.style.display = isHidden ? 'block' : 'none';
+                this.themeGalleryBtn.classList.toggle('active', isHidden);
+            };
+        }
+
+        if (this.customBgBtn) {
+            this.customBgBtn.onclick = () => this.bgColorPicker.click();
+        }
+
+        if (this.galleryBgBtn) {
+            this.galleryBgBtn.onclick = () => this.bgImageInput.click();
+        }
+
+        // Color Picker Listener
+        if (this.bgColorPicker) {
+            this.bgColorPicker.oninput = (e) => {
+                if (!this.activeNoteId) return;
+                const note = this.notes.find(n => n.id === this.activeNoteId);
+                if (note) {
+                    note.theme = 'custom';
+                    note.customBgColor = e.target.value;
+                    this.applyTheme('custom', note.customBgColor);
+                    this.saveToStorage();
+                }
+            };
+        }
+
+        // Image Input Listener (Updated to handle visibility)
+        if (this.bgImageInput) {
+            this.bgImageInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file || !this.activeNoteId) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const note = this.notes.find(n => n.id === this.activeNoteId);
+                    if (note) {
+                        note.theme = 'gallery';
+                        note.bgImage = ev.target.result;
+                        this.applyTheme('gallery', null, note.bgImage);
+                        this.saveToStorage();
+                    }
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+            };
+        }
+    }
+
+    handleThemeChange(themeId) {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.theme = themeId;
+            this.applyTheme(themeId, note.customBgColor, note.bgImage);
+            this.saveToStorage();
+
+            // Auto close on select if desktop, keep open on mobile maybe?
+            // For now, let's just keep it simple.
         }
     }
 
@@ -3366,6 +3430,29 @@ class NoteApp {
                 this.editorView.style.backgroundImage = `url(${bgImage})`;
             }
         }
+
+        // Update Gallery UI
+        if (this.currentThemeName) {
+            const labels = {
+                'none': 'Normal', 'sunset': 'Sunset', 'ocean': 'Ocean', 'emerald': 'Forest',
+                'royal': 'Royal', 'midnight': 'Night', 'aurora': 'Aurora', 'cherry': 'Cherry',
+                'volcano': 'Volcano', 'arctic': 'Arctic', 'nebula': 'Nebula', 'golden': 'Golden',
+                'lavender': 'Lavender', 'tropical': 'Tropical', 'neon': 'Neon', 'rose-gold': 'Rose Gold',
+                'custom': 'Color Sólido', 'gallery': 'Imagen'
+            };
+            this.currentThemeName.textContent = labels[theme] || 'Normal';
+        }
+
+        // Update Active Swatch
+        if (this.themeGrid) {
+            const swatches = this.themeGrid.querySelectorAll('.theme-swatch');
+            swatches.forEach(s => {
+                s.classList.toggle('active', s.classList.contains(`swatch-${theme}`));
+            });
+        }
+
+        // Update Compatibility Select (optional but good for consistency)
+        if (this.themeSelect) this.themeSelect.value = theme || 'none';
     }
 
     saveCustomCategory() {
