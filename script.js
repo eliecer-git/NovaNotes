@@ -968,6 +968,8 @@ class NoteApp {
         this.newNoteBtn = document.getElementById('new-note-btn');
         this.deleteNoteBtn = document.getElementById('delete-note-btn');
         this.saveNoteBtn = document.getElementById('save-note-btn');
+        this.deleteNoteBtnMobile = document.getElementById('delete-note-btn-mobile');
+        this.saveNoteBtnMobile = document.getElementById('save-note-btn-mobile');
         this.searchInput = document.getElementById('search-input');
         this.noteTitleInput = document.getElementById('note-title');
         this.noteContentInput = document.getElementById('note-content');
@@ -1171,6 +1173,8 @@ class NoteApp {
 
         this.deleteNoteBtn.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
         this.saveNoteBtn.onclick = () => this.saveActiveNote();
+        this.deleteNoteBtnMobile.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
+        this.saveNoteBtnMobile.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
         this.fullscreenBtn.onclick = () => this.toggleFullscreen();
 
@@ -2353,6 +2357,8 @@ class NoteApp {
             if (this.editorActions) this.editorActions.style.display = 'none';
             this.deleteNoteBtn.hidden = true;
             this.saveNoteBtn.hidden = true;
+            this.deleteNoteBtnMobile.hidden = true;
+            this.saveNoteBtnMobile.hidden = true;
             this.lastEditedText.textContent = 'Selecciona una nota para comenzar';
             document.body.classList.remove('editor-screen-active');
             // Resetear el fondo/tema del editor al estado normal
@@ -2403,6 +2409,8 @@ class NoteApp {
             this.emptyState.hidden = true;
             this.deleteNoteBtn.hidden = false;
             this.saveNoteBtn.hidden = false;
+            this.deleteNoteBtnMobile.hidden = false;
+            this.saveNoteBtnMobile.hidden = false;
 
         } else {
             this.setActiveNote(null);
@@ -2617,7 +2625,11 @@ class NoteApp {
     saveActiveNote() {
         this.autoSave(true);
         this.saveNoteBtn.textContent = '¡Guardado!';
-        setTimeout(() => this.saveNoteBtn.textContent = 'Guardar', 1500);
+        this.saveNoteBtnMobile.textContent = '¡Guardado!';
+        setTimeout(() => {
+            this.saveNoteBtn.textContent = 'Guardar';
+            this.saveNoteBtnMobile.textContent = 'Guardar';
+        }, 1500);
     }
 
     deleteNote(noteId = null) {

@@ -2805,6 +2805,11 @@ ul.checklist li.checked::before {
     }
 }
 
+/* Mobile-only elements: hidden on desktop */
+.mobile-only {
+    display: none !important;
+}
+
 @media (max-width: 768px) {
     .app-container {
         flex-direction: column;
@@ -2867,6 +2872,10 @@ ul.checklist li.checked::before {
 
     .desktop-only {
         display: none !important;
+    }
+
+    .mobile-only {
+        display: flex !important;
     }
 
     .editor-view {
