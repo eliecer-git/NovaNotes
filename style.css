@@ -953,6 +953,54 @@ body.light-theme .note-menu-btn:hover {
     background-image: none !important;
 }
 
+/* New Themes */
+.editor-view.theme-aurora {
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+.editor-view.theme-cherry {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+.editor-view.theme-volcano {
+    background: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
+}
+
+.editor-view.theme-arctic {
+    background: linear-gradient(135deg, #e6dada 0%, #274046 100%);
+}
+
+.editor-view.theme-nebula {
+    background: linear-gradient(135deg, #6441A5 0%, #2a0845 50%, #6441A5 100%);
+}
+
+.editor-view.theme-golden {
+    background: linear-gradient(135deg, #F09819 0%, #EDDE5D 100%);
+}
+
+.editor-view.theme-lavender {
+    background: linear-gradient(135deg, #C9D6FF 0%, #E2E2E2 50%, #a18cd1 100%);
+}
+
+.editor-view.theme-tropical {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.editor-view.theme-neon {
+    background: linear-gradient(135deg, #000000 0%, #0f9b0f 50%, #000000 100%);
+}
+
+.editor-view.theme-rose-gold {
+    background: linear-gradient(135deg, #f4c4f3 0%, #fc67fa 50%, #f4c4f3 100%);
+}
+
+/* Gallery Image Theme */
+.editor-view.theme-gallery {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
 /* Readability adjustments removed to allow manual color control */
 
 /* Security Blur */

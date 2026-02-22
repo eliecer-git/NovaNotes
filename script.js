@@ -999,6 +999,7 @@ class NoteApp {
         this.closePwdBtn = document.getElementById('close-pwd-btn');
         this.pwdError = document.getElementById('pwd-error');
         this.bgColorPicker = document.getElementById('bg-color-picker');
+        this.bgImageInput = document.getElementById('bg-image-input');
         this.categoryModal = document.getElementById('category-modal');
 
         this.installBtn = document.getElementById('pwa-install-btn');
@@ -1544,13 +1545,15 @@ class NoteApp {
             const note = this.notes.find(n => n.id === this.activeNoteId);
             if (note) {
                 note.theme = e.target.value;
+                this.bgColorPicker.style.display = 'none';
                 if (e.target.value === 'custom') {
                     this.bgColorPicker.style.display = 'block';
                     this.bgColorPicker.click();
-                } else {
-                    this.bgColorPicker.style.display = 'none';
+                } else if (e.target.value === 'gallery') {
+                    this.bgImageInput.click();
+                    return; // Wait for file selection
                 }
-                this.applyTheme(note.theme, note.customBgColor);
+                this.applyTheme(note.theme, note.customBgColor, note.bgImage);
                 this.saveToStorage();
             }
         };
@@ -1563,6 +1566,23 @@ class NoteApp {
                 this.applyTheme('custom', note.customBgColor);
                 this.saveToStorage();
             }
+        };
+
+        this.bgImageInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file || !this.activeNoteId) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const note = this.notes.find(n => n.id === this.activeNoteId);
+                if (note) {
+                    note.theme = 'gallery';
+                    note.bgImage = ev.target.result;
+                    this.applyTheme('gallery', null, note.bgImage);
+                    this.saveToStorage();
+                }
+            };
+            reader.readAsDataURL(file);
+            e.target.value = ''; // Reset
         };
 
         this.lockNoteBtn.onclick = () => this.handleLockClick();
@@ -2243,7 +2263,7 @@ class NoteApp {
 
         // ... rest of rendering ...
         this.applyFormat(note.styles);
-        this.applyTheme(note.theme || 'none', note.customBgColor);
+        this.applyTheme(note.theme || 'none', note.customBgColor, note.bgImage);
 
 
 
@@ -2359,7 +2379,7 @@ class NoteApp {
             this.themeSelect.value = note.theme || 'none';
             this.bgColorPicker.style.display = note.theme === 'custom' ? 'block' : 'none';
             if (note.customBgColor) this.bgColorPicker.value = note.customBgColor;
-            this.applyTheme(note.theme || 'none', note.customBgColor);
+            this.applyTheme(note.theme || 'none', note.customBgColor, note.bgImage);
 
             // New: Handle Note Color UI (Button active state)
             this.updateColorUI(note.color || 'none');
@@ -3305,20 +3325,22 @@ class NoteApp {
         this.noteContentInput.classList.toggle('is-empty', isContentEmpty);
     }
 
-    applyTheme(theme, customColor) {
+    applyTheme(theme, customColor, bgImage) {
         // Remover todos los temas previos
         this.editorView.classList.forEach(cls => {
             if (cls.startsWith('theme-')) this.editorView.classList.remove(cls);
         });
+        // Reset background image
+        this.editorView.style.removeProperty('background-image');
+        this.editorView.style.removeProperty('--custom-bg-color');
+
         if (theme && theme !== 'none') {
             this.editorView.classList.add(`theme-${theme}`);
             if (theme === 'custom' && customColor) {
                 this.editorView.style.setProperty('--custom-bg-color', customColor);
-            } else {
-                this.editorView.style.removeProperty('--custom-bg-color');
+            } else if (theme === 'gallery' && bgImage) {
+                this.editorView.style.backgroundImage = `url(${bgImage})`;
             }
-        } else {
-            this.editorView.style.removeProperty('--custom-bg-color');
         }
     }
 
@@ -3942,7 +3964,7 @@ class NoteApp {
                 this.noteContentInput.innerHTML = note.content || '';
 
                 // Apply styles
-                this.applyTheme(note.theme || 'none', note.customBgColor);
+                this.applyTheme(note.theme || 'none', note.customBgColor, note.bgImage);
 
                 // Read Only Mode
                 this.noteTitleInput.contentEditable = false;
