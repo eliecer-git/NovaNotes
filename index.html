@@ -622,37 +622,37 @@
                 </button>
 
             </div>
-    </div>
 
-    <div id="editor-view" class="editor-view empty">
-        <div class="empty-state">
-            <div class="empty-illustration">✍️</div>
-            <h2>Comienza tu historia</h2>
-            <p>Crea una nueva nota o selecciona una existente para editar.</p>
-        </div>
+            <div id="editor-view" class="editor-view empty">
+                <div class="empty-state">
+                    <div class="empty-illustration">✍️</div>
+                    <h2>Comienza tu historia</h2>
+                    <p>Crea una nueva nota o selecciona una existente para editar.</p>
+                </div>
 
-        <div class="editor-fields" hidden>
-            <div id="note-title" class="input-title" contenteditable="true" data-placeholder="Título de la nota...">
+                <div class="editor-fields" hidden>
+                    <div id="note-title" class="input-title" contenteditable="true"
+                        data-placeholder="Título de la nota...">
+                    </div>
+                    <!-- Cambiado de textarea a div para soportar colores por palabra -->
+                    <div id="note-content" class="input-content" contenteditable="true"
+                        data-placeholder="Empieza a escribir tu historia..."></div>
+
+                    <!-- Barra flotante de color para selección -->
+                    <div id="selection-toolbar" class="selection-toolbar glass" hidden>
+                        <input type="color" id="selection-color-picker" title="Color de selección">
+                        <span class="toolbar-label">Resaltar</span>
+                        <button id="remove-highlight-btn" class="btn-icon-small" title="Quitar resaltado">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <!-- Cambiado de textarea a div para soportar colores por palabra -->
-            <div id="note-content" class="input-content" contenteditable="true"
-                data-placeholder="Empieza a escribir tu historia..."></div>
-
-            <!-- Barra flotante de color para selección -->
-            <div id="selection-toolbar" class="selection-toolbar glass" hidden>
-                <input type="color" id="selection-color-picker" title="Color de selección">
-                <span class="toolbar-label">Resaltar</span>
-                <button id="remove-highlight-btn" class="btn-icon-small" title="Quitar resaltado">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-    </main>
+        </main>
     </div>
 
     <!-- Modal de Información -->
