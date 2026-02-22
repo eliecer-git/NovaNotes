@@ -2596,8 +2596,12 @@ class NoteApp {
 
     saveActiveNote() {
         this.autoSave(true);
-        this.saveNoteBtn.textContent = '¡Guardado!';
-        setTimeout(() => this.saveNoteBtn.textContent = 'Guardar', 1500);
+        this.saveNoteBtn.classList.add('saved-feedback');
+        this.saveNoteBtn.title = '¡Guardado!';
+        setTimeout(() => {
+            this.saveNoteBtn.classList.remove('saved-feedback');
+            this.saveNoteBtn.title = 'Guardar cambios';
+        }, 1500);
     }
 
     deleteNote(noteId = null) {
