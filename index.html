@@ -578,36 +578,81 @@
                                     <!-- AI button moved to Row 1 -->
                                 </div> <!-- End of actions-row -->
 
-                                <!-- Theme Section Moved for better spacing -->
+                                <!-- Theme Section - Visual Grid -->
                                 <div class="toolbar-row theme-row"
-                                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
-                                    <span style="font-size: 0.8rem; color: var(--text-muted);">Estilo:</span>
-                                    <div class="theme-picker-group" style="flex: 1; display: flex; gap: 8px;">
-                                        <select id="theme-select" class="select-premium" title="Fondo del Editor"
-                                            style="width: 100%;">
-                                            <option value="none">Fondo Normal</option>
-                                            <option value="sunset">🌅 Sunset</option>
-                                            <option value="ocean">🌊 Ocean</option>
-                                            <option value="emerald">🌲 Forest</option>
-                                            <option value="royal">👑 Royal</option>
-                                            <option value="midnight">🌙 Night</option>
-                                            <option value="aurora">🌌 Aurora</option>
-                                            <option value="cherry">🌸 Cherry</option>
-                                            <option value="volcano">🌋 Volcano</option>
-                                            <option value="arctic">❄️ Arctic</option>
-                                            <option value="nebula">🪐 Nebula</option>
-                                            <option value="golden">✨ Golden</option>
-                                            <option value="lavender">💜 Lavender</option>
-                                            <option value="tropical">🏝️ Tropical</option>
-                                            <option value="neon">💚 Neon</option>
-                                            <option value="rose-gold">🌹 Rose Gold</option>
-                                            <option value="custom">🎨 Color Sólido</option>
-                                            <option value="gallery">🖼️ Imagen de Galería</option>
-                                        </select>
-                                        <input type="color" id="bg-color-picker" class="color-picker-premium"
-                                            title="Color Fondo" value="#0d0f16" style="display: none;">
-                                        <input type="file" id="bg-image-input" accept="image/*" style="display: none;">
+                                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                        <span style="font-size: 0.8rem; color: var(--text-muted);">Estilo:</span>
+                                        <span id="theme-name-label"
+                                            style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Normal</span>
                                     </div>
+                                    <div class="theme-grid" id="theme-grid">
+                                        <div class="theme-swatch active" data-theme="none" title="Normal"
+                                            style="background: var(--editor-bg); border: 1px solid var(--border-color);">
+                                        </div>
+                                        <div class="theme-swatch" data-theme="sunset" title="Sunset"
+                                            style="background: linear-gradient(135deg, #ff9a9e, #fecfef);"></div>
+                                        <div class="theme-swatch" data-theme="ocean" title="Ocean"
+                                            style="background: linear-gradient(135deg, #2af598, #009efd);"></div>
+                                        <div class="theme-swatch" data-theme="emerald" title="Forest"
+                                            style="background: linear-gradient(135deg, #348f50, #56b4d3);"></div>
+                                        <div class="theme-swatch" data-theme="royal" title="Royal"
+                                            style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                                        <div class="theme-swatch" data-theme="midnight" title="Night"
+                                            style="background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);">
+                                        </div>
+                                        <div class="theme-swatch" data-theme="aurora" title="Aurora"
+                                            style="background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
+                                        </div>
+                                        <div class="theme-swatch" data-theme="cherry" title="Cherry"
+                                            style="background: linear-gradient(135deg, #eb3349, #f45c43);"></div>
+                                        <div class="theme-swatch" data-theme="volcano" title="Volcano"
+                                            style="background: linear-gradient(135deg, #f12711, #f5af19);"></div>
+                                        <div class="theme-swatch" data-theme="arctic" title="Arctic"
+                                            style="background: linear-gradient(135deg, #e6dada, #274046);"></div>
+                                        <div class="theme-swatch" data-theme="nebula" title="Nebula"
+                                            style="background: linear-gradient(135deg, #6441A5, #2a0845, #6441A5);">
+                                        </div>
+                                        <div class="theme-swatch" data-theme="golden" title="Golden"
+                                            style="background: linear-gradient(135deg, #F09819, #EDDE5D);"></div>
+                                        <div class="theme-swatch" data-theme="lavender" title="Lavender"
+                                            style="background: linear-gradient(135deg, #C9D6FF, #E2E2E2, #a18cd1);">
+                                        </div>
+                                        <div class="theme-swatch" data-theme="tropical" title="Tropical"
+                                            style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+                                        <div class="theme-swatch" data-theme="neon" title="Neon"
+                                            style="background: linear-gradient(135deg, #000, #0f9b0f, #000);"></div>
+                                        <div class="theme-swatch" data-theme="rose-gold" title="Rose Gold"
+                                            style="background: linear-gradient(135deg, #f4c4f3, #fc67fa, #f4c4f3);">
+                                        </div>
+                                        <div class="theme-swatch" data-theme="custom" title="Color Sólido"
+                                            style="background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);">
+                                        </div>
+                                        <div class="theme-swatch theme-swatch-gallery" data-theme="gallery"
+                                            title="Imagen de Galería">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                                <polyline points="21 15 16 10 5 21"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div id="gallery-change-row" style="display: none; margin-top: 6px;">
+                                        <button id="change-gallery-btn" class="btn-icon-small" title="Cambiar imagen"
+                                            style="font-size: 0.75rem; gap: 4px; padding: 4px 10px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                                <polyline points="21 15 16 10 5 21"></polyline>
+                                            </svg>
+                                            Cambiar imagen
+                                        </button>
+                                    </div>
+                                    <input type="color" id="bg-color-picker" class="color-picker-premium"
+                                        title="Color Fondo" value="#0d0f16" style="display: none;">
+                                    <input type="file" id="bg-image-input" accept="image/*" style="display: none;">
                                 </div>
                             </div> <!-- End of toolbar-content -->
                         </div>

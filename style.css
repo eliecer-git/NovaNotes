@@ -2162,6 +2162,55 @@ body.light-theme .btn-gradient-small:hover {
     border-color: rgba(99, 102, 241, 0.4);
 }
 
+/* Visual Theme Grid */
+.theme-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.theme-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.theme-swatch:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+}
+
+.theme-swatch.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+    transform: scale(1.1);
+}
+
+.theme-swatch-gallery {
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.theme-swatch-gallery:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.theme-swatch-gallery.active {
+    border-style: solid;
+    border-color: var(--accent);
+}
+
 .format-toolbar .divider {
     width: 1px;
     height: 16px;

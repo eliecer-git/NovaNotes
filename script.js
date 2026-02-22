@@ -993,7 +993,10 @@ class NoteApp {
         this.formatToolbar = document.getElementById('format-toolbar');
         this.editorActions = document.querySelector('.editor-actions'); // Add this line
 
-        this.themeSelect = document.getElementById('theme-select');
+        this.themeGrid = document.getElementById('theme-grid');
+        this.themeNameLabel = document.getElementById('theme-name-label');
+        this.galleryChangeRow = document.getElementById('gallery-change-row');
+        this.changeGalleryBtn = document.getElementById('change-gallery-btn');
         this.lockNoteBtn = document.getElementById('lock-note-btn');
         this.passwordModal = document.getElementById('password-modal');
         this.pwdInput = document.getElementById('note-password-input');
@@ -1544,22 +1547,34 @@ class NoteApp {
         this.textColorPicker.onchange = (e) => this.closeToolbarMobile();
 
 
-        this.themeSelect.onchange = (e) => {
-            if (!this.activeNoteId) return;
+        // Theme Grid click handler
+        this.themeGrid.addEventListener('click', (e) => {
+            const swatch = e.target.closest('.theme-swatch');
+            if (!swatch || !this.activeNoteId) return;
+            const theme = swatch.dataset.theme;
             const note = this.notes.find(n => n.id === this.activeNoteId);
-            if (note) {
-                note.theme = e.target.value;
-                this.bgColorPicker.style.display = 'none';
-                if (e.target.value === 'custom') {
-                    this.bgColorPicker.style.display = 'block';
-                    this.bgColorPicker.click();
-                } else if (e.target.value === 'gallery') {
-                    this.bgImageInput.click();
-                    return; // Wait for file selection
-                }
-                this.applyTheme(note.theme, note.customBgColor, note.bgImage);
-                this.saveToStorage();
+            if (!note) return;
+
+            note.theme = theme;
+            this.bgColorPicker.style.display = 'none';
+            this.galleryChangeRow.style.display = 'none';
+
+            if (theme === 'custom') {
+                this.bgColorPicker.style.display = 'block';
+                this.bgColorPicker.click();
+            } else if (theme === 'gallery') {
+                this.bgImageInput.click();
+                this.galleryChangeRow.style.display = 'block';
             }
+
+            this.updateThemeGridUI(theme);
+            this.applyTheme(note.theme, note.customBgColor, note.bgImage);
+            this.saveToStorage();
+        });
+
+        // Change gallery image button
+        this.changeGalleryBtn.onclick = () => {
+            this.bgImageInput.click();
         };
 
         this.bgColorPicker.oninput = (e) => {
@@ -2382,8 +2397,9 @@ class NoteApp {
             // Restore Note Color logic (Visual bg wrapper or border)
             // If uses "theme" (Canva style) or "color" (Simple color).
             // We'll prioritize 'theme' if set, else 'color'.
-            this.themeSelect.value = note.theme || 'none';
+            this.updateThemeGridUI(note.theme || 'none');
             this.bgColorPicker.style.display = note.theme === 'custom' ? 'block' : 'none';
+            this.galleryChangeRow.style.display = note.theme === 'gallery' ? 'block' : 'none';
             if (note.customBgColor) this.bgColorPicker.value = note.customBgColor;
             this.applyTheme(note.theme || 'none', note.customBgColor, note.bgImage);
 
@@ -3354,6 +3370,16 @@ class NoteApp {
                 this.editorView.style.backgroundImage = `url(${bgImage})`;
             }
         }
+    }
+
+    updateThemeGridUI(activeTheme) {
+        // Update active swatch
+        this.themeGrid.querySelectorAll('.theme-swatch').forEach(s => {
+            s.classList.toggle('active', s.dataset.theme === activeTheme);
+        });
+        // Update label
+        const activeSwatch = this.themeGrid.querySelector(`[data-theme="${activeTheme}"]`);
+        this.themeNameLabel.textContent = activeSwatch ? activeSwatch.title : 'Normal';
     }
 
     saveCustomCategory() {
