@@ -284,6 +284,31 @@ h2,
     transform: rotate(15deg) scale(1.1);
 }
 
+.logo-stars path {
+    transform-origin: center;
+    animation: twinkle 2s infinite alternate ease-in-out;
+}
+
+.logo-stars path:nth-child(2n) {
+    animation-delay: 0.5s;
+}
+
+.logo-stars path:nth-child(3n) {
+    animation-delay: 1s;
+}
+
+@keyframes twinkle {
+    0% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
 .logo-icon svg {
     width: 100%;
     height: 100%;
