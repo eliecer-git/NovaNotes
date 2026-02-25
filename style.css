@@ -3104,6 +3104,11 @@ ul.checklist li.checked::before {
         display: none !important;
     }
 
+    /* Mostrar funciones de escritorio en el menú desplegable móvil */
+    .format-toolbar .desktop-only {
+        display: flex !important;
+    }
+
     .mobile-only {
         display: flex !important;
     }
@@ -3182,6 +3187,11 @@ ul.checklist li.checked::before {
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Expandir todas las secciones por defecto en móvil para mejorar descubrimiento */
+    .format-toolbar.show .toolbar-content {
+        display: block !important;
     }
 
     .toolbar-section-btn {
