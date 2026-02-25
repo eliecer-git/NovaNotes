@@ -3189,11 +3189,6 @@ ul.checklist li.checked::before {
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* Expandir todas las secciones por defecto en móvil para mejorar descubrimiento */
-    .format-toolbar.show .toolbar-content {
-        display: block !important;
-    }
-
     .toolbar-section-btn {
         width: 100%;
         text-align: left;
@@ -3329,20 +3324,20 @@ ul.checklist li.checked::before {
     /* Stack items vertically like a list menu */
     .toolbar-row {
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
         width: 100%;
     }
 
     /* Full width items for list look */
     .select-premium.compact {
-        width: 100%;
-        max-width: none;
-        min-width: 0;
-        font-size: 0.95rem;
-        padding: 12px;
-        height: auto;
+        flex: 1;
+        min-width: 120px;
+        font-size: 0.85rem;
+        padding: 8px 10px;
+        height: 38px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background-color: rgba(255, 255, 255, 0.03);
     }
@@ -3354,8 +3349,8 @@ ul.checklist li.checked::before {
 
     /* Color picker as a list item row */
     .color-picker-premium.compact-color {
-        width: 100% !important;
-        height: 40px;
+        width: 44px !important;
+        height: 38px;
         border-radius: 8px;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
