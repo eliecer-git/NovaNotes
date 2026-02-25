@@ -3164,21 +3164,22 @@ ul.checklist li.checked::before {
         flex-direction: column;
         position: absolute;
         top: 100%;
-        left: 12px;
-        right: 12px;
-        width: auto;
+        left: 8px;
+        right: 8px;
+        width: calc(100% - 16px);
         background: rgba(15, 23, 42, 0.98);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        padding: 10px;
-        gap: 8px;
+        border-radius: 18px;
+        padding: 6px;
+        gap: 6px;
         z-index: 1000;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
         animation: menuSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        max-height: 80vh;
-        overflow-y: auto;
+        max-height: 70vh;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     /* Accordion Styles */
@@ -3205,13 +3206,14 @@ ul.checklist li.checked::before {
     }
 
     .toolbar-content {
-        padding: 10px;
-        display: none;
+        padding: 8px;
+        display: none !important;
         border-top: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
     }
 
     .toolbar-content.show {
-        display: block;
+        display: block !important;
     }
 
     .toolbar-row {
@@ -3230,16 +3232,15 @@ ul.checklist li.checked::before {
     /* Compact Inputs */
     .select-premium.compact {
         flex: 1;
-        /* Share space */
-        min-width: 0;
+        min-width: 110px;
         font-size: 0.8rem;
         padding: 8px;
+        height: 36px;
     }
 
     .color-picker-premium.compact-color {
-        width: 28% !important;
-        /* Requested width */
-        height: 38px;
+        width: 40px !important;
+        height: 36px;
         flex-shrink: 0;
         border-radius: 8px;
     }
@@ -3324,10 +3325,10 @@ ul.checklist li.checked::before {
     /* Stack items vertically like a list menu */
     .toolbar-row {
         display: flex;
-        flex-direction: row;
+        flex-direction: row !important;
         flex-wrap: wrap;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         width: 100%;
     }
 
