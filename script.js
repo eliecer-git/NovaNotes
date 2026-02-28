@@ -4227,12 +4227,69 @@ Responde SOLO el JSON, sin explicación.`;
                 setTimeout(() => { this.aiClassifyBtn.textContent = '🧠'; }, 1500);
             }
         } catch (err) {
-            console.error('AI classify error:', err);
-            this.aiClassifyBtn.textContent = '❌';
+            console.warn('AI classify failed, using local fallback:', err.message);
+            // Fallback: local keyword classification
+            const result = this.localClassify(note);
+            note.category = result.category;
+            note.status = result.status;
+            if (this.noteCategorySelect) this.noteCategorySelect.value = result.category;
+            if (this.noteStatusSelect) this.noteStatusSelect.value = result.status;
+            this.saveToStorage();
+            this.renderNotesList();
+
+            this.aiClassifyBtn.textContent = '🔤';
             setTimeout(() => { this.aiClassifyBtn.textContent = '🧠'; }, 1500);
         } finally {
             this.aiClassifyBtn.disabled = false;
         }
+    }
+
+    localClassify(note) {
+        const text = ((note.title || '') + ' ' + this.getRawText(note.content || '')).toLowerCase();
+
+        // Category detection by keywords
+        const categoryKeywords = {
+            'trabajo': ['trabajo', 'reunión', 'reunion', 'cliente', 'proyecto', 'empresa', 'oficina', 'jefe', 'deadline', 'presentación', 'informe', 'reporte'],
+            'estudio': ['examen', 'tarea', 'clase', 'universidad', 'colegio', 'estudiar', 'apuntes', 'materia', 'profesor', 'nota de clase', 'investigación', 'ensayo', 'exposición'],
+            'ideas': ['idea', 'concepto', 'innovar', 'crear', 'inventar', 'brainstorm', 'propuesta', 'inspiración', 'posibilidad', 'imaginar'],
+            'compras': ['comprar', 'lista', 'supermercado', 'tienda', 'precio', 'oferta', 'mercado', 'producto', 'carrito', 'pedido', 'amazon'],
+            'metas': ['meta', 'objetivo', 'lograr', 'plan', 'propósito', 'hábito', 'reto', 'desafío', 'resolución', 'progreso'],
+            'finanzas': ['dinero', 'pago', 'factura', 'cuenta', 'banco', 'ahorro', 'inversión', 'presupuesto', 'deuda', 'salario', 'ingreso', 'gasto', 'dólar', 'peso'],
+            'salud': ['salud', 'médico', 'doctor', 'cita', 'medicina', 'ejercicio', 'dieta', 'gym', 'peso', 'vitamina', 'síntoma', 'enfermedad', 'hospital'],
+            'viajes': ['viaje', 'vuelo', 'hotel', 'reserva', 'pasaporte', 'maleta', 'turismo', 'destino', 'avión', 'playa', 'vacaciones', 'itinerario'],
+            'recetas': ['receta', 'cocinar', 'ingrediente', 'preparar', 'horno', 'mezclar', 'cocina', 'comida', 'plato', 'cucharada', 'minutos de cocción']
+        };
+
+        let bestCategory = 'personal';
+        let bestScore = 0;
+
+        for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+            let score = 0;
+            for (const kw of keywords) {
+                if (text.includes(kw)) score++;
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                bestCategory = cat;
+            }
+        }
+
+        // Status detection
+        let status = 'draft';
+        const hasChecklist = text.includes('☑') || text.includes('✓') || text.includes('[x]');
+        const hasUnchecked = text.includes('☐') || text.includes('[ ]');
+        const doneWords = ['terminado', 'completado', 'listo', 'hecho', 'finalizado', 'done'];
+        const progressWords = ['en proceso', 'pendiente', 'trabajando', 'avanzando', 'progreso'];
+
+        if (doneWords.some(w => text.includes(w)) || (hasChecklist && !hasUnchecked)) {
+            status = 'done';
+        } else if (progressWords.some(w => text.includes(w)) || (hasChecklist && hasUnchecked)) {
+            status = 'progress';
+        } else if (text.length > 200) {
+            status = 'progress'; // Long notes are likely in progress
+        }
+
+        return { category: bestCategory, status };
     }
 
     async loadGuestNote(publicId) {
