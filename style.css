@@ -1774,6 +1774,11 @@ body.light-theme .tag-pill {
     transform: scale(1.1);
 }
 
+.color-swatch-custom {
+    position: relative;
+    overflow: hidden;
+}
+
 /* Note Item Color Variants (Subtle Backgrounds) */
 .note-item.color-red {
     background: rgba(239, 68, 68, 0.15);

@@ -1722,12 +1722,28 @@ class NoteApp {
         }
 
         this.colorSwatches.forEach(swatch => {
+            if (swatch.getAttribute('data-color') === 'custom') return; // Skip custom swatch
             swatch.onclick = (e) => {
                 const color = e.target.getAttribute('data-color');
                 this.setNoteColor(color);
                 this.noteColorMenu.style.display = 'none';
             };
         });
+
+        // Custom color picker handler
+        const customColorPicker = document.getElementById('note-custom-color-picker');
+        if (customColorPicker) {
+            customColorPicker.oninput = (e) => {
+                const hexColor = e.target.value;
+                this.setNoteColor(hexColor);
+                // Update the custom swatch background to show selected color
+                const customSwatch = customColorPicker.closest('.color-swatch');
+                if (customSwatch) customSwatch.style.background = hexColor;
+            };
+            customColorPicker.onchange = () => {
+                this.noteColorMenu.style.display = 'none';
+            };
+        }
 
 
 
@@ -2513,19 +2529,37 @@ class NoteApp {
     updateColorUI(color) {
         // Reset swatches
         this.colorSwatches.forEach(s => s.classList.remove('active'));
-        // Activate current
-        const current = this.noteColorMenu.querySelector(`[data-color="${color}"]`);
-        if (current) current.classList.add('active');
 
-        // Update button icon color maybe?
-        if (color !== 'none') {
-            this.noteColorBtn.style.color = this.getColorHex(color);
+        // Check if custom hex color
+        if (color && color.startsWith('#')) {
+            // Activate the custom swatch
+            const customSwatch = this.noteColorMenu.querySelector('[data-color="custom"]');
+            if (customSwatch) {
+                customSwatch.classList.add('active');
+                customSwatch.style.background = color;
+            }
+            this.noteColorBtn.style.color = color;
+            // Update the picker value
+            const picker = document.getElementById('note-custom-color-picker');
+            if (picker) picker.value = color;
         } else {
-            this.noteColorBtn.style.color = '';
+            // Activate preset
+            const current = this.noteColorMenu.querySelector(`[data-color="${color}"]`);
+            if (current) current.classList.add('active');
+            // Reset custom swatch to rainbow
+            const customSwatch = this.noteColorMenu.querySelector('[data-color="custom"]');
+            if (customSwatch) customSwatch.style.background = 'conic-gradient(#ef4444, #f97316, #eab308, #22c55e, #14b8a6, #3b82f6, #a855f7, #ec4899, #ef4444)';
+
+            if (color !== 'none') {
+                this.noteColorBtn.style.color = this.getColorHex(color);
+            } else {
+                this.noteColorBtn.style.color = '';
+            }
         }
     }
 
     getColorHex(colorName) {
+        if (colorName && colorName.startsWith('#')) return colorName;
         const colors = {
             'red': '#ef4444', 'orange': '#f97316', 'yellow': '#eab308',
             'green': '#22c55e', 'teal': '#14b8a6', 'blue': '#3b82f6',
@@ -3002,10 +3036,16 @@ class NoteApp {
         filteredNotes.forEach(note => {
             const noteEl = document.createElement('div');
             // Add color class if present
-            const colorClass = note.color && note.color !== 'none' ? `color-${note.color}` : '';
+            const isCustomColor = note.color && note.color.startsWith('#');
+            const colorClass = note.color && note.color !== 'none' && !isCustomColor ? `color-${note.color}` : '';
             noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''} ${colorClass}`;
             noteEl.setAttribute('data-id', note.id);
             if (note.pinned) noteEl.classList.add('pinned');
+            // Apply custom hex color as inline style
+            if (isCustomColor) {
+                noteEl.style.background = `${note.color}22`;
+                noteEl.style.borderLeft = `3px solid ${note.color}`;
+            }
 
 
             // Build star HTML
