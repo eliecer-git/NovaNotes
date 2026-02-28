@@ -2884,6 +2884,7 @@ class NoteApp {
             note.color = color;
             this.saveToStorage();
             this.renderNotesList();
+            this.updateColorUI(color);
         }
     }
 
