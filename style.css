@@ -1026,6 +1026,9 @@ body.light-theme .note-menu-btn:hover {
     animation: slideDown 0.3s ease-out;
     max-height: 250px;
     overflow-y: auto;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .theme-grid {

@@ -2086,7 +2086,8 @@ class NoteApp {
 
         // Listeners
         if (this.themeGalleryBtn) {
-            this.themeGalleryBtn.onclick = () => {
+            this.themeGalleryBtn.onclick = (e) => {
+                e.stopPropagation();
                 const isHidden = this.themeVisualPanel.style.display === 'none';
                 this.themeVisualPanel.style.display = isHidden ? 'block' : 'none';
                 this.themeGalleryBtn.classList.toggle('active', isHidden);
