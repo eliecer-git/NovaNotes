@@ -3010,11 +3010,9 @@ ul.checklist li.checked::before {
 /* Tablet / Large Phone Horizontal Scroll Fix */
 @media (max-width: 1024px) {
     .format-toolbar {
-        flex-wrap: wrap !important;
-        /* Force wrap to separate lines if needed */
+        flex-wrap: nowrap !important;
         height: auto;
-        overflow-x: visible;
-        /* No scroll, just wrap */
+        overflow-x: hidden;
         justify-content: center;
     }
 
@@ -3163,6 +3161,7 @@ ul.checklist li.checked::before {
     .format-toolbar {
         display: none !important;
         flex-direction: column !important;
+        flex-wrap: nowrap !important;
         position: absolute;
         top: 100%;
         left: 8px;
