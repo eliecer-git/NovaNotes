@@ -449,488 +449,6 @@ class AuthManager {
     }
 }
 
-/**
- * @class AIManager
- * @description Handles interaction with Google Gemini API for AI features.
- */
-class AIManager {
-    constructor(noteApp) {
-        this.noteApp = noteApp; // Reference to main app for context
-        this.API_KEY_KEY = 'novanotes_gemini_key';
-        this.SESSIONS_KEY = 'novanotes_ai_sessions_v1';
-
-        // List of models to try in order of preference
-        // Only using models available in v1beta API (2025+)
-        this.MODELS_TO_TRY = [
-            'gemini-2.0-flash',
-            'gemini-1.5-flash',
-            'gemini-1.5-flash-8b',
-            'gemini-2.0-flash-lite'
-        ];
-
-        // DOM Elements
-        this.aiBtn = document.getElementById('ai-btn');
-        this.chatInterface = document.getElementById('ai-chat-interface');
-        this.closeChatBtn = document.getElementById('close-ai-chat-btn');
-
-        // History UI
-        this.historyToggleBtn = document.getElementById('ai-history-toggle-btn');
-        this.historySidebar = document.getElementById('ai-history-sidebar');
-        this.historyListContainer = document.getElementById('ai-history-list');
-        this.newChatBtn = document.getElementById('ai-new-chat-btn');
-        this.closeHistoryBtn = document.getElementById('ai-close-history-btn');
-
-        this.keyModal = document.getElementById('ai-key-modal');
-        this.keyInput = document.getElementById('ai-api-key-input');
-        this.saveKeyBtn = document.getElementById('save-ai-key-btn');
-        this.closeKeyBtn = document.getElementById('close-ai-key-btn');
-        this.settingsBtn = document.getElementById('ai-settings-btn');
-        this.chatInput = document.getElementById('ai-chat-input');
-        this.sendBtn = document.getElementById('ai-send-btn');
-        this.messagesContainer = document.getElementById('ai-chat-messages');
-        this.keyError = document.getElementById('ai-key-error');
-
-        // State
-        this.sessions = this.loadSessions();
-        this.currentSessionId = null;
-
-        this.initListeners();
-
-        // Load last session or start new
-        if (this.sessions.length > 0) {
-            this.loadSession(this.sessions[0].id); // Load most recent
-        } else {
-            this.createNewSession(false); // Start fresh without UI flash
-        }
-    }
-
-    initListeners() {
-        // Toggle Chat
-        if (this.aiBtn) {
-            this.aiBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleChat();
-            });
-        }
-
-        // History Toggles
-        if (this.historyToggleBtn) {
-            this.historyToggleBtn.addEventListener('click', () => {
-                this.renderHistoryList();
-                this.historySidebar.hidden = !this.historySidebar.hidden;
-            });
-        }
-
-        if (this.closeHistoryBtn) {
-            this.closeHistoryBtn.addEventListener('click', () => {
-                this.historySidebar.hidden = true;
-            });
-        }
-
-        if (this.newChatBtn) {
-            this.newChatBtn.addEventListener('click', () => {
-                this.createNewSession();
-                this.historySidebar.hidden = true; // Auto close sidebar
-            });
-        }
-
-        // Close Chat
-        if (this.closeChatBtn) {
-            this.closeChatBtn.addEventListener('click', () => {
-                this.chatInterface.hidden = true;
-            });
-        }
-
-        // Settings (Key Configuration)
-        if (this.settingsBtn) {
-            this.settingsBtn.addEventListener('click', () => {
-                this.openKeyModal();
-            });
-        }
-
-        // Key Modal
-        if (this.saveKeyBtn) {
-            this.saveKeyBtn.addEventListener('click', () => this.saveKey());
-        }
-        if (this.closeKeyBtn) {
-            this.closeKeyBtn.addEventListener('click', () => this.keyModal.hidden = true);
-        }
-
-        // Sending Messages
-        if (this.sendBtn) {
-            this.sendBtn.addEventListener('click', () => this.handleUserSend());
-        }
-        if (this.chatInput) {
-            this.chatInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    this.handleUserSend();
-                }
-            });
-        }
-    }
-
-    // --- Session Management ---
-
-    loadSessions() {
-        try {
-            const data = localStorage.getItem(this.SESSIONS_KEY);
-            return data ? JSON.parse(data) : [];
-        } catch (e) {
-            console.error('Error loading sessions', e);
-            return [];
-        }
-    }
-
-    saveSessions() {
-        localStorage.setItem(this.SESSIONS_KEY, JSON.stringify(this.sessions));
-    }
-
-    createNewSession(updateUI = true) {
-        const newSession = {
-            id: Date.now().toString(),
-            title: 'Nueva Conversación',
-            messages: [],
-            updatedAt: Date.now()
-        };
-
-        // Add welcome message
-        const welcomeMsg = { type: 'ai-welcome', text: '¡Hola! Soy Nova. ¿En qué puedo ayudarte hoy?', timestamp: Date.now() };
-        newSession.messages.push(welcomeMsg);
-
-        this.sessions.unshift(newSession); // Add to top
-        this.saveSessions();
-        this.loadSession(newSession.id);
-
-        if (updateUI) this.renderHistoryList();
-    }
-
-    loadSession(sessionId) {
-        const session = this.sessions.find(s => s.id === sessionId);
-        if (!session) return;
-
-        this.currentSessionId = sessionId;
-        this.messagesContainer.innerHTML = ''; // Clear view
-
-        session.messages.forEach(msg => {
-            this.appendMessageToView(msg.type, msg.text);
-        });
-
-        this.scrollToBottom();
-    }
-
-    deleteSession(sessionId) {
-        if (!confirm('¿Eliminar esta conversación?')) return;
-
-        this.sessions = this.sessions.filter(s => s.id !== sessionId);
-        this.saveSessions();
-        this.renderHistoryList();
-
-        // If deleted current session
-        if (this.currentSessionId === sessionId) {
-            if (this.sessions.length > 0) {
-                this.loadSession(this.sessions[0].id);
-            } else {
-                this.createNewSession();
-            }
-        }
-    }
-
-    updateCurrentSessionTitle(firstUserMessage) {
-        if (!this.currentSessionId) return;
-        const session = this.sessions.find(s => s.id === this.currentSessionId);
-        if (session && session.title === 'Nueva Conversación') {
-            // Simple truncation for title
-            session.title = firstUserMessage.length > 30 ? firstUserMessage.substring(0, 30) + '...' : firstUserMessage;
-            this.saveSessions();
-            this.renderHistoryList();
-        }
-    }
-
-    // --- UI Rendering ---
-
-    renderHistoryList() {
-        if (!this.historyListContainer) return;
-        this.historyListContainer.innerHTML = '';
-
-        if (this.sessions.length === 0) {
-            this.historyListContainer.innerHTML = '<div class="history-placeholder" style="text-align:center; padding: 20px; color: var(--text-muted);">No hay chats guardados</div>';
-            return;
-        }
-
-        this.sessions.forEach(session => {
-            const item = document.createElement('div');
-            item.className = `history-item ${session.id === this.currentSessionId ? 'active' : ''}`;
-
-            const dateStr = new Date(session.updatedAt).toLocaleDateString();
-
-            item.innerHTML = `
-                <div style="flex:1; overflow:hidden;" onclick="app.aiManager.switchSession('${session.id}')">
-                    <div class="history-title">${session.title}</div>
-                    <div class="history-date">${dateStr}</div>
-                </div>
-                <button class="history-delete-btn" onclick="app.aiManager.deleteSession('${session.id}')">🗑️</button>
-            `;
-            this.historyListContainer.appendChild(item);
-        });
-    }
-
-    // Bridge for onclick in HTML
-    switchSession(id) {
-        this.loadSession(id);
-        this.historySidebar.hidden = true; // optional: close on select
-    }
-
-    toggleChat() {
-        // First check if user has a key
-        const key = this.getKey();
-        if (!key) {
-            this.openKeyModal();
-            return;
-        }
-
-        this.chatInterface.hidden = !this.chatInterface.hidden;
-        if (!this.chatInterface.hidden) {
-            this.chatInput.focus();
-            this.scrollToBottom();
-        }
-    }
-
-    openKeyModal() {
-        this.keyModal.hidden = false;
-        this.keyInput.value = this.getKey() || '';
-        this.keyInput.focus();
-        this.keyError.textContent = '';
-    }
-
-    getKey() {
-        return localStorage.getItem(this.API_KEY_KEY);
-    }
-
-    saveKey() {
-        const key = this.keyInput.value.trim();
-        if (!key) {
-            this.keyError.textContent = 'Por favor ingresa una clave válida.';
-            return;
-        }
-        if (!key.startsWith('AIza')) {
-            this.keyError.textContent = 'La clave no parece válida (debe empezar con AIza...).';
-            return; // Soft validation, can be removed if strict
-        }
-
-        localStorage.setItem(this.API_KEY_KEY, key);
-        this.keyModal.hidden = true;
-        this.chatInterface.hidden = false; // Open chat after saving
-
-        // Greeting if first time
-        if (this.messagesContainer.children.length <= 1) {
-            this.appendMessage('ai', '¡Configuración exitosa! Ahora puedo leer tus notas y ayudarte. Intenta pedirme que resuma lo que estás escribiendo.');
-        }
-    }
-
-    handleUserSend() {
-        const text = this.chatInput.value.trim();
-        if (!text) return;
-
-        // Clear input
-        this.chatInput.value = '';
-        this.chatInput.style.height = 'auto'; // Reset height if auto-expanding
-
-        // Save to current Session
-        if (!this.currentSessionId) this.createNewSession(false);
-
-        // Update title if it's the first message
-        this.updateCurrentSessionTitle(text);
-
-        // Show user message
-        this.appendMessage('user', text);
-
-        // Get context from active note
-        const context = this.noteApp.getActiveNoteContext();
-
-        // Show loading
-        const loadingId = this.appendLoading();
-
-        // Call API
-        this.callGemini(text, context)
-            .then(response => {
-                this.removeLoading(loadingId);
-                this.appendMessage('ai', response);
-            })
-            .catch(err => {
-                this.removeLoading(loadingId);
-                this.appendMessage('ai error', 'Lo siento, hubo un error: ' + (err.message || 'Desconocido'));
-            });
-    }
-
-    appendMessage(type, text) {
-        // Save to data model
-        const session = this.sessions.find(s => s.id === this.currentSessionId);
-        if (session) {
-            session.messages.push({ type, text, timestamp: Date.now() });
-            session.updatedAt = Date.now();
-            // Move session to top
-            this.sessions = this.sessions.filter(s => s.id !== this.currentSessionId);
-            this.sessions.unshift(session);
-            this.saveSessions();
-        }
-
-        // Action Detection [ACTION:WRITE_TO_NOTE|TITLE:...|CONTENT:...]
-        if (type === 'ai' && text.includes('[ACTION:WRITE_TO_NOTE')) {
-            const actionMatch = text.match(/\[ACTION:WRITE_TO_NOTE\|TITLE:(.*?)\|CONTENT:(.*?)\]/s);
-            if (actionMatch) {
-                const title = actionMatch[1].trim();
-                const content = actionMatch[2].trim();
-                // Execute action
-                this.noteApp.writeFromAI(title, content);
-                // Clean the text for display (remove the action block)
-                text = text.replace(/\[ACTION:WRITE_TO_NOTE.*?\]/s, '').trim();
-            }
-        }
-
-        // Visual Append
-        this.appendMessageToView(type, text);
-    }
-
-    appendMessageToView(type, text) {
-        const div = document.createElement('div');
-        div.className = `ai-message ${type}`;
-
-        let formattedText = text;
-
-        // Simple Markdown parsing (safety check for non-strings)
-        if (typeof text === 'string') {
-            formattedText = text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\`\`\`(.*?)\`\`\`/gs, '<pre><code>$1</code></pre>')
-                .replace(/\n/g, '<br>');
-        }
-
-        div.innerHTML = formattedText;
-
-        // Add "Insert into Note" button for AI messages
-        if (type === 'ai') {
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'ai-msg-actions';
-            actionsDiv.style.cssText = 'display: flex; gap: 8px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;';
-
-            const insertBtn = document.createElement('button');
-            insertBtn.innerHTML = '📝 Insertar en nota';
-            insertBtn.style.cssText = 'background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #818cf8; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;';
-            insertBtn.onclick = () => {
-                // Get title from first line or summary
-                const lines = text.split('\n').filter(l => l.trim() !== '');
-                const suggestedTitle = lines[0].length < 40 ? lines[0] : 'Respuesta de Nova';
-                this.noteApp.writeFromAI(suggestedTitle, text);
-            };
-
-            actionsDiv.appendChild(insertBtn);
-            div.appendChild(actionsDiv);
-        }
-
-        this.messagesContainer.appendChild(div);
-        this.scrollToBottom();
-        return div;
-    }
-
-
-    appendLoading() {
-        const id = 'loading-' + Date.now();
-        const div = document.createElement('div');
-        div.id = id;
-        div.className = 'ai-message loading';
-        div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-        this.messagesContainer.appendChild(div);
-        this.scrollToBottom();
-        return id;
-    }
-
-    removeLoading(id) {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-    }
-
-    scrollToBottom() {
-        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-    }
-
-    async callGemini(prompt, context) {
-        const key = this.getKey();
-        if (!key) throw new Error('No hay API Key configurada.');
-
-        const systemInstruction = `Eres Nova, un asistente inteligente integrado en una aplicación de notas profesional.
-        El usuario está editando una nota.
-        
-        CONTEXTO DE LA NOTA ACTUAL (Puede estar vacío):
-        ---
-        TÍTULO: ${context.title}
-        CONTENIDO: ${context.content}
-        ---
-
-        INSTRUCCIONES CRÍTICAS:
-        1. Responde de manera concisa y útil.
-        2. Si el usuario te pide explícitamente "pon esto en mi nota", "escríbelo", "pásalo a la nota" o similar sobre un tema que acabas de explicar o que te pide redactar, DEBES incluir al final de tu mensaje un bloque técnico con este formato:
-           [ACTION:WRITE_TO_NOTE|TITLE:Título Corto|CONTENT:Texto completo de la nota]
-        3. Para el CONTENT del bloque anterior: si parece una lista de elementos, usa el formato "- Elemento" para cada línea.
-        4. No uses el bloque técnico a menos que el usuario pida explícitamente guardar/escribir en la nota.
-        5. Habla siempre en Español de forma profesional y amigable.
-        6. Si el usuario te pide investigar algo (ej: "hablame de los zorros"), da la información normal. Solo si después dice "ponlo en mi nota", genera el bloque.
-        `;
-
-        let lastError = null;
-
-        for (const model of this.MODELS_TO_TRY) {
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-                const payload = {
-                    contents: [{
-                        parts: [{
-                            text: systemInstruction + "\n\nUSUARIO DICE: " + prompt
-                        }]
-                    }]
-                };
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    if (response.status === 429) {
-                        lastError = new Error(`Límite de cuota excedido en ${model}.`);
-                        continue;
-                    }
-                    if (response.status === 404 || response.status === 400 || response.status === 503) {
-                        const errData = await response.json().catch(() => ({}));
-                        const msg = errData.error?.message || response.statusText;
-                        lastError = new Error(`Model ${model} error: ${msg}`);
-                        continue;
-                    }
-                    const errData = await response.json();
-                    throw new Error(errData.error?.message || 'Error en Google AI');
-                }
-
-                const data = await response.json();
-                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (!aiText) throw new Error('Respuesta vacía de la IA.');
-
-                return aiText;
-
-            } catch (error) {
-                lastError = error;
-                console.error(`Error with model ${model}:`, error);
-            }
-        }
-
-        if (lastError && (lastError.message.includes('cuota') || lastError.message.includes('429'))) {
-            throw new Error('⏳ Límite de cuota alcanzado. La versión gratuita de Gemini tiene límites por minuto y por día. Si sigue fallando después de esperar, es posible que hayas agotado tus créditos gratuitos por hoy.');
-        }
-
-        throw lastError || new Error('No se pudo conectar con la IA.');
-    }
-}
 
 /**
  * @class NoteApp
@@ -1105,7 +623,7 @@ class NoteApp {
         // Category & Status System
         this.noteCategorySelect = document.getElementById('note-category-select');
         this.noteStatusSelect = document.getElementById('note-status-select');
-        this.aiClassifyBtn = document.getElementById('ai-classify-btn');
+        this.localClassifyBtn = document.getElementById('local-classify-btn');
         this.filterCategorySelect = document.getElementById('filter-category');
         this.filterStatusSelect = document.getElementById('filter-status');
         this.currentFilterCategory = 'all';
@@ -1142,7 +660,6 @@ class NoteApp {
         // Help Dropdown
         this.helpBtn = document.getElementById('help-btn');
         this.helpDropdownMenu = document.getElementById('help-dropdown-menu');
-        this.helpAiBtn = document.getElementById('help-ai-btn');
 
         // Context Menu (Long Press) Elements
         this.contextMenu = document.getElementById('note-context-menu');
@@ -1161,8 +678,6 @@ class NoteApp {
         this.longPressDuration = 500; // ms
         this.isLongPressing = false;
 
-        // Initialize AI Manager
-        this.aiManager = new AIManager(this);
 
         this.init();
     }
@@ -1208,15 +723,7 @@ class NoteApp {
                 }
             });
 
-            // "Talk to AI" opens the AI chat
-            if (this.helpAiBtn) {
-                this.helpAiBtn.addEventListener('click', () => {
-                    this.helpDropdownMenu.hidden = true;
-                    if (this.aiManager) {
-                        this.aiManager.toggleChat();
-                    }
-                });
-            }
+
 
             // "Report Error" opens modal
             const helpEmailBtn = document.getElementById('help-email-btn');
@@ -1790,8 +1297,9 @@ class NoteApp {
         }
 
         // AI Auto-classify button
-        if (this.aiClassifyBtn) {
-            this.aiClassifyBtn.onclick = () => this.aiAutoClassify();
+        // Local classify button
+        if (this.localClassifyBtn) {
+            this.localClassifyBtn.onclick = () => this.autoClassify();
         }
 
         // Media Listeners
@@ -4143,104 +3651,25 @@ class NoteApp {
         return icons[status] || '📝';
     }
 
-    async aiAutoClassify() {
+    autoClassify() {
         if (!this.activeNoteId) return;
         const note = this.notes.find(n => n.id === this.activeNoteId);
         if (!note) return;
 
-        const key = this.aiManager?.getKey();
-        if (!key) {
-            alert('Configura tu API Key de IA primero (botón 💬 > ⚙️)');
-            return;
-        }
+        const classifyBtn = document.getElementById('local-classify-btn');
+        if (classifyBtn) classifyBtn.textContent = '⏳';
 
-        // Visual feedback
-        this.aiClassifyBtn.textContent = '⏳';
-        this.aiClassifyBtn.disabled = true;
+        const result = this.localClassify(note);
+        note.category = result.category;
+        note.status = result.status;
+        if (this.noteCategorySelect) this.noteCategorySelect.value = result.category;
+        if (this.noteStatusSelect) this.noteStatusSelect.value = result.status;
+        this.saveToStorage();
+        this.renderNotesList();
 
-        try {
-            const title = note.title || '';
-            const content = this.getRawText(note.content || '').substring(0, 500);
-
-            const categories = 'personal, trabajo, estudio, ideas, compras, metas, finanzas, salud, viajes, recetas';
-            const statuses = 'draft, progress, done, archived';
-
-            const prompt = `Analiza esta nota y clasifícala. Responde SOLO con un JSON así: {"category":"valor","status":"valor"}
-
-Categorías posibles: ${categories}
-Estados posibles: ${statuses} (draft=borrador/nota nueva, progress=en trabajo, done=completada/concluida, archived=archivable)
-
-TÍTULO: ${title}
-CONTENIDO: ${content}
-
-Responde SOLO el JSON, sin explicación.`;
-
-            const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash-lite'];
-            let aiText = null;
-
-            for (const model of models) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }]
-                        })
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 429 || response.status === 503 || response.status === 404) {
-                            continue; // Try next model
-                        }
-                        throw new Error('Error de IA');
-                    }
-
-                    const data = await response.json();
-                    aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    break; // Success, stop trying
-                } catch (e) {
-                    if (model === models[models.length - 1]) throw e;
-                    continue;
-                }
-            }
-
-            if (!aiText) throw new Error('Todos los modelos fallaron');
-
-            // Extract JSON from response
-            const jsonMatch = aiText.match(/\{[^}]+\}/);
-            if (jsonMatch) {
-                const result = JSON.parse(jsonMatch[0]);
-                if (result.category) {
-                    note.category = result.category;
-                    if (this.noteCategorySelect) this.noteCategorySelect.value = result.category;
-                }
-                if (result.status) {
-                    note.status = result.status;
-                    if (this.noteStatusSelect) this.noteStatusSelect.value = result.status;
-                }
-                this.saveToStorage();
-                this.renderNotesList();
-
-                // Success animation
-                this.aiClassifyBtn.textContent = '✨';
-                setTimeout(() => { this.aiClassifyBtn.textContent = '🧠'; }, 1500);
-            }
-        } catch (err) {
-            console.warn('AI classify failed, using local fallback:', err.message);
-            // Fallback: local keyword classification
-            const result = this.localClassify(note);
-            note.category = result.category;
-            note.status = result.status;
-            if (this.noteCategorySelect) this.noteCategorySelect.value = result.category;
-            if (this.noteStatusSelect) this.noteStatusSelect.value = result.status;
-            this.saveToStorage();
-            this.renderNotesList();
-
-            this.aiClassifyBtn.textContent = '🔤';
-            setTimeout(() => { this.aiClassifyBtn.textContent = '🧠'; }, 1500);
-        } finally {
-            this.aiClassifyBtn.disabled = false;
+        if (classifyBtn) {
+            classifyBtn.textContent = '✨';
+            setTimeout(() => { classifyBtn.textContent = '🔤'; }, 1500);
         }
     }
 
