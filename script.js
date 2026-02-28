@@ -4175,19 +4175,37 @@ CONTENIDO: ${content}
 
 Responde SOLO el JSON, sin explicación.`;
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
-            });
+            const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash-lite'];
+            let aiText = null;
 
-            if (!response.ok) throw new Error('Error de IA');
+            for (const model of models) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }]
+                        })
+                    });
 
-            const data = await response.json();
-            let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    if (!response.ok) {
+                        if (response.status === 429 || response.status === 503 || response.status === 404) {
+                            continue; // Try next model
+                        }
+                        throw new Error('Error de IA');
+                    }
+
+                    const data = await response.json();
+                    aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    break; // Success, stop trying
+                } catch (e) {
+                    if (model === models[models.length - 1]) throw e;
+                    continue;
+                }
+            }
+
+            if (!aiText) throw new Error('Todos los modelos fallaron');
 
             // Extract JSON from response
             const jsonMatch = aiText.match(/\{[^}]+\}/);
