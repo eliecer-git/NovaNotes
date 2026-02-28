@@ -3188,7 +3188,7 @@ ul.checklist li.checked::before {
     .toolbar-section {
         background: rgba(255, 255, 255, 0.03);
         border-radius: 12px;
-        overflow: hidden;
+        overflow: visible;
         border: 1px solid rgba(255, 255, 255, 0.05);
         display: block !important;
         flex-direction: column !important;

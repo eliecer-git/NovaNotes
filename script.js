@@ -2088,9 +2088,16 @@ class NoteApp {
         if (this.themeGalleryBtn) {
             this.themeGalleryBtn.onclick = (e) => {
                 e.stopPropagation();
-                const isHidden = this.themeVisualPanel.style.display === 'none';
+                e.preventDefault();
+                const isHidden = this.themeVisualPanel.style.display === 'none' || this.themeVisualPanel.style.display === '';
                 this.themeVisualPanel.style.display = isHidden ? 'block' : 'none';
                 this.themeGalleryBtn.classList.toggle('active', isHidden);
+
+                // Ensure the parent toolbar-content stays open (accordion fix)
+                const parentContent = this.themeGalleryBtn.closest('.toolbar-content');
+                if (parentContent && !parentContent.classList.contains('show')) {
+                    parentContent.classList.add('show');
+                }
             };
         }
 
