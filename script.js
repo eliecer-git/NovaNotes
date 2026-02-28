@@ -2364,12 +2364,20 @@ class NoteApp {
     syncSelect(select, value) { if (select.value !== value) select.value = value; }
 
     toggleMobileMenu() {
+        const isOpening = !this.formatToolbar.classList.contains('show');
         this.formatToolbar.classList.toggle('show');
         this.mobileMenuBtn.classList.toggle('active');
+
+        // When opening, close all accordion sections so user starts clean
+        if (isOpening) {
+            this.formatToolbar.querySelectorAll('.toolbar-content').forEach(tc => {
+                tc.classList.remove('show');
+            });
+        }
     }
 
     closeToolbarMobile() {
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= 900) {
             this.formatToolbar.classList.remove('show');
             this.mobileMenuBtn.classList.remove('active');
         }

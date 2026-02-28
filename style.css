@@ -3040,7 +3040,7 @@ ul.checklist li.checked::before {
     display: none !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .app-container {
         flex-direction: column;
         height: 100vh;
@@ -3156,12 +3156,10 @@ ul.checklist li.checked::before {
         /* Allow toolbar to use header width */
     }
 
-    /* Transform toolbar into an elegant dropdown */
-    /* Transform toolbar into an elegant dropdown */
     /* Transform toolbar into an elegant dropdown ONLY on mobile */
     .format-toolbar {
         display: none !important;
-        flex-direction: column;
+        flex-direction: column !important;
         position: absolute;
         top: 100%;
         left: 8px;
@@ -3177,36 +3175,47 @@ ul.checklist li.checked::before {
         z-index: 1000;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
         animation: menuSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        max-height: 70vh;
+        max-height: 60vh;
         overflow-y: auto !important;
+        overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Accordion Styles */
+    /* Accordion Styles - Force vertical stacking */
     .toolbar-section {
         background: rgba(255, 255, 255, 0.03);
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.05);
+        display: block !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Remove desktop pipe separators */
+    .toolbar-section::after {
+        display: none !important;
     }
 
     .toolbar-section-btn {
         width: 100%;
         text-align: left;
-        padding: 10px 15px;
+        padding: 12px 15px;
         background: none;
         border: none;
         color: var(--text-primary);
         font-weight: 600;
         font-size: 0.9rem;
         cursor: pointer;
-        display: flex;
+        display: flex !important;
         justify-content: space-between;
         align-items: center;
     }
 
     .toolbar-content {
-        padding: 8px;
+        padding: 10px;
         display: none !important;
         border-top: 1px solid rgba(255, 255, 255, 0.05);
         background: rgba(255, 255, 255, 0.02);
@@ -3222,11 +3231,50 @@ ul.checklist li.checked::before {
         gap: 6px;
         align-items: center;
         width: 100%;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
+    }
+
+    .toolbar-row:last-child {
+        margin-bottom: 0;
     }
 
     .actions-row {
         padding: 5px 0;
+    }
+
+    /* Theme visual panel - constrain within mobile toolbar */
+    .theme-visual-panel {
+        max-height: 180px !important;
+        overflow-y: auto;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .theme-grid {
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* Theme row - stack vertically on mobile */
+    .toolbar-row.theme-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    /* Note color menu - fix positioning for mobile */
+    .note-color-wrapper {
+        position: static !important;
+    }
+
+    #note-color-menu {
+        position: fixed !important;
+        top: auto !important;
+        bottom: 80px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        min-width: 160px !important;
+        grid-template-columns: repeat(3, 1fr) !important;
     }
 
     /* Compact Inputs */
@@ -4337,7 +4385,7 @@ body.light-theme .btn-auth-secondary:hover {
 /* On desktop, unwrap the accordion structure */
 /* On desktop, enforce strict organization */
 /* On desktop, enforce strict organization */
-@media (min-width: 769px) {
+@media (min-width: 901px) {
     .format-toolbar {
         display: flex !important;
         flex-direction: row;

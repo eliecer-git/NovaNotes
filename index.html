@@ -292,7 +292,7 @@
                         <!-- Sección Herramientas (Bold, Italic, List, etc.) -->
                         <div class="toolbar-section">
                             <button class="toolbar-section-btn"
-                                onclick="this.nextElementSibling.classList.toggle('show')">
+                                onclick="const content=this.nextElementSibling; const wasOpen=content.classList.contains('show'); this.closest('.format-toolbar').querySelectorAll('.toolbar-content').forEach(c=>c.classList.remove('show')); if(!wasOpen) content.classList.add('show');">
                                 Herramientas de Edición ▼
                             </button>
                             <div class="toolbar-content"> <!-- Default closed -->
@@ -401,7 +401,7 @@
                         <!-- Sección Título -->
                         <div class="toolbar-section">
                             <button class="toolbar-section-btn"
-                                onclick="this.nextElementSibling.classList.toggle('show')">
+                                onclick="const content=this.nextElementSibling; const wasOpen=content.classList.contains('show'); this.closest('.format-toolbar').querySelectorAll('.toolbar-content').forEach(c=>c.classList.remove('show')); if(!wasOpen) content.classList.add('show');">
                                 Título ▼
                             </button>
                             <div class="toolbar-content">
@@ -435,7 +435,7 @@
                         <!-- Sección Texto -->
                         <div class="toolbar-section">
                             <button class="toolbar-section-btn"
-                                onclick="this.nextElementSibling.classList.toggle('show')">
+                                onclick="const content=this.nextElementSibling; const wasOpen=content.classList.contains('show'); this.closest('.format-toolbar').querySelectorAll('.toolbar-content').forEach(c=>c.classList.remove('show')); if(!wasOpen) content.classList.add('show');">
                                 Texto ▼
                             </button>
                             <div class="toolbar-content">
@@ -466,7 +466,7 @@
                         <!-- Sección Otros (Acciones) -->
                         <div class="toolbar-section">
                             <button class="toolbar-section-btn"
-                                onclick="this.nextElementSibling.classList.toggle('show')">
+                                onclick="const content=this.nextElementSibling; const wasOpen=content.classList.contains('show'); this.closest('.format-toolbar').querySelectorAll('.toolbar-content').forEach(c=>c.classList.remove('show')); if(!wasOpen) content.classList.add('show');">
                                 Acciones y Extras ▼
                             </button>
                             <div class="toolbar-content">
