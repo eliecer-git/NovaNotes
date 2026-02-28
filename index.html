@@ -171,6 +171,32 @@
                 </button>
             </div>
 
+            <!-- Category & Status Filters -->
+            <div class="classify-filters" style="padding: 0 24px 8px; display: flex; gap: 6px;">
+                <select id="filter-category" class="select-premium compact"
+                    style="flex: 1; font-size: 0.78rem; height: 32px; padding: 4px 8px;">
+                    <option value="all">📂 Todas</option>
+                    <option value="personal">👤 Personal</option>
+                    <option value="trabajo">💼 Trabajo</option>
+                    <option value="estudio">📚 Estudio</option>
+                    <option value="ideas">💡 Ideas</option>
+                    <option value="compras">🛒 Compras</option>
+                    <option value="metas">🎯 Metas</option>
+                    <option value="finanzas">💰 Finanzas</option>
+                    <option value="salud">❤️ Salud</option>
+                    <option value="viajes">✈️ Viajes</option>
+                    <option value="recetas">🍳 Recetas</option>
+                </select>
+                <select id="filter-status" class="select-premium compact"
+                    style="flex: 1; font-size: 0.78rem; height: 32px; padding: 4px 8px;">
+                    <option value="all">📋 Todos</option>
+                    <option value="draft">📝 Borrador</option>
+                    <option value="progress">⏳ En progreso</option>
+                    <option value="done">✅ Completada</option>
+                    <option value="archived">📦 Archivada</option>
+                </select>
+            </div>
+
 
 
             <div class="sort-container">
@@ -594,6 +620,35 @@
                                         </svg>
                                     </button>
                                 </div> <!-- End of actions-row -->
+
+                                <!-- Classification Row: Category + Status + AI -->
+                                <div class="toolbar-row classify-row"
+                                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                                    <select id="note-category-select" class="select-premium compact"
+                                        title="Categoría de la nota" style="flex: 1; min-width: 120px;">
+                                        <option value="personal">👤 Personal</option>
+                                        <option value="trabajo">💼 Trabajo</option>
+                                        <option value="estudio">📚 Estudio</option>
+                                        <option value="ideas">💡 Ideas</option>
+                                        <option value="compras">🛒 Compras</option>
+                                        <option value="metas">🎯 Metas</option>
+                                        <option value="finanzas">💰 Finanzas</option>
+                                        <option value="salud">❤️ Salud</option>
+                                        <option value="viajes">✈️ Viajes</option>
+                                        <option value="recetas">🍳 Recetas</option>
+                                    </select>
+                                    <select id="note-status-select" class="select-premium compact"
+                                        title="Estado de la nota" style="flex: 1; min-width: 110px;">
+                                        <option value="draft">📝 Borrador</option>
+                                        <option value="progress">⏳ En progreso</option>
+                                        <option value="done">✅ Completada</option>
+                                        <option value="archived">📦 Archivada</option>
+                                    </select>
+                                    <button id="ai-classify-btn" class="btn-icon" title="Clasificar con IA"
+                                        style="width: 40px; height: 36px;">
+                                        🧠
+                                    </button>
+                                </div>
 
                                 <!-- Reverted Theme Section -->
                                 <div class="toolbar-row theme-row"

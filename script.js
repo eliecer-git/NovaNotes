@@ -1102,8 +1102,14 @@ class NoteApp {
 
         this.starBtn = document.getElementById('star-note-btn');
 
-        // Category System (New)
-
+        // Category & Status System
+        this.noteCategorySelect = document.getElementById('note-category-select');
+        this.noteStatusSelect = document.getElementById('note-status-select');
+        this.aiClassifyBtn = document.getElementById('ai-classify-btn');
+        this.filterCategorySelect = document.getElementById('filter-category');
+        this.filterStatusSelect = document.getElementById('filter-status');
+        this.currentFilterCategory = 'all';
+        this.currentFilterStatus = 'all';
 
         this.noteColorBtn = document.getElementById('note-color-btn');
         this.noteColorMenu = document.getElementById('note-color-menu');
@@ -1745,7 +1751,48 @@ class NoteApp {
             };
         }
 
+        // Category & Status Listeners
+        if (this.noteCategorySelect) {
+            this.noteCategorySelect.onchange = (e) => {
+                if (!this.activeNoteId) return;
+                const note = this.notes.find(n => n.id === this.activeNoteId);
+                if (note) {
+                    note.category = e.target.value;
+                    this.saveToStorage();
+                    this.renderNotesList();
+                }
+            };
+        }
+        if (this.noteStatusSelect) {
+            this.noteStatusSelect.onchange = (e) => {
+                if (!this.activeNoteId) return;
+                const note = this.notes.find(n => n.id === this.activeNoteId);
+                if (note) {
+                    note.status = e.target.value;
+                    this.saveToStorage();
+                    this.renderNotesList();
+                }
+            };
+        }
 
+        // Sidebar filter listeners
+        if (this.filterCategorySelect) {
+            this.filterCategorySelect.onchange = (e) => {
+                this.currentFilterCategory = e.target.value;
+                this.renderNotesList();
+            };
+        }
+        if (this.filterStatusSelect) {
+            this.filterStatusSelect.onchange = (e) => {
+                this.currentFilterStatus = e.target.value;
+                this.renderNotesList();
+            };
+        }
+
+        // AI Auto-classify button
+        if (this.aiClassifyBtn) {
+            this.aiClassifyBtn.onclick = () => this.aiAutoClassify();
+        }
 
         // Media Listeners
         if (this.btnImage) this.btnImage.onclick = () => this.imageUploadInput.click();
@@ -2498,6 +2545,10 @@ class NoteApp {
             // New: Handle Note Color UI (Button active state)
             this.updateColorUI(note.color || 'none');
 
+            // Sync Category & Status selects
+            if (this.noteCategorySelect) this.noteCategorySelect.value = note.category || 'personal';
+            if (this.noteStatusSelect) this.noteStatusSelect.value = note.status || 'draft';
+
             this.lockNoteBtn.classList.toggle('locked-active', !!note.password);
             this.pinNoteBtn.classList.toggle('pin-active', !!note.pinned);
 
@@ -2980,6 +3031,15 @@ class NoteApp {
             }
         }
 
+        // Apply category filter
+        if (this.currentFilterCategory && this.currentFilterCategory !== 'all') {
+            filteredNotes = filteredNotes.filter(n => (n.category || 'personal') === this.currentFilterCategory);
+        }
+        // Apply status filter
+        if (this.currentFilterStatus && this.currentFilterStatus !== 'all') {
+            filteredNotes = filteredNotes.filter(n => (n.status || 'draft') === this.currentFilterStatus);
+        }
+
         // Sort
         const sortMode = this.currentSortValue || 'date-desc';
 
@@ -3051,10 +3111,9 @@ class NoteApp {
             // Build star HTML
             const starHtml = `<span class="note-star ${note.isFavorite ? 'active' : ''}">★</span>`;
 
-            // Tags removed
-
             const plainText = this.getRawText(note.content);
-            const cat = note.category || 'Personal';
+            const catIcon = this.getCategoryIcon(note.category || 'personal');
+            const statusIcon = this.getStatusIcon(note.status || 'draft');
 
             // Highlight Logic
             let displayTitle = note.title || 'Nota sin título';
@@ -3066,7 +3125,6 @@ class NoteApp {
             }
 
             noteEl.innerHTML = `
-                <!-- <div class="note-icon">${this.getCategoryIcon(cat)}</div> -->
                 <div class="note-info">
                     <div class="note-title">
                         ${starHtml} ${displayTitle}
@@ -3076,7 +3134,8 @@ class NoteApp {
                     </div>
                     <div class="note-preview">${displayPreview}</div>
                     <div class="note-meta">
-                        <span>${this.formatDate(note.timestamp || note.updatedAt)}</span>
+                        <span>${catIcon} ${this.formatDate(note.timestamp || note.updatedAt)}</span>
+                        <span class="note-status-badge">${statusIcon}</span>
                     </div>
                 </div>
                 <button class="note-menu-btn" data-note-id="${note.id}" title="Opciones">
@@ -4065,15 +4124,99 @@ class NoteApp {
     }
 
     getCategoryIcon(category) {
-        switch (category) {
-            case 'personal': return '👤';
-            case 'ideas': return '💡';
-            case 'proyectos': return '🚀';
-            case 'tareas': return '✅';
-            case 'custom': return '📂';
-            default: return '📝';
+        const icons = {
+            'personal': '👤', 'trabajo': '💼', 'estudio': '📚',
+            'ideas': '💡', 'compras': '🛒', 'metas': '🎯',
+            'finanzas': '💰', 'salud': '❤️', 'viajes': '✈️',
+            'recetas': '🍳', 'custom': '📂',
+            // Legacy compat
+            'proyectos': '🚀', 'tareas': '✅'
+        };
+        return icons[category] || '📝';
+    }
+
+    getStatusIcon(status) {
+        const icons = {
+            'draft': '📝', 'progress': '⏳',
+            'done': '✅', 'archived': '📦'
+        };
+        return icons[status] || '📝';
+    }
+
+    async aiAutoClassify() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (!note) return;
+
+        const key = this.aiManager?.getKey();
+        if (!key) {
+            alert('Configura tu API Key de IA primero (botón 💬 > ⚙️)');
+            return;
+        }
+
+        // Visual feedback
+        this.aiClassifyBtn.textContent = '⏳';
+        this.aiClassifyBtn.disabled = true;
+
+        try {
+            const title = note.title || '';
+            const content = this.getRawText(note.content || '').substring(0, 500);
+
+            const categories = 'personal, trabajo, estudio, ideas, compras, metas, finanzas, salud, viajes, recetas';
+            const statuses = 'draft, progress, done, archived';
+
+            const prompt = `Analiza esta nota y clasifícala. Responde SOLO con un JSON así: {"category":"valor","status":"valor"}
+
+Categorías posibles: ${categories}
+Estados posibles: ${statuses} (draft=borrador/nota nueva, progress=en trabajo, done=completada/concluida, archived=archivable)
+
+TÍTULO: ${title}
+CONTENIDO: ${content}
+
+Responde SOLO el JSON, sin explicación.`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            if (!response.ok) throw new Error('Error de IA');
+
+            const data = await response.json();
+            let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+            // Extract JSON from response
+            const jsonMatch = aiText.match(/\{[^}]+\}/);
+            if (jsonMatch) {
+                const result = JSON.parse(jsonMatch[0]);
+                if (result.category) {
+                    note.category = result.category;
+                    if (this.noteCategorySelect) this.noteCategorySelect.value = result.category;
+                }
+                if (result.status) {
+                    note.status = result.status;
+                    if (this.noteStatusSelect) this.noteStatusSelect.value = result.status;
+                }
+                this.saveToStorage();
+                this.renderNotesList();
+
+                // Success animation
+                this.aiClassifyBtn.textContent = '✨';
+                setTimeout(() => { this.aiClassifyBtn.textContent = '🧠'; }, 1500);
+            }
+        } catch (err) {
+            console.error('AI classify error:', err);
+            this.aiClassifyBtn.textContent = '❌';
+            setTimeout(() => { this.aiClassifyBtn.textContent = '🧠'; }, 1500);
+        } finally {
+            this.aiClassifyBtn.disabled = false;
         }
     }
+
     async loadGuestNote(publicId) {
         // Force mobile to show editor view
         document.body.classList.add('editor-screen-active');

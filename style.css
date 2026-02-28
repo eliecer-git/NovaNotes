@@ -1755,6 +1755,18 @@ body.light-theme .tag-pill {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
 }
 
+/* Note Meta with Category & Status */
+.note-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.note-status-badge {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
 /* Note Colors Palette (Dropdown or visual selector) */
 .color-swatch {
     width: 24px;
