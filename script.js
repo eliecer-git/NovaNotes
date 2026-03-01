@@ -502,7 +502,7 @@ class NoteApp {
         this.contentFontSelect = document.getElementById('content-font-select');
         this.contentSizeSelect = document.getElementById('content-size-select');
         this.textColorPicker = document.getElementById('text-color-picker');
-        this.fullscreenBtn = document.getElementById('fullscreen-btn');
+        this.exportTxtBtn = document.getElementById('export-txt-btn');
         this.emojiBtn = document.getElementById('emoji-btn');
         this.emojiPicker = document.getElementById('emoji-picker');
         this.selectionToolbar = document.getElementById('selection-toolbar');
@@ -707,7 +707,7 @@ class NoteApp {
         this.deleteNoteBtnMobile.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
         this.saveNoteBtnMobile.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
-        this.fullscreenBtn.onclick = () => this.toggleFullscreen();
+        if (this.exportTxtBtn) this.exportTxtBtn.onclick = () => this.exportToTXT();
 
         // Help Dropdown Toggle
         if (this.helpBtn && this.helpDropdownMenu) {
@@ -1967,10 +1967,7 @@ class NoteApp {
         if (this.activeNoteId) this.noteContentInput.focus();
     }
 
-    toggleFullscreen() {
-        this.appContainer.classList.toggle('fullscreen');
-        this.fullscreenBtn.classList.toggle('fullscreen-active');
-    }
+
 
     /**
      * Creates a new note with default styles and pushes it to the stack.
@@ -3382,6 +3379,28 @@ class NoteApp {
         html2pdf().set(opt).from(element).save();
     }
 
+    exportToTXT() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (!note) return;
+
+        const title = note.title || 'Nota sin título';
+        const content = this.getRawText(note.content || '');
+        const date = this.formatDate(note.updatedAt || note.timestamp);
+        const category = note.category || 'personal';
+        const status = note.status || 'draft';
+
+        const text = `${title}\n${'='.repeat(title.length)}\n\nCategoría: ${this.getCategoryIcon(category)} ${category}\nEstado: ${this.getStatusIcon(status)} ${status}\nFecha: ${date}\n\n${content}`;
+
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (note.title || 'nota').replace(/\s+/g, '_') + '.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     // --- Features Implementation ---
 
     // 2. Voice Note Logic (Audio Recording)
@@ -3463,19 +3482,33 @@ class NoteApp {
         this.reminderModal.classList.remove('hidden');
     }
 
-    saveReminder() {
+    async saveReminder() {
         if (!this.activeNoteId) return;
         const dateVal = this.reminderDateInput.value;
         if (!dateVal) return;
 
         const note = this.notes.find(n => n.id === this.activeNoteId);
         note.reminder = dateVal;
-        note.reminderFired = false; // Reset fired status whenever updated
+        note.reminderFired = false;
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') {
+                alert('⚠️ Sin permiso de notificaciones, el recordatorio funcionará solo con la app abierta.');
+            }
+        }
 
         this.saveToStorage();
         this.updateReminderUI(note);
         this.reminderModal.hidden = true;
-        this.renderNotesList(); // Update sidebar badge
+        this.renderNotesList();
+
+        // Confirmation
+        const d = new Date(dateVal);
+        const formatted = d.toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+        const statusIcon = Notification.permission === 'granted' ? '🔔' : '⚠️';
+        alert(`${statusIcon} Recordatorio guardado para:\n${formatted}`);
     }
 
     deleteReminder() {

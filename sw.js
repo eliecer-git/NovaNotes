@@ -1,4 +1,4 @@
-const CACHE_NAME = 'novastarpro-v35';
+const CACHE_NAME = 'novastarpro-v36';
 const ASSETS = [
     './',
     './index.html',
@@ -57,8 +57,7 @@ self.addEventListener('fetch', (e) => {
     if (e.request.url.includes('googleapis.com/v1') ||
         e.request.url.includes('firestore.googleapis.com') ||
         e.request.url.includes('identitytoolkit') ||
-        e.request.url.includes('securetoken') ||
-        e.request.url.includes('generativelanguage.googleapis.com')) {
+        e.request.url.includes('securetoken')) {
         return;
     }
 
@@ -124,6 +123,19 @@ self.addEventListener('fetch', (e) => {
             });
 
             return cachedResponse || fetchPromise;
+        })
+    );
+});
+
+// Handle notification clicks (open app when tapping reminder notification)
+self.addEventListener('notificationclick', (e) => {
+    e.notification.close();
+    e.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            if (clientList.length > 0) {
+                return clientList[0].focus();
+            }
+            return clients.openWindow('./');
         })
     );
 });
