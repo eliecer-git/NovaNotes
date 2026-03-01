@@ -623,7 +623,7 @@ class NoteApp {
         // Category & Status System
         this.noteCategorySelect = document.getElementById('note-category-select');
         this.noteStatusSelect = document.getElementById('note-status-select');
-        this.localClassifyBtn = document.getElementById('local-classify-btn');
+
         this.filterCategorySelect = document.getElementById('filter-category');
         this.filterStatusSelect = document.getElementById('filter-status');
         this.currentFilterCategory = 'all';
@@ -1297,10 +1297,6 @@ class NoteApp {
         }
 
         // AI Auto-classify button
-        // Local classify button
-        if (this.localClassifyBtn) {
-            this.localClassifyBtn.onclick = () => this.autoClassify();
-        }
 
         // Media Listeners
         if (this.btnImage) this.btnImage.onclick = () => this.imageUploadInput.click();
@@ -3658,75 +3654,6 @@ class NoteApp {
         return icons[status] || '📝';
     }
 
-    autoClassify() {
-        if (!this.activeNoteId) return;
-        const note = this.notes.find(n => n.id === this.activeNoteId);
-        if (!note) return;
-
-        const classifyBtn = document.getElementById('local-classify-btn');
-        if (classifyBtn) classifyBtn.textContent = '⏳';
-
-        const result = this.localClassify(note);
-        note.category = result.category;
-        note.status = result.status;
-        if (this.noteCategorySelect) this.noteCategorySelect.value = result.category;
-        if (this.noteStatusSelect) this.noteStatusSelect.value = result.status;
-        this.saveToStorage();
-        this.renderNotesList();
-
-        if (classifyBtn) {
-            classifyBtn.textContent = '✨';
-            setTimeout(() => { classifyBtn.textContent = '🔤'; }, 1500);
-        }
-    }
-
-    localClassify(note) {
-        const text = ((note.title || '') + ' ' + this.getRawText(note.content || '')).toLowerCase();
-
-        // Category detection by keywords
-        const categoryKeywords = {
-            'trabajo': ['trabajo', 'reunión', 'reunion', 'cliente', 'proyecto', 'empresa', 'oficina', 'jefe', 'deadline', 'presentación', 'informe', 'reporte'],
-            'estudio': ['examen', 'tarea', 'clase', 'universidad', 'colegio', 'estudiar', 'apuntes', 'materia', 'profesor', 'nota de clase', 'investigación', 'ensayo', 'exposición'],
-            'ideas': ['idea', 'concepto', 'innovar', 'crear', 'inventar', 'brainstorm', 'propuesta', 'inspiración', 'posibilidad', 'imaginar'],
-            'compras': ['comprar', 'lista', 'supermercado', 'tienda', 'precio', 'oferta', 'mercado', 'producto', 'carrito', 'pedido', 'amazon'],
-            'metas': ['meta', 'objetivo', 'lograr', 'plan', 'propósito', 'hábito', 'reto', 'desafío', 'resolución', 'progreso'],
-            'finanzas': ['dinero', 'pago', 'factura', 'cuenta', 'banco', 'ahorro', 'inversión', 'presupuesto', 'deuda', 'salario', 'ingreso', 'gasto', 'dólar', 'peso'],
-            'salud': ['salud', 'médico', 'doctor', 'cita', 'medicina', 'ejercicio', 'dieta', 'gym', 'peso', 'vitamina', 'síntoma', 'enfermedad', 'hospital'],
-            'viajes': ['viaje', 'vuelo', 'hotel', 'reserva', 'pasaporte', 'maleta', 'turismo', 'destino', 'avión', 'playa', 'vacaciones', 'itinerario'],
-            'recetas': ['receta', 'cocinar', 'ingrediente', 'preparar', 'horno', 'mezclar', 'cocina', 'comida', 'plato', 'cucharada', 'minutos de cocción']
-        };
-
-        let bestCategory = 'personal';
-        let bestScore = 0;
-
-        for (const [cat, keywords] of Object.entries(categoryKeywords)) {
-            let score = 0;
-            for (const kw of keywords) {
-                if (text.includes(kw)) score++;
-            }
-            if (score > bestScore) {
-                bestScore = score;
-                bestCategory = cat;
-            }
-        }
-
-        // Status detection
-        let status = 'draft';
-        const hasChecklist = text.includes('☑') || text.includes('✓') || text.includes('[x]');
-        const hasUnchecked = text.includes('☐') || text.includes('[ ]');
-        const doneWords = ['terminado', 'completado', 'listo', 'hecho', 'finalizado', 'done'];
-        const progressWords = ['en proceso', 'pendiente', 'trabajando', 'avanzando', 'progreso'];
-
-        if (doneWords.some(w => text.includes(w)) || (hasChecklist && !hasUnchecked)) {
-            status = 'done';
-        } else if (progressWords.some(w => text.includes(w)) || (hasChecklist && hasUnchecked)) {
-            status = 'progress';
-        } else if (text.length > 200) {
-            status = 'progress'; // Long notes are likely in progress
-        }
-
-        return { category: bestCategory, status };
-    }
 
     async loadGuestNote(publicId) {
         // Force mobile to show editor view
