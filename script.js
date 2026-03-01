@@ -502,6 +502,9 @@ class NoteApp {
         this.contentFontSelect = document.getElementById('content-font-select');
         this.contentSizeSelect = document.getElementById('content-size-select');
         this.textColorPicker = document.getElementById('text-color-picker');
+        this.exportBtn = document.getElementById('export-btn');
+        this.exportDropdown = document.getElementById('export-dropdown');
+        this.exportPdfBtn = document.getElementById('export-pdf-btn');
         this.exportTxtBtn = document.getElementById('export-txt-btn');
         this.emojiBtn = document.getElementById('emoji-btn');
         this.emojiPicker = document.getElementById('emoji-picker');
@@ -707,7 +710,7 @@ class NoteApp {
         this.deleteNoteBtnMobile.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
         this.saveNoteBtnMobile.onclick = () => this.saveActiveNote();
         this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
-        if (this.exportTxtBtn) this.exportTxtBtn.onclick = () => this.exportToTXT();
+
 
         // Help Dropdown Toggle
         if (this.helpBtn && this.helpDropdownMenu) {
@@ -1071,7 +1074,24 @@ class NoteApp {
 
         this.lockNoteBtn.onclick = () => this.handleLockClick();
         this.pinNoteBtn.onclick = () => this.togglePin();
-        this.exportPdfBtn.onclick = () => this.exportToPDF();
+        this.exportPdfBtn.onclick = () => { this.exportToPDF(); this.exportDropdown.style.display = 'none'; };
+
+        // Export dropdown toggle
+        if (this.exportBtn && this.exportDropdown) {
+            this.exportBtn.onclick = () => {
+                const isOpen = this.exportDropdown.style.display !== 'none';
+                this.exportDropdown.style.display = isOpen ? 'none' : 'block';
+            };
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.export-dropdown-container')) {
+                    this.exportDropdown.style.display = 'none';
+                }
+            });
+        }
+        if (this.exportTxtBtn) {
+            this.exportTxtBtn.onclick = () => { this.exportToTXT(); this.exportDropdown.style.display = 'none'; };
+        }
 
         this.confirmPwdBtn.onclick = () => this.verifyPassword();
         this.closePwdBtn.onclick = () => this.passwordModal.hidden = true;
@@ -1174,6 +1194,15 @@ class NoteApp {
             Notification.requestPermission();
         }
         this.startReminderCheck();
+
+        // Listen for SW messages (e.g., STOP_ALARM from notification dismiss)
+        if (navigator.serviceWorker) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'STOP_ALARM') {
+                    this.stopAlarm();
+                }
+            });
+        }
 
         // SORT DROPDOWN LOGIC
         if (this.sortTriggerBtn) {

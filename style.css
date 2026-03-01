@@ -5152,3 +5152,8 @@ body.light-theme .ctx-group-label {
 body.light-theme .context-divider {
     background: #c9b87a;
 }
+
+/* Export Dropdown */
+.export-option:hover {
+    background: var(--bg-hover) !important;
+}

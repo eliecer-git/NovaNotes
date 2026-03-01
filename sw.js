@@ -1,4 +1,4 @@
-const CACHE_NAME = 'novastarpro-v36';
+const CACHE_NAME = 'novastarpro-v37';
 const ASSETS = [
     './',
     './index.html',
@@ -132,20 +132,28 @@ self.addEventListener('notificationclick', (e) => {
     e.notification.close();
 
     if (e.action === 'dismiss') {
-        // Just close the notification, alarm stops via overlay or timeout
+        // Tell all open clients to stop the alarm
+        e.waitUntil(
+            clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+                clientList.forEach(client => {
+                    client.postMessage({ type: 'STOP_ALARM' });
+                });
+            })
+        );
         return;
     }
 
-    // Default click or 'open' action: focus/open the app
+    // Default click or 'open' action: stop alarm + focus/open the app
     e.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Try to focus an existing window
+            clientList.forEach(client => {
+                client.postMessage({ type: 'STOP_ALARM' });
+            });
             for (const client of clientList) {
                 if ('focus' in client) {
                     return client.focus();
                 }
             }
-            // Open new window if none exists
             return clients.openWindow('./');
         })
     );
