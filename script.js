@@ -561,8 +561,6 @@ class NoteApp {
         this.changePwdSuccess = document.getElementById('change-pwd-success');
         // Pin note
         this.pinNoteBtn = document.getElementById('pin-note-btn');
-        // Export PDF
-        this.exportPdfBtn = document.getElementById('export-pdf-btn');
         this.saveStatus = document.getElementById('save-status');
 
         this.initThemeGallery();
@@ -1074,20 +1072,23 @@ class NoteApp {
 
         this.lockNoteBtn.onclick = () => this.handleLockClick();
         this.pinNoteBtn.onclick = () => this.togglePin();
-        this.exportPdfBtn.onclick = () => { this.exportToPDF(); this.exportDropdown.style.display = 'none'; };
 
         // Export dropdown toggle
         if (this.exportBtn && this.exportDropdown) {
-            this.exportBtn.onclick = () => {
+            this.exportBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const isOpen = this.exportDropdown.style.display !== 'none';
                 this.exportDropdown.style.display = isOpen ? 'none' : 'block';
-            };
+            });
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.export-dropdown-container')) {
                     this.exportDropdown.style.display = 'none';
                 }
             });
+        }
+        if (this.exportPdfBtn) {
+            this.exportPdfBtn.onclick = () => { this.exportToPDF(); this.exportDropdown.style.display = 'none'; };
         }
         if (this.exportTxtBtn) {
             this.exportTxtBtn.onclick = () => { this.exportToTXT(); this.exportDropdown.style.display = 'none'; };
