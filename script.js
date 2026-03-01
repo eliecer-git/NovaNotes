@@ -1690,6 +1690,9 @@ class NoteApp {
                     note.customBgColor = e.target.value;
                     this.applyTheme('custom', note.customBgColor);
                     this.saveToStorage();
+                    // Close gallery
+                    if (this.themeVisualPanel) this.themeVisualPanel.style.display = 'none';
+                    if (this.themeGalleryBtn) this.themeGalleryBtn.classList.remove('active');
                 }
             };
         }
@@ -1707,6 +1710,9 @@ class NoteApp {
                         note.bgImage = ev.target.result;
                         this.applyTheme('gallery', null, note.bgImage);
                         this.saveToStorage();
+                        // Close gallery
+                        if (this.themeVisualPanel) this.themeVisualPanel.style.display = 'none';
+                        if (this.themeGalleryBtn) this.themeGalleryBtn.classList.remove('active');
                     }
                 };
                 reader.readAsDataURL(file);
@@ -1723,8 +1729,9 @@ class NoteApp {
             this.applyTheme(themeId, note.customBgColor, note.bgImage);
             this.saveToStorage();
 
-            // Auto close on select if desktop, keep open on mobile maybe?
-            // For now, let's just keep it simple.
+            // Close gallery panel after selection
+            if (this.themeVisualPanel) this.themeVisualPanel.style.display = 'none';
+            if (this.themeGalleryBtn) this.themeGalleryBtn.classList.remove('active');
         }
     }
 
