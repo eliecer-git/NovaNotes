@@ -3553,10 +3553,10 @@ class NoteApp {
     startReminderCheck() {
         if (this.reminderInterval) clearInterval(this.reminderInterval);
 
-        // Check every 30 seconds
+        // Check every 5 seconds for precise alarms
         this.reminderInterval = setInterval(() => {
             this.checkReminders();
-        }, 30000);
+        }, 5000);
     }
 
     checkReminders() {
