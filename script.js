@@ -3584,60 +3584,146 @@ class NoteApp {
     }
 
     triggerAlarm(note) {
-        // 1. Play Sound (Web Audio API - Beep)
-        this.playAlarmSound();
+        // 1. Play alarm sound for 10 seconds
+        this.activeAlarmCtx = null;
+        this.playAlarmLoop(10);
 
-        // 2. System Notification (background/outside app)
-        if (Notification.permission === "granted") {
-            const notif = new Notification("⏰ Recordatorio de novaStarPro", {
-                body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
-                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzBhMGIxMCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMjEwIiBzdHJva2U9IiM4YjVjZjYiIHN0cm9rZS13aWR0aD0iMTAiIHN0cm9rZS1kYXNoYXJyYXk9IjQwIDYwIiBvcGFjaXR5PSIwLjUiLz48cGF0aCBkPSJNMTYwIDQwMFYxMTJMMzUyIDQwMFYxMTIiIHN0cm9rZT0iIzhiNWNmNiIgc3Ryb2tlLXdpZHRoPSIzMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+',
-                requireInteraction: true
-            });
-            notif.onclick = () => {
-                window.focus();
-                this.setActiveNote(note.id);
-            };
+        // 2. Vibrate on mobile (pattern: vibrate 500ms, pause 300ms, repeat)
+        if (navigator.vibrate) {
+            navigator.vibrate([500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500]);
         }
 
-        // 3. In-App Alert
-        alert(`⏰ ¡DING DING! \n\nRecordatorio: ${note.title || 'Nota'}`);
+        // 3. System Notification with dismiss action
+        if ('Notification' in window && Notification.permission === 'granted') {
+            // Use SW showNotification for action buttons
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification('⏰ Recordatorio de novaStarPro', {
+                        body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
+                        icon: 'icons/icon-192x192.png',
+                        badge: 'icons/icon-192x192.png',
+                        requireInteraction: true,
+                        tag: 'reminder-' + note.id,
+                        actions: [
+                            { action: 'dismiss', title: '🔕 Desactivar' },
+                            { action: 'open', title: '📝 Abrir nota' }
+                        ],
+                        vibrate: [500, 300, 500, 300, 500]
+                    });
+                });
+            } else {
+                // Fallback: regular notification
+                const notif = new Notification('⏰ Recordatorio de novaStarPro', {
+                    body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
+                    requireInteraction: true
+                });
+                notif.onclick = () => {
+                    this.stopAlarm();
+                    window.focus();
+                    this.setActiveNote(note.id);
+                };
+            }
+        }
+
+        // 4. In-App overlay with dismiss button
+        this.showAlarmOverlay(note);
     }
 
-    playAlarmSound() {
+    showAlarmOverlay(note) {
+        // Remove existing overlay if any
+        const existing = document.getElementById('alarm-overlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'alarm-overlay';
+        overlay.innerHTML = `
+            <div style="
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.85); z-index: 99999;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                animation: fadeIn 0.3s ease;
+            ">
+                <div style="font-size: 4rem; margin-bottom: 20px; animation: pulse 1s infinite;">⏰</div>
+                <h2 style="color: white; font-size: 1.5rem; margin-bottom: 10px; text-align: center; padding: 0 20px;">¡Recordatorio!</h2>
+                <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 30px; text-align: center; padding: 0 20px;">
+                    ${note.title || 'Nota sin título'}
+                </p>
+                <button id="dismiss-alarm-btn" style="
+                    background: linear-gradient(135deg, #ef4444, #dc2626);
+                    color: white; border: none; padding: 15px 40px;
+                    border-radius: 12px; font-size: 1.1rem; cursor: pointer;
+                    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+                    transition: transform 0.2s;
+                ">🔕 Desactivar Alarma</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById('dismiss-alarm-btn').onclick = () => {
+            this.stopAlarm();
+            overlay.remove();
+        };
+
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (document.getElementById('alarm-overlay')) {
+                overlay.remove();
+            }
+        }, 10000);
+    }
+
+    stopAlarm() {
+        // Stop audio
+        if (this.activeAlarmCtx) {
+            try { this.activeAlarmCtx.close(); } catch (e) { }
+            this.activeAlarmCtx = null;
+        }
+        // Stop vibration
+        if (navigator.vibrate) navigator.vibrate(0);
+        // Remove overlay
+        const overlay = document.getElementById('alarm-overlay');
+        if (overlay) overlay.remove();
+    }
+
+    playAlarmLoop(durationSec) {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (!AudioContext) return;
 
             const ctx = new AudioContext();
-            const oscillators = [];
+            this.activeAlarmCtx = ctx;
 
-            // Function to create a beep
-            const beep = (startTime, freq, duration) => {
+            const beep = (startTime, freq, dur) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, ctx.currentTime);
-
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
-
+                osc.frequency.setValueAtTime(freq, startTime);
+                gain.gain.setValueAtTime(0.15, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-
                 osc.start(startTime);
-                osc.stop(startTime + duration);
+                osc.stop(startTime + dur);
             };
 
-            // Sequence: High High Low (Air horn style or simple alarm)
+            // Repeating alarm pattern for durationSec seconds
             const now = ctx.currentTime;
-            beep(now, 880, 0.5);       // A5
-            beep(now + 0.6, 880, 0.5); // A5
-            beep(now + 1.2, 880, 0.8); // A5 Long
+            for (let t = 0; t < durationSec; t += 1.0) {
+                beep(now + t, 880, 0.2);       // High beep
+                beep(now + t + 0.3, 660, 0.2); // Lower beep
+                beep(now + t + 0.6, 880, 0.2); // High beep
+            }
+
+            // Auto-close after duration
+            setTimeout(() => {
+                if (this.activeAlarmCtx === ctx) {
+                    try { ctx.close(); } catch (e) { }
+                    this.activeAlarmCtx = null;
+                }
+            }, durationSec * 1000);
 
         } catch (e) {
-            console.error("Audio play error", e);
+            console.error('Alarm audio error:', e);
         }
     }
 

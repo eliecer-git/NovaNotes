@@ -127,14 +127,25 @@ self.addEventListener('fetch', (e) => {
     );
 });
 
-// Handle notification clicks (open app when tapping reminder notification)
+// Handle notification clicks (reminder actions)
 self.addEventListener('notificationclick', (e) => {
     e.notification.close();
+
+    if (e.action === 'dismiss') {
+        // Just close the notification, alarm stops via overlay or timeout
+        return;
+    }
+
+    // Default click or 'open' action: focus/open the app
     e.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            if (clientList.length > 0) {
-                return clientList[0].focus();
+            // Try to focus an existing window
+            for (const client of clientList) {
+                if ('focus' in client) {
+                    return client.focus();
+                }
             }
+            // Open new window if none exists
             return clients.openWindow('./');
         })
     );
