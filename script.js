@@ -650,6 +650,22 @@ class NoteApp {
         this.sketchSize = document.getElementById('sketch-size');
         this.ctx = null;
         this.isDrawing = false;
+        this.currentBrushType = 'pen';
+        this.editingImageElement = null; // Guarda el elemento IMG si estamos editando uno existente
+
+        this.brushBtns = {
+            pen: document.getElementById('brush-pen'),
+            marker: document.getElementById('brush-marker'),
+            brush: document.getElementById('brush-brush'),
+            eraser: document.getElementById('brush-eraser')
+        };
+
+        // Image action modal
+        this.imageActionModal = document.getElementById('image-action-modal');
+        this.actionResizeBtn = document.getElementById('action-resize-btn');
+        this.actionEditBtn = document.getElementById('action-edit-btn');
+        this.actionEditText = document.getElementById('action-edit-text');
+        this.closeImageActionBtn = document.getElementById('close-image-action-btn');
 
         // Image Resize Modal
         this.imageResizeModal = document.getElementById('image-resize-modal');
@@ -1403,9 +1419,21 @@ class NoteApp {
         if (this.btnSketch) this.btnSketch.onclick = () => this.openSketchModal();
 
         // Sketch Logic
-        if (this.closeSketchBtn) this.closeSketchBtn.onclick = () => this.sketchModal.hidden = true;
+        if (this.closeSketchBtn) this.closeSketchBtn.onclick = () => { this.sketchModal.hidden = true; this.editingImageElement = null; };
         if (this.clearSketchBtn) this.clearSketchBtn.onclick = () => this.clearSketch();
         if (this.saveSketchBtn) this.saveSketchBtn.onclick = () => this.saveSketch();
+
+        // Brush Buttons Setup
+        Object.keys(this.brushBtns).forEach(type => {
+            const btn = this.brushBtns[type];
+            if (btn) {
+                btn.onclick = () => {
+                    Object.values(this.brushBtns).forEach(b => b?.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.currentBrushType = type;
+                };
+            }
+        });
 
         // Resize Logic
         if (this.cancelResizeBtn) this.cancelResizeBtn.onclick = () => this.imageResizeModal.hidden = true;
@@ -1418,10 +1446,36 @@ class NoteApp {
             };
         }
 
-        // Image Double Click to Resize
+        // Image Action Modal Logic
+        if (this.closeImageActionBtn) this.closeImageActionBtn.onclick = () => this.imageActionModal.hidden = true;
+
+        if (this.actionResizeBtn) {
+            this.actionResizeBtn.onclick = () => {
+                this.imageActionModal.hidden = true;
+                if (this.editingImageElement) {
+                    this.openResizeModal(this.editingImageElement);
+                }
+            };
+        }
+
+        if (this.actionEditBtn) {
+            this.actionEditBtn.onclick = () => {
+                this.imageActionModal.hidden = true;
+                if (this.editingImageElement) {
+                    this.openSketchModal(this.editingImageElement);
+                }
+            };
+        }
+
+        // Image Double Click
         this.noteContentInput.addEventListener('dblclick', (e) => {
             if (e.target.tagName === 'IMG') {
-                this.openResizeModal(e.target);
+                this.editingImageElement = e.target;
+                if (this.actionEditText) {
+                    // Si el atributo data-type es sketch, dice "Editar Dibujo", sino "Editar Imagen"
+                    this.actionEditText.textContent = e.target.getAttribute('data-type') === 'sketch' ? 'Editar Dibujo' : 'Editar Imagen';
+                }
+                this.imageActionModal.hidden = false;
             }
         });
 
@@ -2268,7 +2322,7 @@ class NoteApp {
 
     // --- Sketch Methods --- //
 
-    openSketchModal() {
+    openSketchModal(imgElement = null) {
         this.sketchModal.hidden = false;
         this.sketchModal.classList.remove('hidden');
 
@@ -2277,6 +2331,19 @@ class NoteApp {
             this.initCanvas();
         } else {
             this.clearSketch();
+        }
+
+        // Si estamos editando una imagen existente
+        if (imgElement instanceof HTMLImageElement) {
+            this.editingImageElement = imgElement;
+            const img = new Image();
+            img.onload = () => {
+                // Dibujar la imagen de base en el canvas
+                this.ctx.drawImage(img, 0, 0, this.sketchCanvas.width, this.sketchCanvas.height);
+            };
+            img.src = imgElement.src;
+        } else {
+            this.editingImageElement = null;
         }
     }
 
@@ -2316,16 +2383,45 @@ class NoteApp {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        this.ctx.lineWidth = this.sketchSize.value;
-        this.ctx.strokeStyle = this.sketchColor.value;
-
         this.ctx.beginPath();
+
+        if (this.currentBrushType === 'eraser') {
+            this.ctx.globalCompositeOperation = 'destination-out';
+            this.ctx.lineWidth = this.sketchSize.value * 2; // Goma más ancha
+            this.ctx.strokeStyle = "rgba(0,0,0,1)";
+        } else {
+            this.ctx.globalCompositeOperation = 'source-over';
+            this.ctx.strokeStyle = this.sketchColor.value;
+
+            if (this.currentBrushType === 'marker') {
+                this.ctx.lineWidth = this.sketchSize.value * 1.5;
+                // Efecto de opacidad
+                this.ctx.globalAlpha = 0.5;
+            } else if (this.currentBrushType === 'brush') {
+                this.ctx.lineWidth = this.sketchSize.value;
+                this.ctx.globalAlpha = 0.8;
+                // Shadow blur for brush effect
+                this.ctx.shadowBlur = parseInt(this.sketchSize.value) / 2;
+                this.ctx.shadowColor = this.sketchColor.value;
+            } else {
+                // Pluma normal
+                this.ctx.lineWidth = this.sketchSize.value;
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.shadowBlur = 0;
+            }
+        }
+
         this.ctx.moveTo(this.lastX, this.lastY);
         this.ctx.lineTo(x, y);
         this.ctx.stroke();
 
         this.lastX = x;
         this.lastY = y;
+
+        // Reset properties
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.shadowBlur = 0;
+        this.ctx.globalCompositeOperation = 'source-over';
     }
 
     stopDrawing() {
@@ -2340,7 +2436,32 @@ class NoteApp {
 
     saveSketch() {
         const dataUrl = this.sketchCanvas.toDataURL('image/png');
-        this.insertImage(dataUrl);
+        if (this.editingImageElement) {
+            this.editingImageElement.src = dataUrl;
+            // Forzar actualización si es necesario
+            this.debouncedSaveAndRender();
+        } else {
+            // Es un nuevo dibujo, lo insertamos
+            const img = document.createElement("img");
+            img.src = dataUrl;
+            img.setAttribute("data-type", "sketch");
+            img.style.maxWidth = "100%";
+            img.style.borderRadius = "12px";
+            img.style.marginTop = "10px";
+            img.style.cursor = "pointer";
+
+            this.noteContentInput.focus();
+
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.insertNode(img);
+                range.collapse(false);
+            } else {
+                this.noteContentInput.appendChild(img);
+            }
+        }
+        this.editingImageElement = null;
         this.sketchModal.hidden = true;
     }
 

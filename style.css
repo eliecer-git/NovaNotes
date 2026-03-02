@@ -2959,6 +2959,12 @@ ul.checklist li.checked::before {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
+.btn-icon-small.active {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
 /* Delete Folder Button in Breadcrumb */
 .btn-delete-folder {
     margin-left: auto;

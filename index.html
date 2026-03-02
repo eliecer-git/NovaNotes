@@ -1140,6 +1140,15 @@
             </div>
             <div class="sketch-tools">
                 <div class="tool-group">
+                    <button id="brush-pen" class="btn-icon-small active" title="Pluma"
+                        style="font-size: 1.2rem;">🖊️</button>
+                    <button id="brush-marker" class="btn-icon-small" title="Marcador"
+                        style="font-size: 1.2rem;">🖍️</button>
+                    <button id="brush-brush" class="btn-icon-small" title="Pincel"
+                        style="font-size: 1.2rem;">🖌️</button>
+                    <button id="brush-eraser" class="btn-icon-small" title="Borrador"
+                        style="font-size: 1.2rem;">🧼</button>
+                    <div class="divider-v"></div>
                     <input type="color" id="sketch-color" value="#000000" title="Color del pincel">
                     <input type="range" id="sketch-size" min="1" max="20" value="3" title="Grosor">
                 </div>
@@ -1148,6 +1157,20 @@
                     <button id="save-sketch-btn" class="btn-primary">Insertar Dibujo</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Image Double-Click Menu -->
+    <div id="image-action-modal" class="modal-overlay" hidden>
+        <div class="modal-content glass" style="max-width: 320px; padding: 20px; text-align: center;">
+            <h3 style="margin-bottom: 20px;">Opciones de Contenido</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="action-resize-btn" class="btn-secondary" style="width: 100%;">📐 Editar Tamaño</button>
+                <button id="action-edit-btn" class="btn-primary" style="width: 100%;">🎨 <span
+                        id="action-edit-text">Editar Dibujo</span></button>
+            </div>
+            <button id="close-image-action-btn" class="btn-close"
+                style="position: absolute; top: 15px; right: 15px;">×</button>
         </div>
     </div>
 
