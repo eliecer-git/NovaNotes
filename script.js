@@ -1036,7 +1036,11 @@ class NoteApp {
                                         // Navigate up to find if we're still in a list or outside
                                         let inList = false;
                                         let tempNode = currentNode;
+                                        let currentLi = null;
                                         while (tempNode && tempNode !== this.noteContentInput) {
+                                            if (tempNode.nodeName === 'LI') {
+                                                currentLi = tempNode;
+                                            }
                                             if (tempNode.nodeName === 'UL' || tempNode.nodeName === 'OL') {
                                                 inList = true;
                                                 break;
@@ -1044,14 +1048,27 @@ class NoteApp {
                                             tempNode = tempNode.parentNode;
                                         }
 
+                                        // If we're inside the list, remove the checked state from the new list item
+                                        if (inList && currentLi) {
+                                            currentLi.classList.remove('checked');
+                                        }
+
                                         // If we're outside the list, remove text-decoration
                                         if (!inList && currentNode.parentElement) {
-                                            const parent = currentNode.parentElement;
-                                            if (parent.style.textDecoration) {
-                                                parent.style.textDecoration = 'none';
+                                            let p = currentNode.parentElement;
+                                            while (p && p !== this.noteContentInput) {
+                                                if (p.style && p.style.textDecoration) {
+                                                    p.style.textDecoration = 'none';
+                                                }
+                                                p = p.parentElement;
                                             }
+
                                             // Also use execCommand to ensure clean formatting
                                             document.execCommand('removeFormat', false, null);
+                                            // Explicitly turn off strikethrough state
+                                            if (document.queryCommandState('strikethrough')) {
+                                                document.execCommand('strikethrough', false, null);
+                                            }
                                         }
                                     }
                                 }, 10);
