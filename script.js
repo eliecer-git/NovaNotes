@@ -470,6 +470,7 @@ class NoteApp {
 
         this.activeNoteId = null;
         this.searchTerm = '';
+        this.customCategories = JSON.parse(localStorage.getItem('novanotes_custom_categories')) || [];
 
         /** @type {Object} Default typography and color settings */
         this.DEFAULT_STYLES = {
@@ -679,8 +680,39 @@ class NoteApp {
         this.longPressDuration = 500; // ms
         this.isLongPressing = false;
 
+        this.renderCategoryOptions();
 
         this.init();
+    }
+
+    renderCategoryOptions() {
+        const defaultCats = [
+            { value: 'personal', label: '👤 Personal' },
+            { value: 'trabajo', label: '💼 Trabajo' },
+            { value: 'estudio', label: '📚 Estudio' },
+            { value: 'ideas', label: '💡 Ideas' },
+            { value: 'compras', label: '🛒 Compras' },
+            { value: 'metas', label: '🎯 Metas' },
+            { value: 'finanzas', label: '💰 Finanzas' },
+            { value: 'salud', label: '❤️ Salud' },
+            { value: 'viajes', label: '✈️ Viajes' },
+            { value: 'recetas', label: '🍳 Recetas' }
+        ];
+
+        if (this.noteCategorySelect) {
+            let noteOpts = ``;
+            defaultCats.forEach(cat => noteOpts += `<option value="${cat.value}">${cat.label}</option>`);
+            this.customCategories.forEach(cat => noteOpts += `<option value="${cat}">✨ ${cat}</option>`);
+            noteOpts += `<option value="add_new" style="color: var(--accent-color); font-weight: bold;">➕ Crear nueva...</option>`;
+            this.noteCategorySelect.innerHTML = noteOpts;
+        }
+
+        if (this.filterCategorySelect) {
+            let filterOpts = `<option value="all">📂 Todas</option>`;
+            defaultCats.forEach(cat => filterOpts += `<option value="${cat.value}">${cat.label}</option>`);
+            this.customCategories.forEach(cat => filterOpts += `<option value="${cat}">✨ ${cat}</option>`);
+            this.filterCategorySelect.innerHTML = filterOpts;
+        }
     }
 
     debounce(func, wait) {
@@ -1292,6 +1324,26 @@ class NoteApp {
         if (this.noteCategorySelect) {
             this.noteCategorySelect.onchange = (e) => {
                 if (!this.activeNoteId) return;
+
+                if (e.target.value === 'add_new') {
+                    const newCat = prompt('Ponele un nombre a tu nueva categoría:');
+                    if (newCat && newCat.trim() !== '') {
+                        const cleanCat = newCat.trim();
+                        if (!this.customCategories.includes(cleanCat)) {
+                            this.customCategories.push(cleanCat);
+                            localStorage.setItem('novanotes_custom_categories', JSON.stringify(this.customCategories));
+                            this.renderCategoryOptions();
+                        }
+                        // Assigning to the note
+                        e.target.value = cleanCat;
+                    } else {
+                        // Revert if cancelled
+                        const note = this.notes.find(n => n.id === this.activeNoteId);
+                        e.target.value = note ? (note.category || 'personal') : 'personal';
+                        return;
+                    }
+                }
+
                 const note = this.notes.find(n => n.id === this.activeNoteId);
                 if (note) {
                     note.category = e.target.value;
