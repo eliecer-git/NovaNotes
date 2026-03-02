@@ -2741,7 +2741,10 @@ class NoteApp {
                     </div>
                     <div class="note-preview">${displayPreview}</div>
                     <div class="note-meta">
-                        <span>${catIcon} ${this.formatDate(note.timestamp || note.updatedAt)}</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="note-category-badge">${catIcon} ${note.category || 'personal'}</span>
+                            <span class="note-date">${this.formatDate(note.timestamp || note.updatedAt)}</span>
+                        </div>
                         <span class="note-status-badge">${statusIcon}</span>
                     </div>
                 </div>

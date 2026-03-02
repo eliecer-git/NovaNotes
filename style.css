@@ -1767,6 +1767,24 @@ body.light-theme .tag-pill {
     opacity: 0.7;
 }
 
+.note-category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.note-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
 /* Note Colors Palette (Dropdown or visual selector) */
 .color-swatch {
     width: 24px;
