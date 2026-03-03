@@ -254,7 +254,12 @@ h2,
     flex-direction: column;
     z-index: 10;
     contain: content;
-    /* Booster: Evita repintados */
+    overflow-y: auto;
+    /* Fix for small laptop screens */
+}
+
+.sidebar>* {
+    flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -655,6 +660,8 @@ h2,
 /* Notes List */
 .notes-list-container {
     flex: 1;
+    min-height: 250px;
+    /* Assure notes section is always visible */
     overflow-y: auto;
     padding: 0 12px;
 }
@@ -3095,10 +3102,14 @@ ul.checklist li.checked::before {
         flex: none;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        overflow: hidden;
+        overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         display: flex;
         flex-direction: column;
+    }
+
+    .sidebar>* {
+        flex-shrink: 0;
     }
 
     .sidebar-header {
@@ -3108,6 +3119,7 @@ ul.checklist li.checked::before {
 
     .notes-list-container {
         flex: 1;
+        min-height: 250px;
         overflow-y: auto;
     }
 
