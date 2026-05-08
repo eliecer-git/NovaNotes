@@ -404,8 +404,8 @@ class AuthManager {
         } catch (error) {
             console.error('GitHub Sign-In Error:', error);
 
-            if (error.code === 'auth/popup-closed-by-user') {
-                // User closed the popup, no need to show error
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/popup-blocked') {
+                // Popup blocked or closed - redirect method will handle it automatically
                 return;
             }
 
@@ -458,6 +458,44 @@ class AuthManager {
             this.showAuthModal();
             return null;
         }
+    }
+
+    /**
+     * Handle Firebase redirect login result (for when popup was blocked)
+     */
+    handleRedirectResult(result) {
+        const user = result.user;
+        const provider = user.providerData?.[0]?.providerId?.includes('github') ? 'github' : 'google';
+
+        const users = this.getUsers();
+        let existingUser = users.find(u => u.email === user.email);
+
+        if (!existingUser) {
+            existingUser = {
+                id: provider + '_' + user.uid,
+                name: user.displayName || user.email?.split('@')[0] || 'Usuario',
+                email: user.email,
+                photoURL: user.photoURL,
+                provider: provider,
+                createdAt: new Date().toISOString()
+            };
+            users.push(existingUser);
+            this.saveUsers(users);
+        }
+
+        const session = {
+            userId: existingUser.id,
+            firebaseUid: user.uid,
+            name: existingUser.name,
+            email: existingUser.email,
+            photoURL: existingUser.photoURL,
+            provider: provider
+        };
+        this.saveSession(session);
+        this.hideAuthModal();
+        this.updateUserUI(session);
+
+        if (this.onLoginSuccess) this.onLoginSuccess(session);
     }
 }
 
@@ -4215,6 +4253,11 @@ class NoteApp {
  */
 let app = null;
 const auth = new AuthManager();
+
+// Escuchar resultado de redirect login (cuando popup es bloqueado)
+window.addEventListener('firebaseRedirectLogin', (e) => {
+    auth.handleRedirectResult(e.detail);
+});
 
 // Check authentication status first
 const session = auth.checkAuth();

@@ -1382,7 +1382,7 @@
     <script type="module">
         // Firebase configuration
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, GithubAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, increment, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1407,10 +1407,36 @@
         window.firebaseDb = db;
         window.googleProvider = googleProvider;
         window.githubProvider = githubProvider;
-        window.signInWithGoogle = () => signInWithPopup(auth, googleProvider);
-        window.signInWithGithub = () => signInWithPopup(auth, githubProvider);
+        // Sign-in con fallback: intenta popup, si falla usa redirect
+        window.signInWithGoogle = async () => {
+            try {
+                return await signInWithPopup(auth, googleProvider);
+            } catch (e) {
+                if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+                    return signInWithRedirect(auth, googleProvider);
+                }
+                throw e;
+            }
+        };
+        window.signInWithGithub = async () => {
+            try {
+                return await signInWithPopup(auth, githubProvider);
+            } catch (e) {
+                if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+                    return signInWithRedirect(auth, githubProvider);
+                }
+                throw e;
+            }
+        };
         window.signOutFirebase = () => signOut(auth);
         window.onFirebaseAuthStateChanged = (callback) => onAuthStateChanged(auth, callback);
+
+        // Manejar resultado de redirect (cuando vuelve del login externo)
+        getRedirectResult(auth).then((result) => {
+            if (result && result.user) {
+                window.dispatchEvent(new CustomEvent('firebaseRedirectLogin', { detail: result }));
+            }
+        }).catch(console.error);
 
         // ============================================
         // FIRESTORE SYNC FUNCTIONS
