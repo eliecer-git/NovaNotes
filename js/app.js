@@ -1,0 +1,4265 @@
+/**
+ * @class AuthManager
+ * @description Handles local user authentication (registration, login, logout, session)
+ */
+class AuthManager {
+    constructor() {
+        this.USERS_KEY = 'novanotes_users';
+        this.SESSION_KEY = 'novanotes_session';
+
+        // DOM Elements
+        this.authModal = document.getElementById('auth-modal');
+        this.loginForm = document.getElementById('login-form');
+        this.registerForm = document.getElementById('register-form');
+        this.loginEmail = document.getElementById('login-email');
+        this.loginPassword = document.getElementById('login-password');
+        this.loginError = document.getElementById('login-error');
+        this.loginSubmitBtn = document.getElementById('login-submit-btn');
+        this.registerName = document.getElementById('register-name');
+        this.registerEmail = document.getElementById('register-email');
+        this.registerPassword = document.getElementById('register-password');
+        this.registerConfirm = document.getElementById('register-confirm');
+        this.registerError = document.getElementById('register-error');
+        this.registerSubmitBtn = document.getElementById('register-submit-btn');
+        this.showRegisterLink = document.getElementById('show-register');
+        this.showLoginLink = document.getElementById('show-login');
+        this.userGreetingBox = document.getElementById('user-greeting-box');
+        this.greetingName = document.getElementById('greeting-name');
+        this.logoutBtn = document.getElementById('logout-btn');
+
+        this.authSelector = document.getElementById('auth-selector');
+        this.selectLoginBtn = document.getElementById('select-login-btn');
+        this.selectRegisterBtn = document.getElementById('select-register-btn');
+        this.backToSelectorBtns = document.querySelectorAll('.btn-auth-back');
+        this.googleSignInBtn = document.getElementById('google-signin-btn');
+        this.githubSignInBtn = document.getElementById('github-signin-btn');
+
+        this.onLoginSuccess = null; // Callback when user logs in
+        this.onLogout = null; // Callback when user logs out
+
+        this.initListeners();
+    }
+
+    initListeners() {
+        // Toggle between login and register
+        this.showRegisterLink?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showRegister();
+        });
+
+        this.showLoginLink?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showLogin();
+        });
+
+        // Submit handlers
+        this.loginSubmitBtn?.addEventListener('click', () => this.handleLogin());
+        this.registerSubmitBtn?.addEventListener('click', () => this.handleRegister());
+
+        // Enter key handlers
+        this.loginPassword?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.handleLogin();
+        });
+        this.registerConfirm?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.handleRegister();
+        });
+
+        // Logout
+        this.logoutBtn?.addEventListener('click', () => this.logout());
+
+        // Selector buttons
+        this.selectLoginBtn?.addEventListener('click', () => this.showLogin());
+        this.selectRegisterBtn?.addEventListener('click', () => this.showRegister());
+
+        // Back to selector
+        this.backToSelectorBtns.forEach(btn => {
+            btn.addEventListener('click', () => this.showAuthSelector());
+        });
+
+        // Google Sign-In Button
+        this.googleSignInBtn?.addEventListener('click', () => this.handleGoogleSignIn());
+
+        // GitHub Sign-In Button
+        this.githubSignInBtn?.addEventListener('click', () => this.handleGithubSignIn());
+
+        // Password visibility toggles
+        document.querySelectorAll('.password-input-wrapper .btn-toggle-pwd').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input) {
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    btn.textContent = isPassword ? '🙈' : '👁️';
+                }
+            });
+        });
+    }
+
+    /**
+     * Simple hash function for passwords (not cryptographically secure, but adequate for localStorage demo)
+     */
+    hashPassword(password) {
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return 'h_' + Math.abs(hash).toString(36) + '_' + password.length;
+    }
+
+    getUsers() {
+        return JSON.parse(localStorage.getItem(this.USERS_KEY)) || [];
+    }
+
+    saveUsers(users) {
+        localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+    }
+
+    getSession() {
+        return JSON.parse(localStorage.getItem(this.SESSION_KEY));
+    }
+
+    saveSession(session) {
+        localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    }
+
+    clearSession() {
+        localStorage.removeItem(this.SESSION_KEY);
+    }
+
+    isLoggedIn() {
+        return this.getSession() !== null;
+    }
+
+    getCurrentUser() {
+        return this.getSession();
+    }
+
+    showAuthSelector() {
+        this.authSelector.style.display = 'flex';
+        this.loginForm.style.display = 'none';
+        this.registerForm.style.display = 'none';
+    }
+
+    showLogin() {
+        this.authSelector.style.display = 'none';
+        this.loginForm.style.display = 'flex';
+        this.registerForm.style.display = 'none';
+        this.loginError.textContent = '';
+        this.loginEmail.value = '';
+        this.loginPassword.value = '';
+    }
+
+    showRegister() {
+        this.authSelector.style.display = 'none';
+        this.loginForm.style.display = 'none';
+        this.registerForm.style.display = 'flex';
+        this.registerError.textContent = '';
+        this.registerName.value = '';
+        this.registerEmail.value = '';
+        this.registerPassword.value = '';
+        this.registerConfirm.value = '';
+    }
+
+    showAuthModal() {
+        this.authModal.hidden = false;
+        this.showAuthSelector();
+    }
+
+    hideAuthModal() {
+        this.authModal.hidden = true;
+    }
+
+    handleLogin() {
+        const email = this.loginEmail.value.trim().toLowerCase();
+        const password = this.loginPassword.value;
+
+        // Validations
+        if (!email || !password) {
+            this.loginError.textContent = 'Por favor, completa todos los campos.';
+            return;
+        }
+
+        const users = this.getUsers();
+        const user = users.find(u => u.email === email);
+
+        if (!user) {
+            this.loginError.textContent = 'No existe una cuenta con ese correo.';
+            return;
+        }
+
+        if (user.passwordHash !== this.hashPassword(password)) {
+            this.loginError.textContent = 'Contraseña incorrecta.';
+            return;
+        }
+
+        // Success - create session
+        const session = {
+            userId: user.id,
+            name: user.name,
+            email: user.email
+        };
+        this.saveSession(session);
+        this.hideAuthModal();
+        this.updateUserUI(session);
+
+        if (this.onLoginSuccess) this.onLoginSuccess(session);
+    }
+
+    handleRegister() {
+        const name = this.registerName.value.trim();
+        const email = this.registerEmail.value.trim().toLowerCase();
+        const password = this.registerPassword.value;
+        const confirm = this.registerConfirm.value;
+
+        // Validations
+        if (!name || !email || !password || !confirm) {
+            this.registerError.textContent = 'Por favor, completa todos los campos.';
+            return;
+        }
+
+        if (!email.includes('@') || !email.includes('.')) {
+            this.registerError.textContent = 'Ingresa un correo electrónico válido.';
+            return;
+        }
+
+        if (password.length < 6) {
+            this.registerError.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+            return;
+        }
+
+        if (password !== confirm) {
+            this.registerError.textContent = 'Las contraseñas no coinciden.';
+            return;
+        }
+
+        const users = this.getUsers();
+        if (users.find(u => u.email === email)) {
+            this.registerError.textContent = 'Ya existe una cuenta con ese correo.';
+            return;
+        }
+
+        // Create new user
+        const newUser = {
+            id: 'user_' + Date.now().toString(36),
+            name: name,
+            email: email,
+            passwordHash: this.hashPassword(password),
+            createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        this.saveUsers(users);
+
+        // Auto-login after registration
+        const session = {
+            userId: newUser.id,
+            name: newUser.name,
+            email: newUser.email
+        };
+        this.saveSession(session);
+        this.hideAuthModal();
+        this.updateUserUI(session);
+
+        if (this.onLoginSuccess) this.onLoginSuccess(session);
+    }
+
+    async handleGoogleSignIn() {
+        // Check if Firebase is loaded
+        if (typeof window.signInWithGoogle !== 'function') {
+            alert('Error: Firebase no está listo. Por favor, recarga la página.');
+            return;
+        }
+
+        // Show loading state
+        this.googleSignInBtn.classList.add('loading');
+        this.googleSignInBtn.disabled = true;
+
+        try {
+            const result = await window.signInWithGoogle();
+            const user = result.user;
+
+            // Create or update local user from Google data
+            const users = this.getUsers();
+            let existingUser = users.find(u => u.email === user.email);
+
+            if (!existingUser) {
+                // Create new user from Google data
+                existingUser = {
+                    id: 'google_' + user.uid,
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    provider: 'google',
+                    createdAt: new Date().toISOString()
+                };
+                users.push(existingUser);
+                this.saveUsers(users);
+            } else {
+                // Update existing user with Google data if needed
+                existingUser.photoURL = user.photoURL;
+                existingUser.provider = 'google';
+                this.saveUsers(users);
+            }
+
+            // Create session
+            const session = {
+                userId: existingUser.id,
+                firebaseUid: user.uid, // Raw Firebase UID for Firestore
+                name: existingUser.name,
+                email: existingUser.email,
+                photoURL: existingUser.photoURL,
+                provider: 'google'
+            };
+            this.saveSession(session);
+
+            this.hideAuthModal();
+            this.updateUserUI(session);
+
+            if (this.onLoginSuccess) this.onLoginSuccess(session);
+
+        } catch (error) {
+            console.error('Google Sign-In Error:', error);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                // User closed the popup, no need to show error
+                return;
+            }
+
+            alert('Error al iniciar sesión con Google: ' + (error.message || 'Intenta de nuevo.'));
+        } finally {
+            this.googleSignInBtn.classList.remove('loading');
+            this.googleSignInBtn.disabled = false;
+        }
+    }
+
+    async handleGithubSignIn() {
+        // Check if Firebase is loaded
+        if (typeof window.signInWithGithub !== 'function') {
+            alert('Error: Firebase no está listo. Por favor, recarga la página.');
+            return;
+        }
+
+        // Show loading state
+        this.githubSignInBtn.classList.add('loading');
+        this.githubSignInBtn.disabled = true;
+
+        try {
+            const result = await window.signInWithGithub();
+            const user = result.user;
+
+            // Create or update local user from GitHub data
+            const users = this.getUsers();
+            let existingUser = users.find(u => u.email === user.email);
+
+            if (!existingUser) {
+                // Create new user from GitHub data
+                existingUser = {
+                    id: 'github_' + user.uid,
+                    name: user.displayName || user.email?.split('@')[0] || 'Usuario GitHub',
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    provider: 'github',
+                    createdAt: new Date().toISOString()
+                };
+                users.push(existingUser);
+                this.saveUsers(users);
+            } else {
+                // Update existing user with GitHub data if needed
+                existingUser.photoURL = user.photoURL;
+                existingUser.provider = 'github';
+                this.saveUsers(users);
+            }
+
+            // Create session
+            const session = {
+                userId: existingUser.id,
+                firebaseUid: user.uid, // Raw Firebase UID for Firestore
+                name: existingUser.name,
+                email: existingUser.email,
+                photoURL: existingUser.photoURL,
+                provider: 'github'
+            };
+            this.saveSession(session);
+
+            this.hideAuthModal();
+            this.updateUserUI(session);
+
+            if (this.onLoginSuccess) this.onLoginSuccess(session);
+
+        } catch (error) {
+            console.error('GitHub Sign-In Error:', error);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                // User closed the popup, no need to show error
+                return;
+            }
+
+            if (error.code === 'auth/account-exists-with-different-credential') {
+                alert('Ya existe una cuenta con este correo electrónico. Intenta iniciar sesión con Google o con tu correo y contraseña.');
+                return;
+            }
+
+            alert('Error al iniciar sesión con GitHub: ' + (error.message || 'Intenta de nuevo.'));
+        } finally {
+            this.githubSignInBtn.classList.remove('loading');
+            this.githubSignInBtn.disabled = false;
+        }
+    }
+
+    logout() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            // Also sign out from Firebase if it was a Google or GitHub login
+            const session = this.getSession();
+            if ((session?.provider === 'google' || session?.provider === 'github') && typeof window.signOutFirebase === 'function') {
+                window.signOutFirebase().catch(console.error);
+            }
+
+            this.clearSession();
+            this.userGreetingBox.style.display = 'none';
+            this.showAuthModal();
+            if (this.onLogout) this.onLogout();
+        }
+    }
+
+    updateUserUI(session) {
+        if (session) {
+            this.userGreetingBox.style.display = 'flex';
+            this.greetingName.textContent = session.name;
+        } else {
+            this.userGreetingBox.style.display = 'none';
+        }
+    }
+
+    /**
+     * Check auth status on app load
+     */
+    checkAuth() {
+        const session = this.getSession();
+        if (session) {
+            this.hideAuthModal();
+            this.updateUserUI(session);
+            return session;
+        } else {
+            this.showAuthModal();
+            return null;
+        }
+    }
+}
+
+
+/**
+ * @class NoteApp
+ * @description Core engine for novaStarPro. Handles note management, state, UI rendering, and security.
+ */
+class NoteApp {
+    /**
+     * @constructor
+     * Initializes the application state, DOM references, and event listeners.
+     * @param {string|null} userId - The ID of the current logged-in user
+     * @param {string|null} firebaseUid - The raw Firebase UID for Firestore operations
+     * @param {boolean} isGuest - Whether the app is running in guest/public view mode
+     */
+    constructor(userId = null, firebaseUid = null, isGuest = false) {
+        this.currentUserId = userId;
+        this.firebaseUid = firebaseUid; // Used for Firestore cloud sync
+        this.isGuest = isGuest;
+        this.notes = this.isGuest ? [] : this.loadUserNotes(); // Don't load local notes for guest
+
+        this.activeNoteId = null;
+        this.searchTerm = '';
+        this.customCategories = JSON.parse(localStorage.getItem('novanotes_custom_categories')) || [];
+
+        /** @type {Object} Default typography and color settings */
+        this.DEFAULT_STYLES = {
+            titleFont: "Outfit, sans-serif",
+            titleSize: "2.5rem",
+            titleColor: "#f8fafc",
+            contentFont: "Inter, sans-serif",
+            contentSize: "1.15rem",
+            textColor: "#94a3b8"
+        };
+
+        // DOM Elements
+        this.notesList = document.getElementById('notes-list');
+        this.newNoteBtn = document.getElementById('new-note-btn');
+        this.deleteNoteBtn = document.getElementById('delete-note-btn');
+        this.saveNoteBtn = document.getElementById('save-note-btn');
+        this.deleteNoteBtnMobile = document.getElementById('delete-note-btn-mobile');
+        this.saveNoteBtnMobile = document.getElementById('save-note-btn-mobile');
+        this.searchInput = document.getElementById('search-input');
+        this.noteTitleInput = document.getElementById('note-title');
+        this.noteContentInput = document.getElementById('note-content');
+        this.lastEditedText = document.getElementById('last-edited');
+        this.noteCountText = document.getElementById('note-count');
+        this.editorView = document.getElementById('editor-view');
+        this.editorFields = document.querySelector('.editor-fields');
+        this.emptyState = document.querySelector('.empty-state');
+        this.titleFontSelect = document.getElementById('title-font-select');
+        this.titleSizeSelect = document.getElementById('title-size-select');
+        this.titleColorPicker = document.getElementById('title-color-picker');
+        this.contentFontSelect = document.getElementById('content-font-select');
+        this.contentSizeSelect = document.getElementById('content-size-select');
+        this.textColorPicker = document.getElementById('text-color-picker');
+        this.exportBtn = document.getElementById('export-btn');
+        this.exportDropdown = document.getElementById('export-dropdown');
+        this.exportPdfBtn = document.getElementById('export-pdf-btn');
+        this.exportTxtBtn = document.getElementById('export-txt-btn');
+        this.emojiBtn = document.getElementById('emoji-btn');
+        this.emojiPicker = document.getElementById('emoji-picker');
+        this.selectionToolbar = document.getElementById('selection-toolbar');
+        this.selectionColorPicker = document.getElementById('selection-color-picker');
+        this.appContainer = document.querySelector('.app-container');
+        this.formatToolbar = document.getElementById('format-toolbar');
+        this.editorActions = document.querySelector('.editor-actions'); // Add this line
+
+        this.themeSelect = document.getElementById('theme-select');
+        this.lockNoteBtn = document.getElementById('lock-note-btn');
+        this.passwordModal = document.getElementById('password-modal');
+        this.pwdInput = document.getElementById('note-password-input');
+        this.confirmPwdBtn = document.getElementById('confirm-password-btn');
+        this.closePwdBtn = document.getElementById('close-pwd-btn');
+        this.pwdError = document.getElementById('pwd-error');
+        this.bgColorPicker = document.getElementById('bg-color-picker');
+        this.bgImageInput = document.getElementById('bg-image-input');
+
+        // Theme Visual Picker
+        this.themeGalleryBtn = document.getElementById('theme-gallery-btn');
+        this.themeVisualPanel = document.getElementById('theme-visual-panel');
+        this.themeGrid = document.getElementById('theme-grid');
+        this.currentThemeName = document.getElementById('current-theme-name');
+        this.customBgBtn = document.getElementById('custom-bg-btn');
+        this.galleryBgBtn = document.getElementById('gallery-bg-btn');
+        this.categoryModal = document.getElementById('category-modal');
+
+        this.installBtn = document.getElementById('pwa-install-btn');
+        this.infoBtn = document.getElementById('info-btn');
+        this.infoModal = document.getElementById('info-modal');
+        this.closeInfoBtn = document.getElementById('close-info-btn');
+        this.themeToggleBtn = document.getElementById('theme-toggle-btn');
+        this.themeIcon = document.getElementById('theme-icon');
+        this.filterPublicBtn = document.getElementById('filter-public-btn');
+        this.filterPrivateBtn = document.getElementById('filter-private-btn');
+        this.filterTrashBtn = document.getElementById('filter-trash-btn');
+        this.masterLockModal = document.getElementById('master-lock-modal');
+        this.masterPwdInput = document.getElementById('master-password-input');
+        this.unlockVaultBtn = document.getElementById('unlock-vault-btn');
+        this.closeVaultViewBtn = document.getElementById('close-vault-view-btn');
+        this.masterPwdError = document.getElementById('master-pwd-error');
+        this.masterLockText = document.getElementById('master-lock-text');
+        this.toggleVaultPwdBtn = document.getElementById('toggle-vault-pwd');
+        // Cambio de contraseña
+        this.changePwdBtn = document.getElementById('change-pwd-btn');
+        this.changePwdModal = document.getElementById('change-pwd-modal');
+        this.closeChangePwdBtn = document.getElementById('close-change-pwd-btn');
+        this.currentPwdInput = document.getElementById('current-pwd-input');
+        this.newPwdInput = document.getElementById('new-pwd-input');
+        this.confirmPwdInput = document.getElementById('confirm-pwd-input');
+        this.saveNewPwdBtn = document.getElementById('save-new-pwd-btn');
+        this.changePwdError = document.getElementById('change-pwd-error');
+        this.changePwdSuccess = document.getElementById('change-pwd-success');
+        // Pin note
+        this.pinNoteBtn = document.getElementById('pin-note-btn');
+        this.saveStatus = document.getElementById('save-status');
+
+        this.initThemeGallery();
+        this.mobileBackBtn = document.getElementById('mobile-back-btn');
+        this.shareNoteBtn = document.getElementById('share-note-btn'); // Share button
+
+        // Vaciar Papelera
+        this.emptyTrashBtn = document.getElementById('empty-trash-btn');
+        this.emptyTrashContainer = document.getElementById('empty-trash-container');
+
+        this.currentNoteFilter = 'public'; // 'public', 'private', or 'trash'
+        this.isVaultUnlocked = false; // Estado de desbloqueo sesión actual
+        this.deferredPrompt = null;
+
+        // Cleanup trash on initialization
+        this.cleanupTrash();
+
+
+        // Optimized Debouncing
+        this.debouncedSaveAndRender = this.debounce(() => this.autoSave(true), 1500);
+        this.debouncedSelection = this.debounce(() => this.handleSelection(), 100);
+
+        // Features: Voice, Reminder
+        this.voiceNoteBtn = document.getElementById('voice-note-btn');
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecording = false;
+
+
+
+        this.reminderBtn = document.getElementById('reminder-btn');
+
+        // Share Modal Elements
+        this.shareModal = document.getElementById('share-modal');
+        this.shareContentText = document.getElementById('share-content-text');
+        this.closeShareBtn = document.getElementById('close-share-btn');
+        this.copyShareLinkBtn = document.getElementById('copy-share-link-btn');
+        this.createPublicLinkBtn = document.getElementById('create-public-link-btn'); // New button
+        this.reminderModal = document.getElementById('reminder-modal');
+        this.closeReminderBtn = document.getElementById('close-reminder-btn');
+        this.reminderDateInput = document.getElementById('reminder-date-input');
+        this.saveReminderBtn = document.getElementById('save-reminder-btn');
+        this.deleteReminderBtn = document.getElementById('delete-reminder-btn');
+
+        // Alarm System
+        this.reminderInterval = null;
+
+        // New Layout Elements for Sort
+        this.sortTriggerBtn = document.getElementById('sort-trigger-btn');
+        this.sortMenuOptions = document.getElementById('sort-menu-options');
+        this.sortTextCurrent = document.getElementById('sort-text-current');
+        this.sortIconCurrent = document.querySelector('.sort-icon-current');
+        this.currentSortValue = 'date-desc'; // Default
+
+        this.sortTextCurrent = document.getElementById('sort-text-current');
+        this.sortIconCurrent = document.querySelector('.sort-icon-current');
+        this.currentSortValue = 'date-desc'; // Default
+
+        this.starBtn = document.getElementById('star-note-btn');
+
+        // Category & Status System
+        this.noteCategorySelect = document.getElementById('note-category-select');
+        this.noteStatusSelect = document.getElementById('note-status-select');
+
+        this.filterCategorySelect = document.getElementById('filter-category');
+        this.filterStatusSelect = document.getElementById('filter-status');
+        this.currentFilterCategory = 'all';
+        this.currentFilterStatus = 'all';
+
+        this.noteColorBtn = document.getElementById('note-color-btn');
+        this.noteColorMenu = document.getElementById('note-color-menu');
+        this.colorSwatches = document.querySelectorAll('.color-swatch');
+
+        // New Media Elements
+        this.btnImage = document.getElementById('btn-image');
+        this.btnSketch = document.getElementById('btn-sketch');
+        this.imageUploadInput = document.getElementById('image-upload-input');
+
+        // Sketch Modal
+        this.sketchModal = document.getElementById('sketch-modal');
+        this.sketchCanvas = document.getElementById('sketch-canvas');
+        this.closeSketchBtn = document.getElementById('close-sketch-btn');
+        this.clearSketchBtn = document.getElementById('clear-sketch-btn');
+        this.saveSketchBtn = document.getElementById('save-sketch-btn');
+        this.sketchColor = document.getElementById('sketch-color');
+        this.sketchSize = document.getElementById('sketch-size');
+        this.ctx = null;
+        this.isDrawing = false;
+        this.currentBrushType = 'pen';
+        this.editingImageElement = null; // Guarda el elemento IMG si estamos editando uno existente
+
+        this.brushBtns = {
+            pen: document.getElementById('brush-pen'),
+            marker: document.getElementById('brush-marker'),
+            brush: document.getElementById('brush-brush'),
+            eraser: document.getElementById('brush-eraser')
+        };
+
+        // Image action modal
+        this.imageActionModal = document.getElementById('image-action-modal');
+        this.actionResizeBtn = document.getElementById('action-resize-btn');
+        this.actionEditBtn = document.getElementById('action-edit-btn');
+        this.actionEditText = document.getElementById('action-edit-text');
+        this.closeImageActionBtn = document.getElementById('close-image-action-btn');
+
+        // Image Resize Modal
+        this.imageResizeModal = document.getElementById('image-resize-modal');
+        this.imgResizeRange = document.getElementById('img-resize-range');
+        this.imgResizeVal = document.getElementById('img-resize-val');
+        this.cancelResizeBtn = document.getElementById('cancel-resize-btn');
+        this.confirmResizeBtn = document.getElementById('confirm-resize-btn');
+        this.currentResizingImg = null;
+
+        // Help Dropdown
+        this.helpBtn = document.getElementById('help-btn');
+        this.helpDropdownMenu = document.getElementById('help-dropdown-menu');
+
+        // Context Menu (Long Press) Elements
+        this.contextMenu = document.getElementById('note-context-menu');
+        this.contextMenuTitle = document.getElementById('context-menu-title');
+        this.closeContextMenuBtn = document.getElementById('close-context-menu-btn');
+        this.ctxFavoriteBtn = document.getElementById('ctx-favorite-btn');
+        this.ctxFavoriteLabel = document.getElementById('ctx-favorite-label');
+        this.ctxPinBtn = document.getElementById('ctx-pin-btn');
+        this.ctxPinLabel = document.getElementById('ctx-pin-label');
+        this.ctxDeleteBtn = document.getElementById('ctx-delete-btn');
+        this.ctxColorSwatches = document.querySelectorAll('.ctx-color-swatch');
+
+        // Long Press State
+        this.longPressTimer = null;
+        this.longPressNoteId = null;
+        this.longPressDuration = 500; // ms
+        this.isLongPressing = false;
+
+        this.renderCategoryOptions();
+
+        this.init();
+    }
+
+    renderCategoryOptions() {
+        const defaultCats = [
+            { value: 'personal', label: '👤 Personal' },
+            { value: 'trabajo', label: '💼 Trabajo' },
+            { value: 'estudio', label: '📚 Estudio' },
+            { value: 'ideas', label: '💡 Ideas' },
+            { value: 'compras', label: '🛒 Compras' },
+            { value: 'metas', label: '🎯 Metas' },
+            { value: 'finanzas', label: '💰 Finanzas' },
+            { value: 'salud', label: '❤️ Salud' },
+            { value: 'viajes', label: '✈️ Viajes' },
+            { value: 'recetas', label: '🍳 Recetas' }
+        ];
+
+        if (this.noteCategorySelect) {
+            let noteOpts = ``;
+            defaultCats.forEach(cat => noteOpts += `<option value="${cat.value}">${cat.label}</option>`);
+            this.customCategories.forEach(cat => noteOpts += `<option value="${cat}">✨ ${cat}</option>`);
+            noteOpts += `<option value="add_new" style="color: var(--accent-color); font-weight: bold;">➕ Crear nueva...</option>`;
+            this.noteCategorySelect.innerHTML = noteOpts;
+        }
+
+        if (this.filterCategorySelect) {
+            let filterOpts = `<option value="all">📂 Todas</option>`;
+            defaultCats.forEach(cat => filterOpts += `<option value="${cat.value}">${cat.label}</option>`);
+            this.customCategories.forEach(cat => filterOpts += `<option value="${cat}">✨ ${cat}</option>`);
+            this.filterCategorySelect.innerHTML = filterOpts;
+        }
+    }
+
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    init() {
+
+
+
+        this.newNoteBtn.addEventListener('click', () => this.createNewNote());
+
+
+
+        this.deleteNoteBtn.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
+        this.saveNoteBtn.onclick = () => this.saveActiveNote();
+        this.deleteNoteBtnMobile.onclick = (e) => { e.preventDefault(); this.deleteNote(); };
+        this.saveNoteBtnMobile.onclick = () => this.saveActiveNote();
+        this.searchInput.oninput = (e) => this.handleSearch(e.target.value);
+
+
+        // Help Dropdown Toggle
+        if (this.helpBtn && this.helpDropdownMenu) {
+            this.helpBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.helpDropdownMenu.hidden = !this.helpDropdownMenu.hidden;
+            });
+
+            // Close on click outside
+            document.addEventListener('click', (e) => {
+                if (!this.helpBtn.contains(e.target) && !this.helpDropdownMenu.contains(e.target)) {
+                    this.helpDropdownMenu.hidden = true;
+                }
+            });
+
+
+
+            // "Report Error" opens modal
+            const helpEmailBtn = document.getElementById('help-email-btn');
+            const reportModal = document.getElementById('report-error-modal');
+            const closeReportBtn = document.getElementById('close-report-modal-btn');
+            const copyEmailBtn = document.getElementById('copy-support-email-btn');
+
+            if (helpEmailBtn && reportModal) {
+                helpEmailBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (this.helpDropdownMenu) this.helpDropdownMenu.hidden = true;
+                    reportModal.style.display = 'flex';
+                });
+            }
+
+            if (closeReportBtn && reportModal) {
+                closeReportBtn.addEventListener('click', () => {
+                    reportModal.style.display = 'none';
+                });
+            }
+
+            if (copyEmailBtn) {
+                copyEmailBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText('danieleliecerorduzbaron@gmail.com').then(() => {
+                        copyEmailBtn.textContent = '✅ ¡Copiado!';
+                        setTimeout(() => {
+                            copyEmailBtn.textContent = '📋 Copiar Correo';
+                        }, 2000);
+                    });
+                });
+            }
+        }
+
+        // Also add global function as backup
+        window.openReportModal = function () {
+            const modal = document.getElementById('report-error-modal');
+            const dropdown = document.getElementById('help-dropdown-menu');
+            if (dropdown) dropdown.hidden = true;
+            if (modal) modal.style.display = 'flex';
+        };
+
+        window.closeReportModal = function () {
+            const modal = document.getElementById('report-error-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.copySupportEmail = function () {
+            navigator.clipboard.writeText('danieleliecerorduzbaron@gmail.com').then(() => {
+                const btn = document.getElementById('copy-support-email-btn');
+                if (btn) {
+                    btn.textContent = '✅ ¡Copiado!';
+                    setTimeout(() => { btn.textContent = '📋 Copiar Correo'; }, 2000);
+                }
+            });
+        };
+        // PWA Install Logic
+        // Check if already running as installed PWA
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true
+            || document.referrer.includes('android-app://');
+
+        if (isStandalone) {
+            // App is already installed and running as PWA, hide install button
+            this.installBtn.style.display = 'none';
+        } else {
+            // Only show install prompt if not already installed
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                this.deferredPrompt = e;
+                // Double-check it's not in standalone mode before showing
+                if (!window.matchMedia('(display-mode: standalone)').matches) {
+                    this.installBtn.style.display = 'flex';
+                }
+            });
+        }
+
+        this.installBtn.addEventListener('click', async () => {
+            if (this.deferredPrompt) {
+                this.deferredPrompt.prompt();
+                const { outcome } = await this.deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    this.installBtn.style.display = 'none';
+                }
+                this.deferredPrompt = null;
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            this.installBtn.style.display = 'none';
+            this.deferredPrompt = null;
+        });
+
+        // Also listen for display-mode changes (in case user uninstalls)
+        window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+            if (e.matches) {
+                this.installBtn.style.display = 'none';
+            }
+        });
+
+        // Filters (Public / Private / Trash)
+        this.filterPublicBtn?.addEventListener('click', () => {
+            this.currentNoteFilter = 'public';
+            this.renderNotesList();
+            this.updateUIForFilter();
+            // Clear editor if trash note was selected
+            if (this.activeNoteId) this.setActiveNote(null);
+        });
+
+        this.filterPrivateBtn?.addEventListener('click', () => {
+            if (!this.isVaultUnlocked) {
+                this.masterLockModal.style.display = 'flex';
+                this.masterPwdInput.value = '';
+                this.masterPwdInput.focus();
+            } else {
+                this.currentNoteFilter = 'private';
+                this.renderNotesList();
+                this.updateUIForFilter();
+            }
+            // Clear editor if trash note was selected
+            if (this.activeNoteId) this.setActiveNote(null);
+        });
+
+        this.filterTrashBtn?.addEventListener('click', () => {
+            this.currentNoteFilter = 'trash';
+            this.renderNotesList();
+            this.updateUIForFilter();
+            if (this.activeNoteId) this.setActiveNote(null);
+        });
+
+        // Share Note - Open Modal
+        this.shareNoteBtn?.addEventListener('click', () => this.shareCurrentNote());
+
+        // Create Public Link Listener
+        this.createPublicLinkBtn?.addEventListener('click', async () => {
+            if (!this.activeNoteId) return;
+
+            const note = this.notes.find(n => n.id === this.activeNoteId);
+            if (!note) return;
+
+            this.createPublicLinkBtn.textContent = '⏳ Generando enlace...';
+            this.createPublicLinkBtn.disabled = true;
+
+            try {
+                if (typeof window.publishNotePublicly === 'function') {
+                    const publicId = await window.publishNotePublicly(note);
+                    if (publicId) {
+                        const link = `${window.location.origin}${window.location.pathname}?publicNote=${publicId}`;
+                        this.shareContentText.value = link;
+                        this.createPublicLinkBtn.textContent = '✅ Enlace Generado';
+                        // Optionally hide the button after success or keep for regen?
+                    } else {
+                        throw new Error('ID nulo recibido');
+                    }
+                } else {
+                    alert('Error: Función de publicación no disponible. Recarga la página.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo generar el enlace. Verifica tu conexión.');
+                this.createPublicLinkBtn.textContent = '🌐 Generar Enlace Público';
+            } finally {
+                this.createPublicLinkBtn.disabled = false;
+            }
+        });
+
+        // Share Modal Listeners
+        this.closeShareBtn?.addEventListener('click', () => {
+            this.shareModal.hidden = true;
+            this.shareModal.classList.remove('flex'); // Assuming utility class or hidden attribute handles it
+            this.shareModal.style.display = 'none';
+        });
+
+        this.copyShareLinkBtn?.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(this.shareContentText.value);
+                const originalText = this.copyShareLinkBtn.textContent;
+                this.copyShareLinkBtn.textContent = '✅ Copiado';
+                setTimeout(() => this.copyShareLinkBtn.textContent = originalText, 2000);
+            } catch (err) {
+                alert('No se pudo copiar automáticamente.');
+            }
+        });
+
+        // Close on overlay click
+        this.shareModal?.addEventListener('click', (e) => {
+            if (e.target === this.shareModal) {
+                this.shareModal.style.display = 'none';
+            }
+        });
+
+        // Info Modal Logic - Secured
+        if (this.infoBtn && this.infoModal) {
+            this.infoBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.infoModal.hidden = false;
+                this.infoModal.style.display = 'flex'; // Ensure flex display
+            };
+        }
+
+        if (this.closeInfoBtn && this.infoModal) {
+            this.closeInfoBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.infoModal.hidden = true;
+                this.infoModal.style.display = 'none';
+            };
+        }
+
+        if (this.infoModal) {
+            this.infoModal.onclick = (e) => {
+                if (e.target === this.infoModal) {
+                    this.infoModal.hidden = true;
+                    this.infoModal.style.display = 'none';
+                }
+            };
+        }
+
+        // Theme Toggle
+        this.themeToggleBtn.onclick = () => this.toggleTheme();
+        this.initTheme();
+
+        // Mobile Menu Logic
+        this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        this.mobileMenuBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.toggleMobileMenu();
+        };
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (this.formatToolbar.classList.contains('show') &&
+                !this.formatToolbar.contains(e.target) &&
+                e.target !== this.mobileMenuBtn &&
+                !this.mobileMenuBtn.contains(e.target)) {
+                this.formatToolbar.classList.remove('show');
+                this.mobileMenuBtn.classList.remove('active');
+            }
+        });
+
+        // Content Editable Events
+        this.noteTitleInput.oninput = () => {
+            this.updateSidebarCardPreview();
+            this.debouncedSaveAndRender();
+            this.updatePlaceholderState();
+        };
+        this.noteTitleInput.onkeydown = (e) => { if (e.key === 'Enter') e.preventDefault(); };
+
+        this.noteContentInput.oninput = () => {
+            this.updateSidebarCardPreview();
+            this.debouncedSaveAndRender();
+            this.updatePlaceholderState();
+        };
+        this.noteContentInput.onpaste = (e) => this.handlePaste(e);
+
+        // Fix for inherited strikethrough when exiting checked list items
+        this.noteContentInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    let node = range.startContainer;
+
+                    // Check if we're inside a list item
+                    while (node && node !== this.noteContentInput) {
+                        if (node.nodeName === 'LI') {
+                            // Check if this LI is in a checklist
+                            const ul = node.parentElement;
+                            if (ul && ul.classList.contains('checklist')) {
+                                // Let default behavior create the new line
+                                setTimeout(() => {
+                                    // After Enter is processed, clean up any inherited styles
+                                    const newSelection = window.getSelection();
+                                    if (newSelection.rangeCount > 0) {
+                                        const newRange = newSelection.getRangeAt(0);
+                                        let currentNode = newRange.startContainer;
+
+                                        // Navigate up to find if we're still in a list or outside
+                                        let inList = false;
+                                        let tempNode = currentNode;
+                                        let currentLi = null;
+                                        while (tempNode && tempNode !== this.noteContentInput) {
+                                            if (tempNode.nodeName === 'LI') {
+                                                currentLi = tempNode;
+                                            }
+                                            if (tempNode.nodeName === 'UL' || tempNode.nodeName === 'OL') {
+                                                inList = true;
+                                                break;
+                                            }
+                                            tempNode = tempNode.parentNode;
+                                        }
+
+                                        // If we're inside the list, remove the checked state from the new list item
+                                        if (inList && currentLi) {
+                                            currentLi.classList.remove('checked');
+                                        }
+
+                                        // If we're outside the list, remove text-decoration
+                                        if (!inList && currentNode.parentElement) {
+                                            let p = currentNode.parentElement;
+                                            while (p && p !== this.noteContentInput) {
+                                                if (p.style && p.style.textDecoration) {
+                                                    p.style.textDecoration = 'none';
+                                                }
+                                                p = p.parentElement;
+                                            }
+
+                                            // Also use execCommand to ensure clean formatting
+                                            document.execCommand('removeFormat', false, null);
+                                            // Explicitly turn off strikethrough state
+                                            if (document.queryCommandState('strikethrough')) {
+                                                document.execCommand('strikethrough', false, null);
+                                            }
+                                        }
+                                    }
+                                }, 10);
+                            }
+                            break;
+                        }
+                        node = node.parentNode;
+                    }
+                }
+            }
+        };
+
+        this.noteTitleInput.onblur = () => this.updatePlaceholderState();
+        this.noteContentInput.onblur = () => this.updatePlaceholderState();
+
+        document.addEventListener('selectionchange', () => this.debouncedSelection());
+        this.selectionColorPicker.oninput = (e) => this.applySelectionColor(e.target.value);
+
+        // Remove Highlight Button
+        this.removeHighlightBtn = document.getElementById('remove-highlight-btn');
+        if (this.removeHighlightBtn) {
+            this.removeHighlightBtn.onclick = () => this.removeHighlight();
+        }
+
+        this.renderNotesList();
+        this.updateStats();
+
+        // Establecer estado vacío inicial (oculta toolbar, muestra emoji de bienvenida)
+        this.setActiveNote(null);
+
+        // Ocultar botón de cambiar contraseña (solo visible en bóveda privada)
+        this.changePwdBtn.style.display = 'none';
+
+        // Format listeners with auto-close logic handled carefully
+        this.titleFontSelect.onchange = (e) => { this.updateFormat('titleFont', e.target.value); this.closeToolbarMobile(); };
+        this.titleSizeSelect.onchange = (e) => { this.updateFormat('titleSize', e.target.value); this.closeToolbarMobile(); };
+
+        // Color pickers: update on input (realtime), close on change (final selection)
+        this.titleColorPicker.oninput = (e) => this.updateFormat('titleColor', e.target.value);
+        this.titleColorPicker.onchange = (e) => this.closeToolbarMobile();
+
+        this.contentFontSelect.onchange = (e) => { this.updateFormat('contentFont', e.target.value); this.closeToolbarMobile(); };
+        this.contentSizeSelect.onchange = (e) => { this.updateFormat('contentSize', e.target.value); this.closeToolbarMobile(); };
+
+        this.textColorPicker.oninput = (e) => this.updateFormat('textColor', e.target.value);
+        this.textColorPicker.onchange = (e) => this.closeToolbarMobile();
+
+
+        // Los listeners de temas ahora se manejan en initThemeGallery()
+
+        this.lockNoteBtn.onclick = () => this.handleLockClick();
+        this.pinNoteBtn.onclick = () => this.togglePin();
+
+        // Export dropdown toggle
+        if (this.exportBtn && this.exportDropdown) {
+            this.exportBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = this.exportDropdown.style.display !== 'none';
+                this.exportDropdown.style.display = isOpen ? 'none' : 'block';
+            });
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.export-dropdown-container')) {
+                    this.exportDropdown.style.display = 'none';
+                }
+            });
+        }
+        if (this.exportPdfBtn) {
+            this.exportPdfBtn.onclick = () => { this.exportToPDF(); this.exportDropdown.style.display = 'none'; };
+        }
+        if (this.exportTxtBtn) {
+            this.exportTxtBtn.onclick = () => { this.exportToTXT(); this.exportDropdown.style.display = 'none'; };
+        }
+
+        this.confirmPwdBtn.onclick = () => this.verifyPassword();
+        this.closePwdBtn.onclick = () => this.passwordModal.hidden = true;
+
+        // Bóveda Maestra Listeners
+        this.unlockVaultBtn.onclick = () => this.verifyMasterPassword();
+        this.closeVaultViewBtn.onclick = () => {
+            this.masterLockModal.hidden = true;
+            this.setFilter('public');
+        };
+
+        this.toggleVaultPwdBtn.onclick = () => {
+            const isPwd = this.masterPwdInput.type === 'password';
+            this.masterPwdInput.type = isPwd ? 'text' : 'password';
+            this.toggleVaultPwdBtn.textContent = isPwd ? '🙈' : '👁️';
+        };
+
+        this.filterPublicBtn.onclick = () => this.setFilter('public');
+        this.filterPrivateBtn.onclick = () => this.enterPrivateVault();
+        this.filterTrashBtn.onclick = () => this.setFilter('trash');
+        this.emptyTrashBtn.onclick = () => this.emptyTrash();
+
+        // Bloqueo de Enter en password maestro
+        this.masterPwdInput.onkeydown = (e) => { if (e.key === 'Enter') this.verifyMasterPassword(); };
+
+        // Cambio de Contraseña Listeners
+        if (this.changePwdBtn) this.changePwdBtn.onclick = () => this.openChangePwdModal();
+        if (this.closeChangePwdBtn) this.closeChangePwdBtn.onclick = () => this.closeChangePwdModal();
+        this.saveNewPwdBtn.onclick = () => this.saveNewPassword();
+
+        this.changePwdModal.onclick = (e) => {
+            if (e.target === this.changePwdModal) this.closeChangePwdModal();
+        };
+
+        // Feedback Listeners
+        this.initFeedback();
+
+        // Formato de Texto
+        // Format Toolbar Buttons
+        const formatButtons = [
+            { id: 'btn-undo', cmd: 'undo' },
+            { id: 'btn-redo', cmd: 'redo' },
+            { id: 'btn-bold', cmd: 'bold' },
+            { id: 'btn-italic', cmd: 'italic' },
+            { id: 'btn-underline', cmd: 'underline' }
+        ];
+
+        formatButtons.forEach(btn => {
+            const el = document.getElementById(btn.id);
+            if (el) {
+                el.onclick = () => {
+                    this.applyTextFormat(btn.cmd);
+                    this.closeToolbarMobile();
+                };
+            }
+        });
+
+        // Custom Checklist Logic
+        const btnList = document.getElementById('btn-list');
+        if (btnList) {
+            btnList.onclick = () => {
+                this.insertChecklist();
+                this.closeToolbarMobile();
+            };
+        }
+
+        // Checklist Interaction (Delegated)
+        this.noteContentInput.addEventListener('click', (e) => {
+            // Check if clicking on LI
+            if (e.target.tagName === 'LI' && this.noteContentInput.contains(e.target)) {
+                // Toggle checked state
+                const li = e.target;
+                // Get click position relative to LI
+                const rect = li.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+
+                // If click is in the "checkbox area" (first 30px approximately)
+                if (x <= 30) {
+                    li.classList.toggle('checked');
+                    this.debouncedSaveAndRender();
+                    e.preventDefault(); // Prevent moving cursor there if just checking
+                }
+            }
+        });
+        // Botón de atrás en móvil
+        if (this.mobileBackBtn) {
+            this.mobileBackBtn.onclick = () => this.setActiveNote(null);
+        }
+
+        // Feature Listeners
+        this.voiceNoteBtn.onclick = () => this.toggleRecording();
+
+        this.reminderBtn.onclick = () => this.openReminderModal();
+        this.closeReminderBtn.onclick = () => this.reminderModal.hidden = true;
+        this.saveReminderBtn.onclick = () => this.saveReminder();
+        this.deleteReminderBtn.onclick = () => this.deleteReminder();
+
+        // Start Alarm System
+        if ('Notification' in window) {
+            Notification.requestPermission();
+        }
+        this.startReminderCheck();
+
+        // Listen for SW messages (e.g., STOP_ALARM from notification dismiss)
+        if (navigator.serviceWorker) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'STOP_ALARM') {
+                    this.stopAlarm();
+                }
+            });
+        }
+
+        // SORT DROPDOWN LOGIC
+        if (this.sortTriggerBtn) {
+            this.sortTriggerBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.sortMenuOptions.hidden = !this.sortMenuOptions.hidden;
+            };
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (this.sortMenuOptions && !this.sortMenuOptions.hidden) {
+                    if (!this.sortTriggerBtn.contains(e.target) && !this.sortMenuOptions.contains(e.target)) {
+                        this.sortMenuOptions.hidden = true;
+                    }
+                }
+            });
+
+            // Options Selection
+            const sortOptions = this.sortMenuOptions.querySelectorAll('.sort-option');
+            sortOptions.forEach(opt => {
+                opt.onclick = () => {
+                    // Remove active from all
+                    sortOptions.forEach(o => o.classList.remove('active'));
+                    // Add active to current
+                    opt.classList.add('active');
+
+                    // Update Logic
+                    this.currentSortValue = opt.getAttribute('data-value');
+                    this.renderNotesList();
+
+                    // Update UI Trigger (Icon & Text)
+                    const icon = opt.querySelector('.opt-icon').textContent;
+                    const title = opt.querySelector('.opt-title').textContent;
+
+                    this.sortIconCurrent.textContent = icon;
+                    this.sortTextCurrent.textContent = title;
+
+                    // Close menu
+                    this.sortMenuOptions.hidden = true;
+                };
+            });
+        }
+
+        if (this.starBtn) {
+            this.starBtn.onclick = () => this.toggleFavorite();
+        }
+
+        if (this.noteColorBtn) {
+            this.noteColorBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.noteColorMenu.style.display = this.noteColorMenu.style.display === 'grid' ? 'none' : 'grid';
+            };
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!this.noteColorBtn.contains(e.target) && !this.noteColorMenu.contains(e.target)) {
+                    this.noteColorMenu.style.display = 'none';
+                }
+            });
+        }
+
+        this.colorSwatches.forEach(swatch => {
+            if (swatch.getAttribute('data-color') === 'custom') return; // Skip custom swatch
+            swatch.onclick = (e) => {
+                const color = e.target.getAttribute('data-color');
+                this.setNoteColor(color);
+                this.noteColorMenu.style.display = 'none';
+            };
+        });
+
+        // Custom color picker handler
+        const customColorPicker = document.getElementById('note-custom-color-picker');
+        if (customColorPicker) {
+            customColorPicker.oninput = (e) => {
+                const hexColor = e.target.value;
+                this.setNoteColor(hexColor);
+                // Update the custom swatch background to show selected color
+                const customSwatch = customColorPicker.closest('.color-swatch');
+                if (customSwatch) customSwatch.style.background = hexColor;
+            };
+            customColorPicker.onchange = () => {
+                this.noteColorMenu.style.display = 'none';
+            };
+        }
+
+        // Category & Status Listeners
+        if (this.noteCategorySelect) {
+            this.noteCategorySelect.onchange = (e) => {
+                if (!this.activeNoteId) return;
+
+                if (e.target.value === 'add_new') {
+                    const newCat = prompt('Ponele un nombre a tu nueva categoría:');
+                    if (newCat && newCat.trim() !== '') {
+                        const cleanCat = newCat.trim();
+                        if (!this.customCategories.includes(cleanCat)) {
+                            this.customCategories.push(cleanCat);
+                            localStorage.setItem('novanotes_custom_categories', JSON.stringify(this.customCategories));
+                            this.renderCategoryOptions();
+                        }
+                        // Assigning to the note
+                        e.target.value = cleanCat;
+                    } else {
+                        // Revert if cancelled
+                        const note = this.notes.find(n => n.id === this.activeNoteId);
+                        e.target.value = note ? (note.category || 'personal') : 'personal';
+                        return;
+                    }
+                }
+
+                const note = this.notes.find(n => n.id === this.activeNoteId);
+                if (note) {
+                    note.category = e.target.value;
+                    this.saveToStorage();
+                    this.renderNotesList();
+                }
+            };
+        }
+        if (this.noteStatusSelect) {
+            this.noteStatusSelect.onchange = (e) => {
+                if (!this.activeNoteId) return;
+                const note = this.notes.find(n => n.id === this.activeNoteId);
+                if (note) {
+                    note.status = e.target.value;
+                    this.saveToStorage();
+                    this.renderNotesList();
+                }
+            };
+        }
+
+        // Sidebar filter listeners
+        if (this.filterCategorySelect) {
+            this.filterCategorySelect.onchange = (e) => {
+                this.currentFilterCategory = e.target.value;
+                this.renderNotesList();
+            };
+        }
+        if (this.filterStatusSelect) {
+            this.filterStatusSelect.onchange = (e) => {
+                this.currentFilterStatus = e.target.value;
+                this.renderNotesList();
+            };
+        }
+
+        // AI Auto-classify button
+
+        // Media Listeners
+        if (this.btnImage) this.btnImage.onclick = () => this.imageUploadInput.click();
+        if (this.imageUploadInput) this.imageUploadInput.onchange = (e) => this.handleImageUpload(e);
+        if (this.btnSketch) this.btnSketch.onclick = () => this.openSketchModal();
+
+        // Sketch Logic
+        if (this.closeSketchBtn) this.closeSketchBtn.onclick = () => { this.sketchModal.hidden = true; this.editingImageElement = null; };
+        if (this.clearSketchBtn) this.clearSketchBtn.onclick = () => this.clearSketch();
+        if (this.saveSketchBtn) this.saveSketchBtn.onclick = () => this.saveSketch();
+
+        // Brush Buttons Setup
+        Object.keys(this.brushBtns).forEach(type => {
+            const btn = this.brushBtns[type];
+            if (btn) {
+                btn.onclick = () => {
+                    Object.values(this.brushBtns).forEach(b => b?.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.currentBrushType = type;
+                };
+            }
+        });
+
+        // Resize Logic
+        if (this.cancelResizeBtn) this.cancelResizeBtn.onclick = () => this.imageResizeModal.hidden = true;
+        if (this.confirmResizeBtn) this.confirmResizeBtn.onclick = () => this.applyImageResize();
+        if (this.imgResizeRange) {
+            this.imgResizeRange.oninput = (e) => {
+                const val = e.target.value + '%';
+                this.imgResizeVal.textContent = val;
+                if (this.currentResizingImg) this.currentResizingImg.style.width = val;
+            };
+        }
+
+        // Image Action Modal Logic
+        if (this.closeImageActionBtn) this.closeImageActionBtn.onclick = () => this.imageActionModal.hidden = true;
+
+        if (this.actionResizeBtn) {
+            this.actionResizeBtn.onclick = () => {
+                this.imageActionModal.hidden = true;
+                if (this.editingImageElement) {
+                    this.openResizeModal(this.editingImageElement);
+                }
+            };
+        }
+
+        if (this.actionEditBtn) {
+            this.actionEditBtn.onclick = () => {
+                this.imageActionModal.hidden = true;
+                if (this.editingImageElement) {
+                    this.openSketchModal(this.editingImageElement);
+                }
+            };
+        }
+
+        // Image Double Click
+        this.noteContentInput.addEventListener('dblclick', (e) => {
+            if (e.target.tagName === 'IMG') {
+                this.editingImageElement = e.target;
+                if (this.actionEditText) {
+                    // Si el atributo data-type es sketch, dice "Editar Dibujo", sino "Editar Imagen"
+                    this.actionEditText.textContent = e.target.getAttribute('data-type') === 'sketch' ? 'Editar Dibujo' : 'Editar Imagen';
+                }
+                this.imageActionModal.hidden = false;
+            }
+        });
+
+        // --- Gestos Táctiles para Redimensionar Imágenes (Móvil) ---
+        let initialPinchDistance = 0;
+        let initialPinchWidthPercent = 100;
+        let pinchTargetImg = null;
+
+        this.noteContentInput.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2 && e.target.tagName === 'IMG') {
+                pinchTargetImg = e.target;
+                initialPinchDistance = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                let currentWidth = pinchTargetImg.style.width || '100%';
+                initialPinchWidthPercent = parseInt(currentWidth) || 100;
+                // No llamamos a preventDefault para no romper el scroll normal,
+                // a menos que estemos pinchando la imagen.
+            }
+        }, { passive: true });
+
+        this.noteContentInput.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && pinchTargetImg) {
+                const currentDistance = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+
+                if (initialPinchDistance > 0) {
+                    const ratio = currentDistance / initialPinchDistance;
+                    let newWidthPercent = initialPinchWidthPercent * ratio;
+
+                    // Limitar entre 10% y 100%
+                    newWidthPercent = Math.max(10, Math.min(100, Math.round(newWidthPercent)));
+
+                    pinchTargetImg.style.width = newWidthPercent + '%';
+
+                    // Aquí sí prevenimos el scroll para que el gesto de zoom sea fluido
+                    if (e.cancelable) e.preventDefault();
+                }
+            }
+        }, { passive: false });
+
+        this.noteContentInput.addEventListener('touchend', () => {
+            if (pinchTargetImg) {
+                this.debouncedSaveAndRender();
+                pinchTargetImg = null;
+                initialPinchDistance = 0;
+            }
+        });
+
+        // ============================================
+        // Context Menu (Long Press) Initialization
+        // ============================================
+        this.initContextMenu();
+    }
+
+    /**
+     * Initializes the context menu for long press on note items (mobile)
+     */
+    initContextMenu() {
+        // Close context menu button
+        if (this.closeContextMenuBtn) {
+            this.closeContextMenuBtn.addEventListener('click', () => this.closeContextMenu());
+        }
+
+        // Close menu when clicking overlay
+        if (this.contextMenu) {
+            this.contextMenu.addEventListener('click', (e) => {
+                if (e.target === this.contextMenu) {
+                    this.closeContextMenu();
+                }
+            });
+        }
+
+        // Favorite button
+        if (this.ctxFavoriteBtn) {
+            this.ctxFavoriteBtn.addEventListener('click', () => {
+                this.toggleFavoriteById(this.longPressNoteId);
+                this.closeContextMenu();
+            });
+        }
+
+        // Pin button
+        if (this.ctxPinBtn) {
+            this.ctxPinBtn.addEventListener('click', () => {
+                this.togglePinById(this.longPressNoteId);
+                this.closeContextMenu();
+            });
+        }
+
+        // Delete button
+        if (this.ctxDeleteBtn) {
+            this.ctxDeleteBtn.addEventListener('click', () => {
+                const noteIdToDelete = this.longPressNoteId; // Save before closing
+                this.closeContextMenu();
+                // Small delay to allow menu to close before confirm dialog
+                setTimeout(() => {
+                    this.deleteNoteById(noteIdToDelete);
+                }, 100);
+            });
+        }
+
+        // Color swatches
+        this.ctxColorSwatches.forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                const color = e.target.getAttribute('data-color');
+                this.setNoteColorById(this.longPressNoteId, color);
+
+                // Update visual selection
+                this.ctxColorSwatches.forEach(s => s.classList.remove('selected'));
+                e.target.classList.add('selected');
+
+                // Small haptic feedback delay before closing
+                setTimeout(() => this.closeContextMenu(), 150);
+            });
+        });
+    }
+
+    /**
+     * Handles touch start for long press detection on note items
+     */
+    handleNoteTouchStart(noteId, noteEl, e) {
+        // Only single touch
+        if (e.touches.length !== 1) return;
+
+        this.isLongPressing = false;
+        this.longPressNoteId = noteId;
+
+        // Add visual feedback
+        noteEl.classList.add('long-pressing');
+
+        this.longPressTimer = setTimeout(() => {
+            this.isLongPressing = true;
+            noteEl.classList.remove('long-pressing');
+            noteEl.classList.add('long-pressed');
+
+            // Haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            this.openContextMenu(noteId);
+
+            // Remove animation class after it plays
+            setTimeout(() => noteEl.classList.remove('long-pressed'), 400);
+        }, this.longPressDuration);
+    }
+
+    /**
+     * Handles touch end/cancel to cancel long press
+     */
+    handleNoteTouchEnd(noteEl) {
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+        noteEl.classList.remove('long-pressing');
+    }
+
+    /**
+     * Opens the context menu for a specific note
+     */
+    openContextMenu(noteId) {
+        const note = this.notes.find(n => n.id === noteId);
+        if (!note) return;
+
+        this.longPressNoteId = noteId;
+
+        // Update menu title
+        if (this.contextMenuTitle) {
+            const title = note.title || 'Nota sin título';
+            this.contextMenuTitle.textContent = title.length > 25 ? title.substring(0, 25) + '...' : title;
+        }
+
+        // Update favorite button label
+        if (this.ctxFavoriteLabel) {
+            this.ctxFavoriteLabel.textContent = note.isFavorite ? 'Quitar de Favoritos' : 'Añadir a Favoritos';
+        }
+
+        // Update pin button label
+        if (this.ctxPinLabel) {
+            this.ctxPinLabel.textContent = note.pinned ? 'Desfijar' : 'Fijar Arriba';
+        }
+
+        // Update color selection
+        this.ctxColorSwatches.forEach(swatch => {
+            swatch.classList.remove('selected');
+            if (swatch.getAttribute('data-color') === (note.color || 'none')) {
+                swatch.classList.add('selected');
+            }
+        });
+
+        // Show menu
+        if (this.contextMenu) {
+            this.contextMenu.hidden = false;
+        }
+    }
+
+    /**
+     * Closes the context menu
+     */
+    closeContextMenu() {
+        if (this.contextMenu) {
+            this.contextMenu.hidden = true;
+        }
+        this.longPressNoteId = null;
+        this.isLongPressing = false;
+    }
+
+    /**
+     * Toggle favorite for a note by ID (used by context menu)
+     */
+    toggleFavoriteById(noteId) {
+        if (!noteId) return;
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            note.isFavorite = !note.isFavorite;
+            this.saveToStorage();
+            this.renderNotesList();
+
+            // Update main editor UI if this is the active note
+            if (noteId === this.activeNoteId) {
+                this.updateNoteMetaUI(note);
+            }
+        }
+    }
+
+    /**
+     * Toggle pin for a note by ID (used by context menu)
+     */
+    togglePinById(noteId) {
+        if (!noteId) return;
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            note.pinned = !note.pinned;
+            this.saveToStorage();
+            this.renderNotesList();
+
+            // Update main editor UI if this is the active note
+            if (noteId === this.activeNoteId && this.pinNoteBtn) {
+                this.pinNoteBtn.classList.toggle('pin-active', note.pinned);
+            }
+        }
+    }
+
+    /**
+     * Delete note by ID (used by context menu)
+     */
+    deleteNoteById(noteId) {
+        if (!noteId) return;
+
+        const noteIndex = this.notes.findIndex(n => n.id === noteId);
+        if (noteIndex === -1) return;
+
+        // If filtering by trash, DELETE PERMANENTLY
+        if (this.currentNoteFilter === 'trash') {
+            if (confirm('¿Eliminar esta nota permanentemente?')) {
+                this.notes.splice(noteIndex, 1);
+                this.saveToStorage();
+                this.renderNotesList();
+                if (noteId === this.activeNoteId) {
+                    this.setActiveNote(null);
+                }
+            }
+        } else {
+            // Soft delete: Move to Trash
+            if (confirm('¿Mover esta nota a la papelera?')) {
+                const note = this.notes[noteIndex];
+                note.deletedAt = new Date().toISOString();
+                note.isFavorite = false;
+                note.pinned = false;
+
+                this.saveToStorage();
+                this.renderNotesList();
+                if (noteId === this.activeNoteId) {
+                    this.setActiveNote(null);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set note color by ID (used by context menu)
+     */
+    setNoteColorById(noteId, color) {
+        if (!noteId) return;
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            note.color = color;
+            this.saveToStorage();
+            this.renderNotesList();
+        }
+    }
+
+    initThemeGallery() {
+        const themes = [
+            { id: 'none', label: 'Normal' },
+            { id: 'sunset', label: 'Sunset' },
+            { id: 'ocean', label: 'Ocean' },
+            { id: 'emerald', label: 'Forest' },
+            { id: 'royal', label: 'Royal' },
+            { id: 'midnight', label: 'Night' },
+            { id: 'aurora', label: 'Aurora' },
+            { id: 'cherry', label: 'Cherry' },
+            { id: 'volcano', label: 'Volcano' },
+            { id: 'arctic', label: 'Arctic' },
+            { id: 'nebula', label: 'Nebula' },
+            { id: 'golden', label: 'Golden' },
+            { id: 'lavender', label: 'Lavender' },
+            { id: 'tropical', label: 'Tropical' },
+            { id: 'neon', label: 'Neon' },
+            { id: 'rose-gold', label: 'Rose Gold' }
+        ];
+
+        // Populate Grid
+        if (this.themeGrid) {
+            this.themeGrid.innerHTML = '';
+            themes.forEach(theme => {
+                const swatch = document.createElement('div');
+                swatch.className = `theme-swatch swatch-${theme.id}`;
+                swatch.title = theme.label;
+                swatch.onclick = () => this.handleThemeChange(theme.id);
+                this.themeGrid.appendChild(swatch);
+            });
+        }
+
+        // Listeners
+        if (this.themeGalleryBtn) {
+            this.themeGalleryBtn.onclick = (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const isHidden = this.themeVisualPanel.style.display === 'none' || this.themeVisualPanel.style.display === '';
+                this.themeVisualPanel.style.display = isHidden ? 'block' : 'none';
+                this.themeGalleryBtn.classList.toggle('active', isHidden);
+
+                // Ensure the parent toolbar-content stays open (accordion fix)
+                const parentContent = this.themeGalleryBtn.closest('.toolbar-content');
+                if (parentContent && !parentContent.classList.contains('show')) {
+                    parentContent.classList.add('show');
+                }
+            };
+        }
+
+        if (this.customBgBtn) {
+            this.customBgBtn.onclick = () => this.bgColorPicker.click();
+        }
+
+        if (this.galleryBgBtn) {
+            this.galleryBgBtn.onclick = () => this.bgImageInput.click();
+        }
+
+        // Color Picker Listener
+        if (this.bgColorPicker) {
+            this.bgColorPicker.oninput = (e) => {
+                if (!this.activeNoteId) return;
+                const note = this.notes.find(n => n.id === this.activeNoteId);
+                if (note) {
+                    note.theme = 'custom';
+                    note.customBgColor = e.target.value;
+                    this.applyTheme('custom', note.customBgColor);
+                    this.saveToStorage();
+                    // Close gallery
+                    if (this.themeVisualPanel) this.themeVisualPanel.style.display = 'none';
+                    if (this.themeGalleryBtn) this.themeGalleryBtn.classList.remove('active');
+                }
+            };
+        }
+
+        // Image Input Listener (Updated to handle visibility)
+        if (this.bgImageInput) {
+            this.bgImageInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file || !this.activeNoteId) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const note = this.notes.find(n => n.id === this.activeNoteId);
+                    if (note) {
+                        note.theme = 'gallery';
+                        note.bgImage = ev.target.result;
+                        this.applyTheme('gallery', null, note.bgImage);
+                        this.saveToStorage();
+                        // Close gallery
+                        if (this.themeVisualPanel) this.themeVisualPanel.style.display = 'none';
+                        if (this.themeGalleryBtn) this.themeGalleryBtn.classList.remove('active');
+                    }
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+            };
+        }
+    }
+
+    handleThemeChange(themeId) {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.theme = themeId;
+            this.applyTheme(themeId, note.customBgColor, note.bgImage);
+            this.saveToStorage();
+
+            // Close gallery panel after selection
+            if (this.themeVisualPanel) this.themeVisualPanel.style.display = 'none';
+            if (this.themeGalleryBtn) this.themeGalleryBtn.classList.remove('active');
+        }
+    }
+
+    async initFeedback() {
+        const likeBtn = document.getElementById('like-btn');
+        const dislikeBtn = document.getElementById('dislike-btn');
+
+        // 1. Limpiar estados visuales por defecto (aseguramos que empiece limpio)
+        likeBtn.classList.remove('voted');
+        dislikeBtn.classList.remove('voted');
+
+        // 2. Cargar conteos globales del servidor
+        this.refreshCounts();
+
+        // 3. Restaurar selección SOLO si el usuario ya votó de verdad
+        localStorage.removeItem('nv_v'); // Limpiar clave antigua que causaba conflictos
+        const hasVoted = localStorage.getItem('novanotes_voted');
+        if (hasVoted === 'likes') {
+            likeBtn.classList.add('voted');
+        } else if (hasVoted === 'dislikes') {
+            dislikeBtn.classList.add('voted');
+        }
+
+        likeBtn.onclick = () => this.handleVote('likes', likeBtn);
+        dislikeBtn.onclick = () => this.handleVote('dislikes', dislikeBtn);
+    }
+
+    // Simplified Feedback System (Local Only to prevent CORS errors)
+    refreshCounts() {
+        // Load from local storage or default to 0
+        const lCount = parseInt(localStorage.getItem('nstar_l') || '0');
+        const dCount = parseInt(localStorage.getItem('nstar_d') || '0');
+
+        const lEl = document.getElementById('like-count');
+        const dEl = document.getElementById('dislike-count');
+        if (lEl) lEl.textContent = lCount;
+        if (dEl) dEl.textContent = dCount;
+    }
+
+    handleVote(type, btn) {
+        // Simple toggle logic for local feel
+        const isVoted = btn.classList.contains('voted');
+
+        // Handle "deselect" if clicking same button, or switch if checking other
+        const otherType = type === 'likes' ? 'dislikes' : 'likes';
+        const otherBtn = type === 'likes' ? document.getElementById('dislike-btn') : document.getElementById('like-btn');
+
+        // If I was voted, deselect me
+        if (isVoted) {
+            btn.classList.remove('voted');
+            localStorage.removeItem('novanotes_voted');
+
+            let myCount = parseInt(localStorage.getItem(type === 'likes' ? 'nstar_l' : 'nstar_d') || '0');
+            myCount = Math.max(0, myCount - 1);
+            localStorage.setItem(type === 'likes' ? 'nstar_l' : 'nstar_d', myCount);
+
+        } else {
+            // If other was voted, deselect it
+            if (otherBtn.classList.contains('voted')) {
+                otherBtn.classList.remove('voted');
+                let otherCount = parseInt(localStorage.getItem(otherType === 'likes' ? 'nstar_l' : 'nstar_d') || '0');
+                otherCount = Math.max(0, otherCount - 1);
+                localStorage.setItem(otherType === 'likes' ? 'nstar_l' : 'nstar_d', otherCount);
+            }
+
+            // Select me
+            btn.classList.add('voted');
+            localStorage.setItem('novanotes_voted', type);
+
+            let myCount = parseInt(localStorage.getItem(type === 'likes' ? 'nstar_l' : 'nstar_d') || '0');
+            myCount++;
+            localStorage.setItem(type === 'likes' ? 'nstar_l' : 'nstar_d', myCount);
+
+            // Visual feedback
+            const emoji = type === 'likes' ? '✨' : '💫';
+            this.showFloatingEmoji(emoji, btn);
+        }
+
+        this.refreshCounts();
+    }
+
+    handleSelection() {
+        const selection = window.getSelection();
+        const isInContent = this.noteContentInput.contains(selection.anchorNode);
+        const isInTitle = this.noteTitleInput.contains(selection.anchorNode);
+
+        if (selection.rangeCount > 0 && selection.toString().trim().length > 0 && (isInContent || isInTitle)) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+
+            // Ajuste para móviles: si el rect está muy arriba, mostrar abajo
+            let top = rect.top + window.scrollY - 70;
+            if (top < 10) top = rect.bottom + window.scrollY + 20;
+
+            requestAnimationFrame(() => {
+                this.selectionToolbar.hidden = false;
+                this.selectionToolbar.style.top = `${top}px`;
+                this.selectionToolbar.style.left = `${Math.max(10, Math.min(window.innerWidth - 180, rect.left + window.scrollX))}px`;
+            });
+        } else {
+            this.selectionToolbar.hidden = true;
+        }
+    }
+
+    applySelectionColor(color) {
+        // Now acts as Highlight / Marker Background Color
+        document.execCommand('hiliteColor', false, color);
+        // Also support 'backColor' for some browsers if needed, but hiliteColor is standard for selection
+        this.debouncedSaveAndRender();
+        this.selectionToolbar.hidden = true; // Auto hide after selection
+        this.noteContentInput.focus();
+    }
+
+    removeHighlight() {
+        // Remove highlight by setting transparent background
+        document.execCommand('hiliteColor', false, 'transparent');
+        // Fallback for some browsers
+        document.execCommand('backColor', false, 'transparent');
+        this.debouncedSaveAndRender();
+        this.selectionToolbar.hidden = true;
+        this.noteContentInput.focus();
+    }
+
+    applyTextFormat(command, value = null) {
+        this.noteContentInput.focus();
+        document.execCommand(command, false, value);
+        this.debouncedSaveAndRender();
+    }
+
+    insertImage(src) {
+        const imgHtml = `<img src="${src}" style="max-width: 100%; border-radius: 15px; margin: 15px 0; display: block; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">`;
+        this.noteContentInput.focus();
+        document.execCommand('insertHTML', false, imgHtml + '<div><br></div>');
+        this.debouncedSaveAndRender();
+    }
+
+    insertChecklist() {
+        this.noteContentInput.focus();
+        // Insert a UL with class "checklist"
+        // We need to check if we are already in a list or just insert a new one.
+        // Simplified: use execCommand to make a list, then add class to the parent UL
+        document.execCommand('insertUnorderedList');
+
+        // Find the parent UL of the current selection and add class
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            let node = selection.anchorNode;
+            while (node && node.nodeName !== 'UL' && node !== this.noteContentInput) {
+                node = node.parentNode;
+            }
+            if (node && node.nodeName === 'UL') {
+                node.classList.add('checklist');
+            }
+        }
+        this.debouncedSaveAndRender();
+    }
+
+    // Emoji picker methods removed as requested
+    insertTextAtCursor(text) {
+        document.execCommand('insertText', false, text);
+        this.debouncedSaveAndRender();
+    }
+
+    updateFormat(key, value) {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            if (!note.styles) note.styles = { ...this.DEFAULT_STYLES };
+            note.styles[key] = value;
+            this.applyFormat(note.styles);
+            this.saveToStorage();
+        }
+    }
+
+    renderActiveNote() {
+        if (!this.activeNoteId) return;
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        this.noteTitleInput.innerText = note.title || ''; // Use innerText to avoid HTML in title
+        this.noteContentInput.innerHTML = note.content || '';
+
+        this.updateReminderUI(note);
+
+        // ... rest of rendering ...
+        this.applyFormat(note.styles);
+        this.applyTheme(note.theme || 'none', note.customBgColor, note.bgImage);
+
+
+
+        this.updateNoteMetaUI(note);
+
+        // Update placeholders
+        this.updatePlaceholderState();
+        this.updateWordCount();
+    }
+
+    applyFormat(styles) {
+        const s = styles || this.DEFAULT_STYLES;
+        requestAnimationFrame(() => {
+            this.noteTitleInput.style.fontFamily = s.titleFont || this.DEFAULT_STYLES.titleFont;
+            this.noteTitleInput.style.fontSize = s.titleSize || this.DEFAULT_STYLES.titleSize;
+            this.noteTitleInput.style.color = s.titleColor || this.DEFAULT_STYLES.titleColor;
+            this.noteContentInput.style.fontFamily = s.contentFont || this.DEFAULT_STYLES.contentFont;
+            this.noteContentInput.style.fontSize = s.contentSize || this.DEFAULT_STYLES.contentSize;
+            this.noteContentInput.style.color = s.textColor || this.DEFAULT_STYLES.textColor;
+        });
+
+        this.syncSelect(this.titleFontSelect, s.titleFont || this.DEFAULT_STYLES.titleFont);
+        this.syncSelect(this.titleSizeSelect, s.titleSize || this.DEFAULT_STYLES.titleSize);
+        this.titleColorPicker.value = s.titleColor || this.DEFAULT_STYLES.titleColor;
+        this.syncSelect(this.contentFontSelect, s.contentFont || this.DEFAULT_STYLES.contentFont);
+        this.syncSelect(this.contentSizeSelect, s.contentSize || this.DEFAULT_STYLES.contentSize);
+        this.textColorPicker.value = s.textColor || this.DEFAULT_STYLES.textColor;
+    }
+
+    syncSelect(select, value) { if (select.value !== value) select.value = value; }
+
+    toggleMobileMenu() {
+        const isOpening = !this.formatToolbar.classList.contains('show');
+        this.formatToolbar.classList.toggle('show');
+        this.mobileMenuBtn.classList.toggle('active');
+
+        // When opening, close all accordion sections so user starts clean
+        if (isOpening) {
+            this.formatToolbar.querySelectorAll('.toolbar-content').forEach(tc => {
+                tc.classList.remove('show');
+            });
+        }
+    }
+
+    closeToolbarMobile() {
+        if (window.innerWidth <= 900) {
+            this.formatToolbar.classList.remove('show');
+            this.mobileMenuBtn.classList.remove('active');
+        }
+        // Return focus to content to keep typing flow
+        if (this.activeNoteId) this.noteContentInput.focus();
+    }
+
+
+
+    /**
+     * Creates a new note with default styles and pushes it to the stack.
+     * @returns {void}
+     */
+    createNewNote() {
+        const newNote = {
+            id: Date.now().toString(),
+            title: '',
+            content: '',
+            updatedAt: new Date().toISOString(),
+            category: 'personal', // Default
+            styles: { ...this.DEFAULT_STYLES },
+            isFavorite: false,
+            color: 'none' // 'none', 'red', 'blue', etc.
+        };
+        this.notes.unshift(newNote);
+        this.saveToStorage();
+
+        // Si estamos en papelera o privados, cambiar a vista pública para ver la nueva nota
+        if (this.currentNoteFilter !== 'public') {
+            this.currentNoteFilter = 'public';
+            this.updateUIForFilter();
+        }
+
+        this.setActiveNote(newNote.id);
+        this.renderNotesList();
+        this.renderNotesList();
+        this.updateStats();
+        this.noteTitleInput.focus();
+        this.updateNoteMetaUI(newNote);
+    }
+
+    /**
+     * Loads a specific note into the editor and applies its custom styles.
+     * @param {string|null} id - The ID of the note to load.
+     */
+    setActiveNote(id) {
+        if (!id) {
+            this.activeNoteId = null;
+            this.editorFields.hidden = true;
+            this.emptyState.hidden = false;
+            this.editorView.classList.add('empty');
+            // Hide entire toolbar container
+            if (this.editorActions) this.editorActions.style.display = 'none';
+            this.deleteNoteBtn.hidden = true;
+            this.saveNoteBtn.hidden = true;
+            this.deleteNoteBtnMobile.hidden = true;
+            this.saveNoteBtnMobile.hidden = true;
+            this.lastEditedText.textContent = 'Selecciona una nota para comenzar';
+            document.body.classList.remove('editor-screen-active');
+            // Resetear el fondo/tema del editor al estado normal
+            this.applyTheme('none');
+            return;
+        }
+
+        const note = this.notes.find(n => n.id === id);
+        if (note) {
+            // No permitir abrir notas privadas si el filtro es público
+            if (note.password && this.currentNoteFilter === 'public') return;
+
+            document.body.classList.add('editor-screen-active');
+            this.activeNoteId = id;
+
+            // Show toolbar
+            if (this.editorActions) this.editorActions.style.display = 'flex';
+
+            // Asegurar que sean editables (por si veníamos de la papelera)
+            this.noteTitleInput.contentEditable = "true";
+            this.noteContentInput.contentEditable = "true";
+
+            this.noteTitleInput.innerHTML = note.title;
+            this.noteContentInput.innerHTML = note.content;
+
+            // Restore Note Color logic (Visual bg wrapper or border)
+            // If uses "theme" (Canva style) or "color" (Simple color).
+            // We'll prioritize 'theme' if set, else 'color'.
+            this.themeSelect.value = note.theme || 'none';
+            this.bgColorPicker.style.display = note.theme === 'custom' ? 'block' : 'none';
+            if (note.customBgColor) this.bgColorPicker.value = note.customBgColor;
+            this.applyTheme(note.theme || 'none', note.customBgColor, note.bgImage);
+
+            // New: Handle Note Color UI (Button active state)
+            this.updateColorUI(note.color || 'none');
+
+            // Sync Category & Status selects
+            if (this.noteCategorySelect) this.noteCategorySelect.value = note.category || 'personal';
+            if (this.noteStatusSelect) this.noteStatusSelect.value = note.status || 'draft';
+
+            this.lockNoteBtn.classList.toggle('locked-active', !!note.password);
+            this.pinNoteBtn.classList.toggle('pin-active', !!note.pinned);
+
+            // Start Update
+            this.starBtn.classList.toggle('active', !!note.isFavorite);
+
+            // End Update
+
+            this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
+            this.applyFormat(note.styles);
+
+            // Gestionar placeholders
+            this.updatePlaceholderState();
+
+            this.editorView.classList.remove('empty');
+            this.editorFields.hidden = false;
+            this.emptyState.hidden = true;
+            this.deleteNoteBtn.hidden = false;
+            this.saveNoteBtn.hidden = false;
+            this.deleteNoteBtnMobile.hidden = false;
+            this.saveNoteBtnMobile.hidden = false;
+
+        } else {
+            this.setActiveNote(null);
+        }
+        this.updateActiveNoteInList();
+    }
+
+    updateColorUI(color) {
+        // Reset swatches
+        this.colorSwatches.forEach(s => s.classList.remove('active'));
+
+        // Check if custom hex color
+        if (color && color.startsWith('#')) {
+            // Activate the custom swatch
+            const customSwatch = this.noteColorMenu.querySelector('[data-color="custom"]');
+            if (customSwatch) {
+                customSwatch.classList.add('active');
+                customSwatch.style.background = color;
+            }
+            this.noteColorBtn.style.color = color;
+            // Update the picker value
+            const picker = document.getElementById('note-custom-color-picker');
+            if (picker) picker.value = color;
+        } else {
+            // Activate preset
+            const current = this.noteColorMenu.querySelector(`[data-color="${color}"]`);
+            if (current) current.classList.add('active');
+            // Reset custom swatch to rainbow
+            const customSwatch = this.noteColorMenu.querySelector('[data-color="custom"]');
+            if (customSwatch) customSwatch.style.background = 'conic-gradient(#ef4444, #f97316, #eab308, #22c55e, #14b8a6, #3b82f6, #a855f7, #ec4899, #ef4444)';
+
+            if (color !== 'none') {
+                this.noteColorBtn.style.color = this.getColorHex(color);
+            } else {
+                this.noteColorBtn.style.color = '';
+            }
+        }
+    }
+
+    getColorHex(colorName) {
+        if (colorName && colorName.startsWith('#')) return colorName;
+        const colors = {
+            'red': '#ef4444', 'orange': '#f97316', 'yellow': '#eab308',
+            'green': '#22c55e', 'teal': '#14b8a6', 'blue': '#3b82f6',
+            'purple': '#a855f7', 'pink': '#ec4899'
+        };
+        return colors[colorName] || 'var(--text-muted)';
+    }
+
+
+
+    // --- Media Methods --- //
+
+    handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (readerEvent) => {
+                this.insertImage(readerEvent.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+        e.target.value = ''; // Reset
+    }
+
+    openResizeModal(img) {
+        this.currentResizingImg = img;
+        // Parse width %
+        let currentWidth = img.style.width || '100%';
+        if (!currentWidth.includes('%')) currentWidth = '100%';
+        const val = parseInt(currentWidth);
+
+        this.imgResizeRange.value = val;
+        this.imgResizeVal.textContent = val + '%';
+
+        this.imageResizeModal.hidden = false;
+        this.imageResizeModal.classList.remove('hidden');
+    }
+
+    applyImageResize() {
+        // Just hide, change updates realtime-ish or we can finalize here
+        if (this.currentResizingImg) {
+            this.currentResizingImg.style.width = this.imgResizeRange.value + '%';
+            this.debouncedSaveAndRender();
+        }
+        this.imageResizeModal.hidden = true;
+        this.currentResizingImg = null;
+    }
+
+    // --- Sketch Methods --- //
+
+    openSketchModal(imgElement = null) {
+        this.sketchModal.hidden = false;
+        this.sketchModal.classList.remove('hidden');
+
+        // Init Canvas
+        if (!this.ctx) {
+            this.initCanvas();
+        } else {
+            this.clearSketch();
+        }
+
+        // Si estamos editando una imagen existente
+        if (imgElement instanceof HTMLImageElement) {
+            this.editingImageElement = imgElement;
+            const img = new Image();
+            img.onload = () => {
+                // Dibujar la imagen de base en el canvas
+                this.ctx.drawImage(img, 0, 0, this.sketchCanvas.width, this.sketchCanvas.height);
+            };
+            img.src = imgElement.src;
+        } else {
+            this.editingImageElement = null;
+        }
+    }
+
+    initCanvas() {
+        const canvas = this.sketchCanvas;
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+
+        this.ctx = canvas.getContext('2d');
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+
+        // Mouse Events
+        canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+        canvas.addEventListener('mousemove', (e) => this.draw(e));
+        canvas.addEventListener('mouseup', () => this.stopDrawing());
+        canvas.addEventListener('mouseout', () => this.stopDrawing());
+
+        // Touch Events
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); this.startDrawing(e.touches[0]); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); this.draw(e.touches[0]); });
+        canvas.addEventListener('touchend', () => this.stopDrawing());
+    }
+
+    startDrawing(e) {
+        this.isDrawing = true;
+        const rect = this.sketchCanvas.getBoundingClientRect();
+        this.lastX = e.clientX - rect.left;
+        this.lastY = e.clientY - rect.top;
+    }
+
+    draw(e) {
+        if (!this.isDrawing) return;
+
+        const rect = this.sketchCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        this.ctx.beginPath();
+
+        if (this.currentBrushType === 'eraser') {
+            this.ctx.globalCompositeOperation = 'destination-out';
+            this.ctx.lineWidth = this.sketchSize.value * 2; // Goma más ancha
+            this.ctx.strokeStyle = "rgba(0,0,0,1)";
+        } else {
+            this.ctx.globalCompositeOperation = 'source-over';
+            this.ctx.strokeStyle = this.sketchColor.value;
+
+            if (this.currentBrushType === 'marker') {
+                this.ctx.lineWidth = this.sketchSize.value * 1.5;
+                // Efecto de opacidad
+                this.ctx.globalAlpha = 0.5;
+            } else if (this.currentBrushType === 'brush') {
+                this.ctx.lineWidth = this.sketchSize.value;
+                this.ctx.globalAlpha = 0.8;
+                // Shadow blur for brush effect
+                this.ctx.shadowBlur = parseInt(this.sketchSize.value) / 2;
+                this.ctx.shadowColor = this.sketchColor.value;
+            } else {
+                // Pluma normal
+                this.ctx.lineWidth = this.sketchSize.value;
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.shadowBlur = 0;
+            }
+        }
+
+        this.ctx.moveTo(this.lastX, this.lastY);
+        this.ctx.lineTo(x, y);
+        this.ctx.stroke();
+
+        this.lastX = x;
+        this.lastY = y;
+
+        // Reset properties
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.shadowBlur = 0;
+        this.ctx.globalCompositeOperation = 'source-over';
+    }
+
+    stopDrawing() {
+        this.isDrawing = false;
+    }
+
+    clearSketch() {
+        if (this.ctx) {
+            this.ctx.clearRect(0, 0, this.sketchCanvas.width, this.sketchCanvas.height);
+        }
+    }
+
+    saveSketch() {
+        const dataUrl = this.sketchCanvas.toDataURL('image/png');
+        if (this.editingImageElement) {
+            this.editingImageElement.src = dataUrl;
+            // Forzar actualización si es necesario
+            this.debouncedSaveAndRender();
+        } else {
+            // Es un nuevo dibujo, lo insertamos
+            const img = document.createElement("img");
+            img.src = dataUrl;
+            img.setAttribute("data-type", "sketch");
+            img.style.maxWidth = "100%";
+            img.style.borderRadius = "12px";
+            img.style.marginTop = "10px";
+            img.style.cursor = "pointer";
+
+            this.noteContentInput.focus();
+
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.insertNode(img);
+                range.collapse(false);
+            } else {
+                this.noteContentInput.appendChild(img);
+            }
+        }
+        this.editingImageElement = null;
+        this.sketchModal.hidden = true;
+    }
+
+    /* Tag methods removed */
+
+    updateActiveNoteInList() {
+        const items = this.notesList.querySelectorAll('.note-item');
+        items.forEach(item => {
+            item.classList.toggle('active', item.getAttribute('data-id') === this.activeNoteId);
+        });
+    }
+
+    updateSidebarCardPreview() {
+        if (!this.activeNoteId) return;
+        const card = this.notesList.querySelector(`.note-item[data-id="${this.activeNoteId}"]`);
+        if (card) {
+            const titleEl = card.querySelector('.note-title');
+            const previewEl = card.querySelector('.note-preview');
+            const titleText = this.noteTitleInput.innerText || 'Nota sin título';
+
+            // Preserve pin/icon if technically possible or just simple update
+            // For simplicity and robustness, we just update text.
+            // Ideally we should just update the text node, but innerText write removes children.
+            // Let's rely on full re-render (debounced) for perfect structure,
+            // and for immediate preview just update text to show responsiveness.
+            if (titleEl) titleEl.innerText = titleText;
+            if (previewEl) previewEl.innerText = this.noteContentInput.innerText.substring(0, 40) || 'Sin contenido adicional...';
+        }
+    }
+
+    autoSave(shouldRefreshList = false) {
+        if (!this.activeNoteId) return;
+
+        // Mostrar estado de guardando
+        this.saveStatus.textContent = 'Guardando...';
+        this.saveStatus.className = 'save-status saving';
+
+        const index = this.notes.findIndex(n => n.id === this.activeNoteId);
+        if (index === -1) return;
+
+        const note = this.notes[index];
+        note.title = this.noteTitleInput.innerHTML;
+        note.content = this.noteContentInput.innerHTML;
+
+        note.updatedAt = new Date().toISOString();
+
+        this.saveToStorage();
+        this.lastEditedText.textContent = `Editado: ${this.formatDate(note.updatedAt)}`;
+
+
+
+        // Mostrar estado de salvado
+        setTimeout(() => {
+            this.saveStatus.textContent = '✓ Guardado';
+            this.saveStatus.className = 'save-status saved';
+        }, 500);
+
+        if (shouldRefreshList && index > 0) {
+            const [movedNote] = this.notes.splice(index, 1);
+            this.notes.unshift(movedNote);
+            this.saveToStorage();
+            this.renderNotesList();
+        }
+    }
+
+    saveActiveNote() {
+        this.autoSave(true);
+        this.saveNoteBtn.textContent = '¡Guardado!';
+        this.saveNoteBtnMobile.textContent = '¡Guardado!';
+        setTimeout(() => {
+            this.saveNoteBtn.textContent = 'Guardar';
+            this.saveNoteBtnMobile.textContent = 'Guardar';
+        }, 1500);
+    }
+
+    deleteNote(noteId = null) {
+        const idToDelete = noteId || this.activeNoteId;
+        if (!idToDelete) return;
+
+        const noteIndex = this.notes.findIndex(n => n.id === idToDelete);
+        if (noteIndex === -1) return;
+
+        // If filtering by trash, DELETE PERMANENTLY
+        if (this.currentNoteFilter === 'trash') {
+            if (confirm('¿Estás seguro de que quieres eliminar esta nota permanentemente? Esta acción no se puede deshacer.')) {
+                this.notes.splice(noteIndex, 1);
+                this.saveToStorage();
+                this.renderNotesList();
+                this.setActiveNote(null); // Volver a inicio
+                this.showSyncStatus('synced');
+            }
+        } else {
+            // Soft delete: Move to Trash
+            if (confirm('¿Mover esta nota a la papelera?')) {
+                const note = this.notes[noteIndex];
+                note.deletedAt = new Date().toISOString(); // Mark as deleted
+                note.isFavorite = false; // Remove favorite status
+                note.isPinned = false; // Remove pin
+
+                this.saveToStorage();
+                this.renderNotesList();
+                this.setActiveNote(null); // Volver a inicio
+                this.showSyncStatus('synced');
+            }
+        }
+    }
+
+    updateUIForFilter() {
+        // Reset ALL active states
+        this.filterPublicBtn?.classList.remove('active');
+        this.filterPrivateBtn?.classList.remove('active');
+        this.filterTrashBtn?.classList.remove('active');
+
+        // Set active based on current filter
+        if (this.currentNoteFilter === 'public') {
+            this.filterPublicBtn?.classList.add('active');
+            this.masterLockModal.style.display = 'none'; // Ensure lock modal is hidden
+        } else if (this.currentNoteFilter === 'private') {
+            this.filterPrivateBtn?.classList.add('active');
+        } else if (this.currentNoteFilter === 'trash') {
+            this.filterTrashBtn?.classList.add('active');
+            this.masterLockModal.style.display = 'none';
+        }
+    }
+
+    /**
+     * Restore a note from trash
+     */
+    restoreNote(noteId) {
+        const note = this.notes.find(n => n.id === noteId);
+        if (note) {
+            delete note.deletedAt;
+            this.activeNoteId = noteId;
+            // Switch to filter where note belongs? For now stay in trash view but remove item
+            this.saveToStorage();
+            this.renderNotesList();
+            // Optional: Switch filter automatically
+            // this.currentNoteFilter = note.isLocked ? 'private' : 'public';
+            // this.updateUIForFilter();
+        }
+    }
+
+    /**
+     * Delete notes older than 7 days from trash
+     */
+    cleanupTrash() {
+        if (!this.notes) return;
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const initialCount = this.notes.length;
+        this.notes = this.notes.filter(note => {
+            if (note.deletedAt) {
+                const deletedDate = new Date(note.deletedAt);
+                return deletedDate > sevenDaysAgo; // Keep only if deleted recently
+            }
+            return true;
+        });
+
+        if (this.notes.length !== initialCount) {
+            console.log(`🗑️ Cleaned up ${initialCount - this.notes.length} old notes from trash.`);
+            this.saveToStorage();
+        }
+    }
+
+    /**
+     * Share the current note using Web Share API or Clipboard
+     */
+    async shareCurrentNote() {
+        if (!this.activeNoteId) {
+            alert('Primero selecciona una nota para compartir.');
+            return;
+        }
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (!note) return;
+
+        // Populate Modal
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = note.content;
+        let plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+        const textToShare = `${note.title || 'Nota sin título'}\n\n${plainText}\n\n(Compartido desde NovaStarPro)`;
+
+        this.shareContentText.value = textToShare;
+        this.shareModal.style.display = 'flex';
+        this.shareModal.hidden = false;
+    }
+
+    /**
+     * Restaura una nota de la papelera
+     */
+    restoreNote(id) {
+        const note = this.notes.find(n => n.id === id);
+        if (note) {
+            note.trashed = false;
+            delete note.trashedAt;
+            this.saveToStorage();
+            this.renderNotesList();
+            this.updateStats();
+        }
+    }
+
+    /**
+     * Elimina permanentemente una nota
+     */
+    deletePermanently(id) {
+        if (confirm('¿Eliminar esta nota PERMANENTEMENTE? Esta acción no se puede deshacer.')) {
+            this.notes = this.notes.filter(n => n.id !== id);
+            this.saveToStorage();
+            this.setActiveNote(null);
+            this.renderNotesList();
+            this.updateStats();
+        }
+    }
+
+    toggleFavorite() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.isFavorite = !note.isFavorite;
+            this.saveToStorage();
+            this.updateNoteMetaUI(note); // Update star button
+            this.renderNotesList(); // Update list item star
+        }
+    }
+
+    setNoteColor(color) {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.color = color;
+            this.saveToStorage();
+            this.renderNotesList();
+            this.updateColorUI(color);
+        }
+    }
+
+    updateNoteMetaUI(note) {
+        // Update Star Button
+        if (this.starBtn) {
+            const svg = this.starBtn.querySelector('svg');
+            if (note.isFavorite) {
+                this.starBtn.classList.add('active');
+                if (svg) svg.setAttribute('fill', 'currentColor');
+                this.starBtn.style.color = '#fbbf24'; // Gold
+            } else {
+                this.starBtn.classList.remove('active');
+                if (svg) svg.setAttribute('fill', 'none');
+                this.starBtn.style.color = ''; // Reset
+            }
+        }
+    }
+
+    handleSearch(query) {
+
+
+        this.searchTerm = query.toLowerCase();
+        this.renderNotesList();
+    }
+
+
+    /**
+     * Renders the note list based on current filters and search terms.
+     */
+    // --- Rendering Helpers for Search Highlighting ---
+
+    highlightText(text, query) {
+        if (!query) return text;
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+        return text.replace(regex, '<span class="search-highlight">$1</span>');
+    }
+
+    renderNotesList() {
+        this.notesList.innerHTML = '';
+
+        let filteredNotes = [];
+
+        if (this.searchTerm) {
+            filteredNotes = this.notes.filter(note =>
+            (note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                this.getRawText(note.content).toLowerCase().includes(this.searchTerm.toLowerCase()))
+            );
+        } else {
+            if (this.currentNoteFilter === 'trash') {
+                filteredNotes = this.notes.filter(n => n.deletedAt);
+            } else if (this.currentNoteFilter === 'private') {
+                filteredNotes = this.notes.filter(n => (n.password || n.isPrivate) && !n.deletedAt);
+            } else {
+                filteredNotes = this.notes.filter(n =>
+                    !n.password && !n.isPrivate && !n.deletedAt && n.type !== 'folder'
+                );
+            }
+        }
+
+        // Apply category filter
+        if (this.currentFilterCategory && this.currentFilterCategory !== 'all') {
+            filteredNotes = filteredNotes.filter(n => (n.category || 'personal') === this.currentFilterCategory);
+        }
+        // Apply status filter
+        if (this.currentFilterStatus && this.currentFilterStatus !== 'all') {
+            filteredNotes = filteredNotes.filter(n => (n.status || 'draft') === this.currentFilterStatus);
+        }
+
+        // Sort
+        const sortMode = this.currentSortValue || 'date-desc';
+
+        filteredNotes.sort((a, b) => {
+            // Pinned always on top? Or controlled by sort?
+            // Usually pinned is always on top.
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+
+            switch (sortMode) {
+                case 'favorites':
+                    if (a.isFavorite && !b.isFavorite) return -1;
+                    if (!a.isFavorite && b.isFavorite) return 1;
+                    // Fallback to date
+                    return new Date(b.timestamp || b.updatedAt) - new Date(a.timestamp || a.updatedAt);
+                case 'name-asc':
+                    return (a.title || '').localeCompare(b.title || '');
+                case 'name-desc':
+                    return (b.title || '').localeCompare(a.title || '');
+                case 'date-asc':
+                    return new Date(a.timestamp || a.updatedAt) - new Date(b.timestamp || b.updatedAt);
+                case 'date-desc':
+                default:
+                    return new Date(b.timestamp || b.updatedAt) - new Date(a.timestamp || a.updatedAt);
+            }
+        });
+
+        if (filteredNotes.length === 0) {
+            let emptyIcon = '📝';
+            let emptyTitle = 'No hay notas';
+            let emptyMsg = '¡Crea tu primera nota ahora!';
+
+            if (this.currentNoteFilter === 'trash') {
+                emptyIcon = '🗑️';
+                emptyTitle = 'Papelera vacía';
+                emptyMsg = 'No hay notas eliminadas';
+            } else if (this.searchTerm) {
+                emptyIcon = '🔍';
+                emptyTitle = 'Sin resultados';
+                emptyMsg = 'No se encontró nada con esa búsqueda';
+            }
+
+            this.notesList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-illustration">${emptyIcon}</div>
+                    <h3>${emptyTitle}</h3>
+                    <p>${emptyMsg}</p>
+                </div>
+             `;
+            this.updateStats(); // Ensure stats are updated even if empty
+            return;
+        }
+
+        filteredNotes.forEach(note => {
+            const noteEl = document.createElement('div');
+            // Add color class if present
+            const isCustomColor = note.color && note.color.startsWith('#');
+            const colorClass = note.color && note.color !== 'none' && !isCustomColor ? `color-${note.color}` : '';
+            noteEl.className = `note-item ${note.id === this.activeNoteId ? 'active' : ''} ${colorClass}`;
+            noteEl.setAttribute('data-id', note.id);
+            if (note.pinned) noteEl.classList.add('pinned');
+            // Apply custom hex color as inline style
+            if (isCustomColor) {
+                noteEl.style.background = `${note.color}22`;
+                noteEl.style.borderLeft = `3px solid ${note.color}`;
+            }
+
+
+            // Build star HTML
+            const starHtml = `<span class="note-star ${note.isFavorite ? 'active' : ''}">★</span>`;
+
+            const plainText = this.getRawText(note.content);
+            const catIcon = this.getCategoryIcon(note.category || 'personal');
+            const statusIcon = this.getStatusIcon(note.status || 'draft');
+
+            // Highlight Logic
+            let displayTitle = note.title || 'Nota sin título';
+            let displayPreview = plainText.substring(0, 40) || 'Sin contenido adicional...';
+
+            if (this.searchTerm) {
+                displayTitle = this.highlightText(displayTitle, this.searchTerm);
+                displayPreview = this.highlightText(displayPreview, this.searchTerm);
+            }
+
+            noteEl.innerHTML = `
+                <div class="note-info">
+                    <div class="note-title">
+                        ${starHtml} ${displayTitle}
+                        ${note.pinned ? '<span title="Fijada">📌</span>' : ''}
+                        ${note.reminder ? '<span title="Recordatorio">⏰</span>' : ''}
+                        ${note.isRecording ? '<span title="Nota de voz">🎤</span>' : ''}
+                    </div>
+                    <div class="note-preview">${displayPreview}</div>
+                    <div class="note-meta">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="note-category-badge">${catIcon} ${note.category || 'personal'}</span>
+                            <span class="note-date">${this.formatDate(note.timestamp || note.updatedAt)}</span>
+                        </div>
+                        <span class="note-status-badge">${statusIcon}</span>
+                    </div>
+                </div>
+                <button class="note-menu-btn" data-note-id="${note.id}" title="Opciones">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="2"></circle>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <circle cx="12" cy="19" r="2"></circle>
+                    </svg>
+                </button>
+            `;
+
+            if (this.currentNoteFilter === 'trash') {
+                const actions = document.createElement('div');
+                actions.className = 'trash-actions';
+                actions.style.marginTop = '8px';
+                actions.style.display = 'flex';
+                actions.style.gap = '10px';
+
+                actions.innerHTML = `
+                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 6px 10px; border-color: var(--accent); color: var(--accent); cursor: pointer; border-radius: 6px; background: rgba(99, 102, 241, 0.1);" 
+                        onclick="event.stopPropagation(); app.restoreNote('${note.id}')">♻️ Restaurar</button>
+                   <button class="btn-text-small" style="font-size: 0.8rem; padding: 6px 10px; border-color: #ef4444; color: #ef4444; cursor: pointer; border-radius: 6px; background: rgba(239, 68, 68, 0.1);" 
+                        onclick="event.stopPropagation(); app.deleteNote('${note.id}')">🗑️ Borrar</button>
+                 `;
+                noteEl.querySelector('.note-info').appendChild(actions);
+
+                // Read-only view on click
+                noteEl.onclick = () => {
+                    this.setActiveNote(note.id);
+                    this.noteTitleInput.contentEditable = false;
+                    this.noteContentInput.contentEditable = false;
+                    this.lastEditedText.textContent = 'Nota en papelera (Solo lectura)';
+                    if (this.editorActions) this.editorActions.style.display = 'none';
+                };
+            } else {
+                // Click handler
+                noteEl.onclick = (e) => {
+                    // Don't open note if long press was triggered
+                    if (this.isLongPressing) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.isLongPressing = false;
+                        return;
+                    }
+                    this.setActiveNote(note.id);
+                    this.noteTitleInput.contentEditable = true;
+                    this.noteContentInput.contentEditable = true;
+                    if (this.editorActions) this.editorActions.style.display = 'flex';
+                };
+
+                // Long press detection (touch events for mobile)
+                noteEl.addEventListener('touchstart', (e) => {
+                    this.handleNoteTouchStart(note.id, noteEl, e);
+                }, { passive: true });
+
+                noteEl.addEventListener('touchend', () => {
+                    this.handleNoteTouchEnd(noteEl);
+                }, { passive: true });
+
+                noteEl.addEventListener('touchcancel', () => {
+                    this.handleNoteTouchEnd(noteEl);
+                }, { passive: true });
+
+                noteEl.addEventListener('touchmove', () => {
+                    // Cancel long press if user moves finger (scrolling)
+                    this.handleNoteTouchEnd(noteEl);
+                }, { passive: true });
+
+                // Menu button click (desktop 3-dot menu)
+                const menuBtn = noteEl.querySelector('.note-menu-btn');
+                if (menuBtn) {
+                    menuBtn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Don't trigger note click
+                        this.openContextMenu(note.id);
+                    });
+                }
+            }
+
+            this.notesList.appendChild(noteEl);
+        });
+
+        if (filteredNotes.length === 0) {
+            let emptyIcon = '📝';
+            let emptyTitle = 'No hay notas';
+            let emptyMsg = '¡Crea tu primera nota ahora!';
+
+            if (this.currentNoteFilter === 'trash') {
+                emptyIcon = '🗑️';
+                emptyTitle = 'Papelera vacía';
+                emptyMsg = 'No hay notas eliminadas';
+            } else if (this.searchTerm) {
+                emptyIcon = '🔍';
+                emptyTitle = 'Sin resultados';
+                emptyMsg = 'No se encontró nada con esa búsqueda';
+            }
+
+            this.notesList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-illustration">${emptyIcon}</div>
+                    <h3>${emptyTitle}</h3>
+                    <p>${emptyMsg}</p>
+                </div>
+             `;
+        }
+    }
+    // Versión optimizada de extracción de texto sin crear elementos DOM pesados
+    getRawText(html, limit = 45) {
+        if (!html) return '';
+        // Regex simple para quitar etiquetas HTML rápidamente
+        const text = html.replace(/<[^>]*>?/gm, ' ');
+        return text.substring(0, limit).trim();
+    }
+
+    escapeHTML(str) {
+        return str.replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[m]);
+    }
+
+    /**
+     * Resalta el texto buscado en un string
+     */
+    highlightText(text, query) {
+        if (!query || query.trim() === '') return text;
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escaped})`, 'gi');
+        return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+    }
+
+    updateStats() {
+        const count = this.notes.length;
+        this.noteCountText.textContent = `${count} ${count === 1 ? 'nota' : 'notas'} `;
+    }
+
+    /**
+     * Get the storage key for the current user's notes
+     */
+    getNotesStorageKey() {
+        if (this.currentUserId) {
+            return `novanotes_data_${this.currentUserId} `;
+        }
+        return 'novanotes_data';
+    }
+
+    /**
+     * Load notes for the current user
+     */
+    loadUserNotes() {
+        const key = this.getNotesStorageKey();
+        return JSON.parse(localStorage.getItem(key)) || [];
+    }
+
+    /**
+     * Save notes to localStorage for the current user
+     * Also syncs to cloud if user is logged in with Google/GitHub
+     */
+    saveToStorage() {
+        const key = this.getNotesStorageKey();
+        localStorage.setItem(key, JSON.stringify(this.notes));
+
+        // Sync to cloud if available
+        this.syncToCloud();
+    }
+
+    /**
+     * Sync notes to Firestore cloud storage
+     * Called automatically after local save
+     */
+    async syncToCloud() {
+        if (!this.firebaseUid) return;
+
+        // Check if cloud functions are available
+        if (typeof window.saveNotesToCloud !== 'function') {
+            return;
+        }
+
+        try {
+            // Mark this as our own save to prevent echo from onSnapshot
+            if (typeof window.markLocalSave === 'function') {
+                window.markLocalSave();
+            }
+            await window.saveNotesToCloud(this.firebaseUid, this.notes);
+            this.showSyncStatus('synced');
+        } catch (error) {
+            console.error('Cloud sync failed:', error);
+            this.showSyncStatus('error');
+        }
+    }
+
+    /**
+     * Show sync status indicator
+     */
+    showSyncStatus(status) {
+        if (!this.saveStatus) return;
+
+        if (status === 'synced') {
+            this.saveStatus.textContent = '☁️ Sincronizado';
+            this.saveStatus.style.color = '#22c55e';
+        } else if (status === 'syncing') {
+            this.saveStatus.textContent = '⏳ Sincronizando...';
+            this.saveStatus.style.color = '#f59e0b';
+        } else if (status === 'error') {
+            this.saveStatus.textContent = '⚠️ Error de sincronización';
+            this.saveStatus.style.color = '#ef4444';
+        }
+
+        // Clear status after 3 seconds
+        setTimeout(() => {
+            if (this.saveStatus) {
+                this.saveStatus.textContent = '';
+            }
+        }, 3000);
+    }
+
+    /**
+     * Load notes from cloud and merge with local
+     * Called on app initialization for logged-in users
+     */
+    async loadFromCloud() {
+        if (!this.firebaseUid) return;
+
+        if (typeof window.loadNotesFromCloud !== 'function') {
+            console.log('Cloud functions not ready yet');
+            return;
+        }
+
+        this.showSyncStatus('syncing');
+
+        try {
+            const cloudNotes = await window.loadNotesFromCloud(this.firebaseUid);
+
+            if (cloudNotes !== null) {
+                const localNotes = this.loadUserNotes();
+
+                // Merge local and cloud notes
+                if (typeof window.mergeNotes === 'function') {
+                    this.notes = window.mergeNotes(localNotes, cloudNotes);
+                } else {
+                    // Fallback: prefer cloud if exists, otherwise local
+                    this.notes = cloudNotes.length > 0 ? cloudNotes : localNotes;
+                }
+
+                // Save merged notes back to both local and cloud
+                const key = this.getNotesStorageKey();
+                localStorage.setItem(key, JSON.stringify(this.notes));
+
+                // Render the updated notes
+                this.renderNotesList();
+                this.updateStats();
+
+                this.showSyncStatus('synced');
+                console.log('📱 Notes synchronized:', this.notes.length, 'total notes');
+            }
+
+            // Start real-time listener for changes from other devices
+            this.startRealtimeSync();
+
+        } catch (error) {
+            console.error('Failed to load from cloud:', error);
+            this.showSyncStatus('error');
+        }
+    }
+
+    /**
+     * Start listening for real-time changes from other devices
+     * Uses Firestore onSnapshot to detect when notes change in the cloud
+     */
+    startRealtimeSync() {
+        if (!this.firebaseUid) return;
+        if (typeof window.listenToCloudChanges !== 'function') return;
+
+        window.listenToCloudChanges(this.firebaseUid, (cloudNotes, lastUpdated) => {
+            console.log('🔄 Received', cloudNotes.length, 'notes from another device');
+
+            // Update local notes with cloud data
+            this.notes = cloudNotes;
+
+            // Save to localStorage
+            const key = this.getNotesStorageKey();
+            localStorage.setItem(key, JSON.stringify(this.notes));
+
+            // Re-render UI
+            this.renderNotesList();
+            this.updateStats();
+
+            // If we have an active note, refresh its content in the editor
+            if (this.activeNoteId) {
+                const updatedNote = this.notes.find(n => n.id === this.activeNoteId);
+                if (updatedNote) {
+                    this.noteTitleInput.innerHTML = updatedNote.title || '';
+                    this.noteContentInput.innerHTML = updatedNote.content || '';
+                    this.lastEditedText.textContent = `Editado: ${this.formatDate(updatedNote.updatedAt)}`;
+                }
+            }
+
+            this.showSyncStatus('synced');
+            this.showFeedback('🔄 Notas sincronizadas desde otro dispositivo');
+        });
+
+        console.log('👂 Real-time sync listener active');
+    }
+
+    /**
+     * Stop real-time sync listener (called on logout)
+     */
+    stopRealtimeSync() {
+        if (typeof window.stopCloudListener === 'function') {
+            window.stopCloudListener();
+        }
+    }
+
+    /**
+     * Switch to a different user (reload notes)
+     * Loads local notes first, then syncs with cloud
+     */
+    async switchUser(userId) {
+        this.currentUserId = userId;
+        this.notes = this.loadUserNotes();
+        this.activeNoteId = null;
+        this.setActiveNote(null);
+        this.renderNotesList();
+        this.updateStats();
+
+        // Load and sync with cloud notes
+        await this.loadFromCloud();
+    }
+
+    formatDate(iso) {
+        const d = new Date(iso);
+        return new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(d);
+    }
+
+    handlePaste(e) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const pastedText = clipboardData.getData('text');
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+
+        // Check for images first (existing logic)
+        let hasImage = false;
+        for (let item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                hasImage = true;
+                e.preventDefault();
+                const blob = item.getAsFile();
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.insertImage(event.target.result);
+                };
+                reader.readAsDataURL(blob);
+            }
+        }
+
+        if (hasImage) return;
+
+        // Automatic List Detection (Option A) - Robust Version
+        if (pastedText) {
+            const lines = pastedText.split('\n').map(l => l.trim()).filter(line => line !== '');
+            // Pattern for lists: Starts with -, *, •, 1., 1), etc. (space after optional)
+            const listPattern = /^([-*•]|\d+[.)])(\s+)?/;
+
+            // If most lines match a list pattern, we treat it as a list
+            const matchCount = lines.filter(line => listPattern.test(line)).length;
+            const isList = lines.length >= 1 && (matchCount / lines.length >= 0.7);
+
+            if (isList) {
+                e.preventDefault();
+
+                // Create a checklist structure HTML
+                let listHtml = '<ul class="checklist">';
+                lines.forEach(line => {
+                    const content = line.replace(listPattern, '').trim();
+                    if (content) {
+                        listHtml += `<li>${content}</li>`;
+                    }
+                });
+                listHtml += '</ul><br>';
+
+                // Insert using execCommand for better cursor/undo handling
+                document.execCommand('insertHTML', false, listHtml);
+                this.debouncedSaveAndRender();
+                return;
+            }
+        }
+    }
+
+    updatePlaceholderState() {
+        const isTitleEmpty = (this.noteTitleInput.textContent.trim() === '');
+        const isContentEmpty = (this.noteContentInput.textContent.trim() === '' && !this.noteContentInput.querySelector('img'));
+
+        this.noteTitleInput.classList.toggle('is-empty', isTitleEmpty);
+        this.noteContentInput.classList.toggle('is-empty', isContentEmpty);
+    }
+
+    applyTheme(theme, customColor, bgImage) {
+        // Remover todos los temas previos
+        this.editorView.classList.forEach(cls => {
+            if (cls.startsWith('theme-')) this.editorView.classList.remove(cls);
+        });
+        // Reset background image
+        this.editorView.style.removeProperty('background-image');
+        this.editorView.style.removeProperty('--custom-bg-color');
+
+        if (theme && theme !== 'none') {
+            this.editorView.classList.add(`theme-${theme}`);
+            if (theme === 'custom' && customColor) {
+                this.editorView.style.setProperty('--custom-bg-color', customColor);
+            } else if (theme === 'gallery' && bgImage) {
+                this.editorView.style.backgroundImage = `url(${bgImage})`;
+            }
+        }
+
+        // Update Gallery UI
+        if (this.currentThemeName) {
+            const labels = {
+                'none': 'Normal', 'sunset': 'Sunset', 'ocean': 'Ocean', 'emerald': 'Forest',
+                'royal': 'Royal', 'midnight': 'Night', 'aurora': 'Aurora', 'cherry': 'Cherry',
+                'volcano': 'Volcano', 'arctic': 'Arctic', 'nebula': 'Nebula', 'golden': 'Golden',
+                'lavender': 'Lavender', 'tropical': 'Tropical', 'neon': 'Neon', 'rose-gold': 'Rose Gold',
+                'custom': 'Color Sólido', 'gallery': 'Imagen'
+            };
+            this.currentThemeName.textContent = labels[theme] || 'Normal';
+        }
+
+        // Update Active Swatch
+        if (this.themeGrid) {
+            const swatches = this.themeGrid.querySelectorAll('.theme-swatch');
+            swatches.forEach(s => {
+                s.classList.toggle('active', s.classList.contains(`swatch-${theme}`));
+            });
+        }
+
+        // Update Compatibility Select (optional but good for consistency)
+        if (this.themeSelect) this.themeSelect.value = theme || 'none';
+    }
+
+    saveCustomCategory() {
+        const value = this.customCategoryInput.value.trim();
+        if (!value || !this.activeNoteId) return;
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.category = 'custom';
+            note.customCategory = value;
+            this.categoryModal.hidden = true;
+            this.saveToStorage();
+            this.renderNotesList();
+        }
+    }
+
+    handleLockClick() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+
+        if (note.password) {
+            if (confirm('¿Quieres quitar la protección de esta nota?')) {
+                note.password = null;
+                this.lockNoteBtn.classList.remove('locked-active');
+                this.saveToStorage();
+                this.renderNotesList(); // Mover a pestaña pública
+                this.setActiveNote(null);
+            }
+        } else {
+            // Si ya existe contraseña maestra, usarla directo
+            if (masterSaved) {
+                note.password = masterSaved;
+                this.lockNoteBtn.classList.add('locked-active');
+                this.saveToStorage();
+                this.renderNotesList();
+                this.setActiveNote(null);
+            } else {
+                // Crear contraseña maestra por primera vez
+                this.pendingNoteId = this.activeNoteId;
+                this.masterLockText.textContent = "Crea una CONTRASEÑA MAESTRA. Esta protegerá TODAS tus notas privadas.";
+                this.masterPwdInput.placeholder = "Nueva contraseña...";
+                this.masterLockModal.hidden = false;
+                this.masterPwdInput.value = '';
+                this.masterPwdInput.focus();
+                this.masterPwdError.style.display = 'none';
+            }
+        }
+    }
+
+    setFilter(filter) {
+        this.currentNoteFilter = filter;
+        this.filterPublicBtn.classList.toggle('active', filter === 'public');
+        this.filterPrivateBtn.classList.toggle('active', filter === 'private');
+        this.filterTrashBtn.classList.toggle('active', filter === 'trash');
+
+        // Si volvemos a público, bloquear la bóveda de nuevo para seguridad
+        if (filter === 'public') this.isVaultUnlocked = false;
+
+        // Mostrar botón de cambiar contraseña solo en la bóveda privada
+        this.changePwdBtn.style.display = (filter === 'private') ? 'flex' : 'none';
+
+        // Mostrar contenedor de vaciar papelera solo en la papelera
+        if (this.emptyTrashContainer) {
+            this.emptyTrashContainer.style.display = (filter === 'trash') ? 'block' : 'none';
+        }
+
+        this.setActiveNote(null);
+        this.renderNotesList();
+    }
+
+    enterPrivateVault() {
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+
+        if (!masterSaved) {
+            // Silencioso: si no hay notas privadas, simplemente se mantiene en público
+            this.setFilter('public');
+            return;
+        }
+
+        if (this.isVaultUnlocked) {
+            this.setFilter('private');
+        } else {
+            this.masterLockText.textContent = "Introduce tu contraseña maestra para desbloquear tus notas privadas.";
+            this.masterPwdInput.placeholder = "Contraseña...";
+            this.masterPwdInput.type = 'password';
+            this.toggleVaultPwdBtn.textContent = '👁️';
+            this.masterLockModal.hidden = false;
+            this.masterPwdInput.value = '';
+            this.masterPwdInput.focus();
+            this.masterPwdError.style.display = 'none';
+        }
+    }
+
+    verifyMasterPassword() {
+        const pwd = this.masterPwdInput.value;
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+
+        if (!masterSaved) {
+            // CREANDO CONTRASEÑA POR PRIMERA VEZ
+            if (pwd.length < 1) return;
+            localStorage.setItem('nova_master_pwd', pwd);
+
+            // Asignar a la nota que originó la creación
+            const note = this.notes.find(n => n.id === this.pendingNoteId);
+            if (note) {
+                note.password = pwd;
+                this.saveToStorage();
+            }
+
+            this.masterLockModal.hidden = true;
+            this.setActiveNote(null);
+            this.renderNotesList();
+        } else {
+            // VERIFICANDO PARA ENTRAR
+            if (pwd === masterSaved) {
+                this.isVaultUnlocked = true;
+                this.masterLockModal.hidden = true;
+                this.setFilter('private');
+            } else {
+                this.masterPwdError.style.display = 'block';
+            }
+        }
+    }
+
+    /**
+     * Abre el modal de cambio de contraseña
+     */
+    openChangePwdModal() {
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+        if (!masterSaved) {
+            alert('No tienes una contraseña maestra configurada. Crea una nota privada primero.');
+            return;
+        }
+        this.changePwdModal.hidden = false;
+        this.currentPwdInput.value = '';
+        this.newPwdInput.value = '';
+        this.confirmPwdInput.value = '';
+        this.changePwdError.style.display = 'none';
+        this.changePwdSuccess.style.display = 'none';
+        this.currentPwdInput.focus();
+    }
+
+    /**
+     * Cierra el modal de cambio de contraseña
+     */
+    closeChangePwdModal() {
+        this.changePwdModal.hidden = true;
+        this.currentPwdInput.value = '';
+        this.newPwdInput.value = '';
+        this.confirmPwdInput.value = '';
+        this.changePwdError.style.display = 'none';
+        this.changePwdSuccess.style.display = 'none';
+    }
+
+    /**
+     * Guarda la nueva contraseña maestra después de verificar la actual
+     */
+    saveNewPassword() {
+        const masterSaved = localStorage.getItem('nova_master_pwd');
+        const currentPwd = this.currentPwdInput.value;
+        const newPwd = this.newPwdInput.value;
+        const confirmPwd = this.confirmPwdInput.value;
+
+        this.changePwdError.style.display = 'none';
+        this.changePwdSuccess.style.display = 'none';
+
+        // Validar contraseña actual
+        if (currentPwd !== masterSaved) {
+            this.changePwdError.textContent = 'La contraseña actual es incorrecta.';
+            this.changePwdError.style.display = 'block';
+            return;
+        }
+
+        // Validar nueva contraseña
+        if (newPwd.length < 1) {
+            this.changePwdError.textContent = 'La nueva contraseña no puede estar vacía.';
+            this.changePwdError.style.display = 'block';
+            return;
+        }
+
+        // Validar coincidencia
+        if (newPwd !== confirmPwd) {
+            this.changePwdError.textContent = 'Las contraseñas no coinciden.';
+            this.changePwdError.style.display = 'block';
+            return;
+        }
+
+        // Actualizar contraseña maestra
+        localStorage.setItem('nova_master_pwd', newPwd);
+
+        // Actualizar contraseña en todas las notas privadas
+        this.notes.forEach(note => {
+            if (note.password) {
+                note.password = newPwd;
+            }
+        });
+        this.saveToStorage();
+
+        // Mostrar éxito
+        this.changePwdSuccess.textContent = '¡Contraseña cambiada exitosamente!';
+        this.changePwdSuccess.style.display = 'block';
+
+        // Cerrar modal después de 1.5 segundos
+        setTimeout(() => {
+            this.closeChangePwdModal();
+        }, 1500);
+    }
+
+    /**
+     * Shows a temporary toast-style feedback message at the bottom of the screen.
+     * @param {string} message - The message to display
+     * @param {number} duration - Duration in ms (default 2500)
+     */
+    showFeedback(message, duration = 2500) {
+        // Remove any existing feedback
+        const existing = document.querySelector('.app-feedback-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'app-feedback-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 40, 0.95);
+            color: #f8fafc;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 999999;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            animation: slideUp 0.3s ease;
+            pointer-events: none;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    /**
+     * Elimina permanentemente todas las notas de la papelera
+     */
+    emptyTrash() {
+        const trashNotes = this.notes.filter(n => n.deletedAt);
+        if (trashNotes.length === 0) return;
+
+        if (confirm(`¿Estás seguro de que quieres eliminar permanentemente ${trashNotes.length} notas? Esta acción no se puede deshacer.`)) {
+            this.notes = this.notes.filter(n => !n.deletedAt);
+            this.saveToStorage();
+            this.renderNotesList();
+            this.showFeedback('🗑️ Papelera vaciada correctamente');
+        }
+    }
+
+
+
+    /**
+     * Fija o desfija la nota activa
+     */
+    togglePin() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            note.pinned = !note.pinned;
+            this.pinNoteBtn.classList.toggle('pin-active', note.pinned);
+            this.saveToStorage();
+            this.renderNotesList();
+        }
+    }
+
+    /**
+     * Exporta la nota actual a PDF usando html2pdf.js
+     */
+    exportToPDF() {
+        if (!this.activeNoteId) {
+            return;
+        }
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        // Basic configuration
+        const opt = {
+            margin: 1,
+            filename: (note.title || 'nota').replace(/\s+/g, '_') + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Select element to export
+        const element = document.getElementById('editor-view');
+        html2pdf().set(opt).from(element).save();
+    }
+
+    exportToTXT() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (!note) return;
+
+        const title = note.title || 'Nota sin título';
+        const content = this.getRawText(note.content || '');
+        const date = this.formatDate(note.updatedAt || note.timestamp);
+        const category = note.category || 'personal';
+        const status = note.status || 'draft';
+
+        const text = `${title}\n${'='.repeat(title.length)}\n\nCategoría: ${this.getCategoryIcon(category)} ${category}\nEstado: ${this.getStatusIcon(status)} ${status}\nFecha: ${date}\n\n${content}`;
+
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (note.title || 'nota').replace(/\s+/g, '_') + '.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // --- Features Implementation ---
+
+    // 2. Voice Note Logic (Audio Recording)
+    async toggleRecording() {
+        if (!this.isRecording) {
+            // Start Recording
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                this.mediaRecorder = new MediaRecorder(stream);
+                this.audioChunks = [];
+
+                this.mediaRecorder.ondataavailable = (event) => {
+                    this.audioChunks.push(event.data);
+                };
+
+                this.mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp3' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        const base64Audio = reader.result;
+                        this.insertAudioPlayer(base64Audio);
+                    };
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                this.mediaRecorder.start();
+                this.isRecording = true;
+                this.voiceNoteBtn.classList.add('recording');
+                this.voiceNoteBtn.title = "Detener Grabación";
+
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                alert("No se pudo acceder al micrófono.");
+            }
+        } else {
+            // Stop Recording
+            if (this.mediaRecorder) {
+                this.mediaRecorder.stop();
+            }
+            this.isRecording = false;
+            this.voiceNoteBtn.classList.remove('recording');
+            this.voiceNoteBtn.title = "Nota de Voz";
+        }
+    }
+
+    insertAudioPlayer(base64Src) {
+        const playerHtml = `
+            <div class="custom-audio-player" contenteditable="false">
+                <span class="audio-icon">🎤</span>
+                <audio controls src="${base64Src}"></audio>
+            </div>
+            <div><br></div>
+        `;
+
+        this.noteContentInput.focus();
+        document.execCommand('insertHTML', false, playerHtml);
+        this.debouncedSaveAndRender();
+    }
+
+
+
+    // 3. Reminder Logic
+    openReminderModal() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+
+        if (note.reminder) {
+            this.reminderDateInput.value = note.reminder;
+            this.deleteReminderBtn.style.display = 'block';
+            this.saveReminderBtn.textContent = 'Actualizar Recordatorio';
+        } else {
+            this.reminderDateInput.value = '';
+            this.deleteReminderBtn.style.display = 'none';
+            this.saveReminderBtn.textContent = 'Guardar Recordatorio';
+        }
+
+        this.reminderModal.hidden = false;
+        this.reminderModal.classList.remove('hidden');
+    }
+
+    async saveReminder() {
+        if (!this.activeNoteId) return;
+        const dateVal = this.reminderDateInput.value;
+        if (!dateVal) return;
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        note.reminder = dateVal;
+        note.reminderFired = false;
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') {
+                alert('⚠️ Sin permiso de notificaciones, el recordatorio funcionará solo con la app abierta.');
+            }
+        }
+
+        this.saveToStorage();
+        this.updateReminderUI(note);
+        this.reminderModal.hidden = true;
+        this.renderNotesList();
+
+        // Confirmation
+        const d = new Date(dateVal);
+        const formatted = d.toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+        const statusIcon = Notification.permission === 'granted' ? '🔔' : '⚠️';
+        alert(`${statusIcon} Recordatorio guardado para:\n${formatted}`);
+    }
+
+    deleteReminder() {
+        if (!this.activeNoteId) return;
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        delete note.reminder;
+
+        this.saveToStorage();
+        this.updateReminderUI(note);
+        this.reminderModal.hidden = true;
+        this.renderNotesList();
+    }
+
+    updateReminderUI(note) {
+        // Check if there is already a reminder badge in the editor meta
+        const existingBadge = document.querySelector('.reminder-badge');
+        if (existingBadge) existingBadge.remove();
+
+        if (note && note.reminder) {
+            // Update Button State
+            if (this.reminderBtn) this.reminderBtn.classList.add('active');
+
+            const date = new Date(note.reminder);
+            const fmtDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const badge = document.createElement('div');
+            badge.className = 'reminder-badge';
+            if (note.reminderFired) badge.classList.add('expired'); // Optional styling
+            badge.innerHTML = `<span>⏰ ${fmtDate}</span>`;
+
+            // Insert before save status
+            const metaDiv = document.querySelector('.editor-meta');
+            metaDiv.insertBefore(badge, this.saveStatus);
+        } else {
+            // Reset Button State
+            if (this.reminderBtn) this.reminderBtn.classList.remove('active');
+        }
+    }
+
+    // --- Alarm System Methods ---
+
+    startReminderCheck() {
+        if (this.reminderInterval) clearInterval(this.reminderInterval);
+
+        // Check every 5 seconds for precise alarms
+        this.reminderInterval = setInterval(() => {
+            this.checkReminders();
+        }, 5000);
+    }
+
+    checkReminders() {
+        const now = new Date();
+        let changed = false;
+
+        this.notes.forEach(note => {
+            if (note.reminder && !note.reminderFired) {
+                const reminderTime = new Date(note.reminder);
+
+                // If the time has passed (or is now)
+                if (now >= reminderTime) {
+                    this.triggerAlarm(note);
+                    note.reminderFired = true;
+                    changed = true;
+                }
+            }
+        });
+
+        if (changed) {
+            this.saveToStorage();
+            this.renderNotesList();
+            if (this.activeNoteId) this.renderActiveNote();
+        }
+    }
+
+    triggerAlarm(note) {
+        // 1. Play alarm sound for 10 seconds
+        this.activeAlarmCtx = null;
+        this.playAlarmLoop(10);
+
+        // 2. Vibrate on mobile (pattern: vibrate 500ms, pause 300ms, repeat)
+        if (navigator.vibrate) {
+            navigator.vibrate([500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500]);
+        }
+
+        // 3. System Notification with dismiss action
+        if ('Notification' in window && Notification.permission === 'granted') {
+            // Use SW showNotification for action buttons
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification('⏰ Recordatorio de novaStarPro', {
+                        body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
+                        icon: 'icons/icon-192x192.png',
+                        badge: 'icons/icon-192x192.png',
+                        requireInteraction: true,
+                        tag: 'reminder-' + note.id,
+                        actions: [
+                            { action: 'dismiss', title: '🔕 Desactivar' },
+                            { action: 'open', title: '📝 Abrir nota' }
+                        ],
+                        vibrate: [500, 300, 500, 300, 500]
+                    });
+                });
+            } else {
+                // Fallback: regular notification
+                const notif = new Notification('⏰ Recordatorio de novaStarPro', {
+                    body: `Es hora de: ${note.title || 'Tu nota sin título'}`,
+                    requireInteraction: true
+                });
+                notif.onclick = () => {
+                    this.stopAlarm();
+                    window.focus();
+                    this.setActiveNote(note.id);
+                };
+            }
+        }
+
+        // 4. In-App overlay with dismiss button
+        this.showAlarmOverlay(note);
+    }
+
+    showAlarmOverlay(note) {
+        // Remove existing overlay if any
+        const existing = document.getElementById('alarm-overlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'alarm-overlay';
+        overlay.innerHTML = `
+            <div style="
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.85); z-index: 99999;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                animation: fadeIn 0.3s ease;
+            ">
+                <div style="font-size: 4rem; margin-bottom: 20px; animation: pulse 1s infinite;">⏰</div>
+                <h2 style="color: white; font-size: 1.5rem; margin-bottom: 10px; text-align: center; padding: 0 20px;">¡Recordatorio!</h2>
+                <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 30px; text-align: center; padding: 0 20px;">
+                    ${note.title || 'Nota sin título'}
+                </p>
+                <button id="dismiss-alarm-btn" style="
+                    background: linear-gradient(135deg, #ef4444, #dc2626);
+                    color: white; border: none; padding: 15px 40px;
+                    border-radius: 12px; font-size: 1.1rem; cursor: pointer;
+                    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+                    transition: transform 0.2s;
+                ">🔕 Desactivar Alarma</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById('dismiss-alarm-btn').onclick = () => {
+            this.stopAlarm();
+            overlay.remove();
+        };
+
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (document.getElementById('alarm-overlay')) {
+                overlay.remove();
+            }
+        }, 10000);
+    }
+
+    stopAlarm() {
+        // Stop audio
+        if (this.activeAlarmCtx) {
+            try { this.activeAlarmCtx.close(); } catch (e) { }
+            this.activeAlarmCtx = null;
+        }
+        // Stop vibration
+        if (navigator.vibrate) navigator.vibrate(0);
+        // Remove overlay
+        const overlay = document.getElementById('alarm-overlay');
+        if (overlay) overlay.remove();
+    }
+
+    playAlarmLoop(durationSec) {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+
+            const ctx = new AudioContext();
+            this.activeAlarmCtx = ctx;
+
+            const beep = (startTime, freq, dur) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+                gain.gain.setValueAtTime(0.15, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(startTime);
+                osc.stop(startTime + dur);
+            };
+
+            // Repeating alarm pattern for durationSec seconds
+            const now = ctx.currentTime;
+            for (let t = 0; t < durationSec; t += 1.0) {
+                beep(now + t, 880, 0.2);       // High beep
+                beep(now + t + 0.3, 660, 0.2); // Lower beep
+                beep(now + t + 0.6, 880, 0.2); // High beep
+            }
+
+            // Auto-close after duration
+            setTimeout(() => {
+                if (this.activeAlarmCtx === ctx) {
+                    try { ctx.close(); } catch (e) { }
+                    this.activeAlarmCtx = null;
+                }
+            }, durationSec * 1000);
+
+        } catch (e) {
+            console.error('Alarm audio error:', e);
+        }
+    }
+
+
+
+    /**
+     * Inicializa el tema desde localStorage
+     */
+    initTheme() {
+        const savedTheme = localStorage.getItem('nova_theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            this.themeIcon.textContent = '☀️';
+        } else {
+            document.body.classList.remove('light-theme');
+            this.themeIcon.textContent = '🌙';
+        }
+    }
+
+    /**
+     * Alterna entre tema claro y oscuro
+     */
+
+    toggleTheme() {
+        const isLight = document.body.classList.toggle('light-theme');
+        this.themeIcon.textContent = isLight ? '☀️' : '🌙';
+        localStorage.setItem('nova_theme', isLight ? 'light' : 'dark');
+    }
+
+    getCategoryIcon(category) {
+        const icons = {
+            'personal': '👤', 'trabajo': '💼', 'estudio': '📚',
+            'ideas': '💡', 'compras': '🛒', 'metas': '🎯',
+            'finanzas': '💰', 'salud': '❤️', 'viajes': '✈️',
+            'recetas': '🍳', 'custom': '📂',
+            // Legacy compat
+            'proyectos': '🚀', 'tareas': '✅'
+        };
+        return icons[category] || '📝';
+    }
+
+    getStatusIcon(status) {
+        const icons = {
+            'draft': '📝', 'progress': '⏳',
+            'done': '✅', 'archived': '📦'
+        };
+        return icons[status] || '📝';
+    }
+
+
+    async loadGuestNote(publicId) {
+        // Force mobile to show editor view
+        document.body.classList.add('editor-screen-active');
+
+        // Hide sidebar and auth
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+
+        const editorMain = document.querySelector('.editor-main');
+        if (editorMain) editorMain.style.width = '100%';
+
+        // CRITICAL: Hide the full Auth Modal Overlay
+        const authModal = document.getElementById('auth-modal');
+        if (authModal) {
+            authModal.style.display = 'none';
+            // Also force hide any other overlays if they exist
+            authModal.classList.add('hidden');
+        }
+
+        // Show loading state in editor
+        this.editorView.classList.remove('empty');
+        this.editorFields.hidden = false;
+        this.emptyState.hidden = true;
+
+        this.noteTitleInput.innerText = 'Cargando nota compartida...';
+        this.noteContentInput.innerText = '';
+
+        try {
+            // Wait a bit for Firebase functions to be bound if race condition
+            if (typeof window.loadPublicNote !== 'function') {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            if (typeof window.loadPublicNote !== 'function') {
+                throw new Error('Firebase helpers not ready');
+            }
+
+            const noteData = await window.loadPublicNote(publicId);
+
+            if (noteData) {
+                // Mock a local note object
+                const note = {
+                    id: noteData.id,
+                    title: noteData.title,
+                    content: noteData.content,
+                    updatedAt: noteData.createdAt,
+                    theme: noteData.theme,
+                    customBgColor: noteData.customBgColor
+                };
+
+                this.notes = [note]; // Single note in memory
+                this.activeNoteId = note.id;
+
+                // Render
+                this.noteTitleInput.innerHTML = note.title || 'Sin título';
+                this.noteContentInput.innerHTML = note.content || '';
+
+                // Apply styles
+                this.applyTheme(note.theme || 'none', note.customBgColor, note.bgImage);
+
+                // Read Only Mode
+                this.noteTitleInput.contentEditable = false;
+                this.noteContentInput.contentEditable = false;
+
+                // Hide toolbar editing tools and save button
+                if (this.formatToolbar) this.formatToolbar.style.display = 'none';
+                if (this.saveNoteBtn) this.saveNoteBtn.style.display = 'none';
+                if (this.deleteNoteBtn) this.deleteNoteBtn.style.display = 'none';
+
+                // Show a banner "You are viewing a shared note"
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; padding: 12px; text-align: center; margin-bottom: 20px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);';
+                banner.innerHTML = '👀 Estás viendo una nota pública de <b>NovaStarPro</b>';
+
+                // Add a "Create your own" button
+                const ctaBtn = document.createElement('button');
+                ctaBtn.innerText = 'Crear mis propias notas';
+                ctaBtn.style.cssText = 'margin-left: 15px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;';
+                ctaBtn.onclick = () => window.location.href = window.location.pathname; // Reload without params
+                banner.appendChild(ctaBtn);
+
+                this.editorFields.prepend(banner);
+
+            } else {
+                this.noteTitleInput.innerText = 'Error: Nota no encontrada';
+                this.noteContentInput.innerText = 'Es posible que el enlace haya expirado o sea inválido.';
+                this.noteContentInput.style.color = '#ef4444';
+            }
+        } catch (e) {
+            console.error(e);
+            this.noteTitleInput.innerText = 'Error de conexión';
+            this.noteContentInput.innerText = 'No se pudo conectar con el servidor de notas.';
+        }
+    }
+
+    // --- AI Context Helper ---
+    getActiveNoteContext() {
+        if (!this.activeNoteId) {
+            return { title: 'Ninguna (Interfaz vacía)', content: '' };
+        }
+        return {
+            title: this.noteTitleInput.innerText || '',
+            content: this.noteContentInput.innerText || ''
+        };
+    }
+
+    /**
+     * Escribe contenido generado por la IA directamente en la nota activa o crea una nueva.
+     */
+    writeFromAI(title, content) {
+        // Si no hay nota activa, crear una
+        if (!this.activeNoteId) {
+            this.createNewNote();
+        }
+
+        const note = this.notes.find(n => n.id === this.activeNoteId);
+        if (note) {
+            if (title) note.title = title;
+
+            // Detección y formateo de listas en el contenido de la IA
+            const lines = content.split('\n');
+            const listPattern = /^(\s*[-*•]|\s*\d+[.)])\s+/;
+            const hasList = lines.some(l => listPattern.test(l));
+
+            if (hasList) {
+                let html = '';
+                let inList = false;
+
+                lines.forEach(line => {
+                    if (listPattern.test(line)) {
+                        if (!inList) {
+                            html += '<ul class="checklist">';
+                            inList = true;
+                        }
+                        html += `<li>${line.replace(listPattern, '').trim()}</li>`;
+                    } else {
+                        if (inList) {
+                            html += '</ul>';
+                            inList = false;
+                        }
+                        if (line.trim() !== '') {
+                            html += `<div>${line}</div>`;
+                        } else {
+                            html += '<br>';
+                        }
+                    }
+                });
+                if (inList) html += '</ul>';
+                note.content = html;
+            } else {
+                note.content = content.replace(/\n/g, '<br>');
+            }
+
+            note.updatedAt = new Date().toISOString();
+            this.saveToStorage();
+
+            // Actualizar UI
+            this.setActiveNote(note.id);
+            this.renderNotesList();
+            this.showNotification('✨ Nova ha escrito en tu nota');
+        }
+    }
+
+    /**
+     * Muestra una notificación visual elegante (Toast)
+     */
+    showNotification(message) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'nova-toast';
+        toast.style.cssText = `
+            background: rgba(17, 19, 26, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
+        `;
+        toast.innerHTML = `<span>🚀</span> ${message}`;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px) scale(0.9)';
+            toast.style.transition = 'all 0.4s ease';
+            setTimeout(() => toast.remove(), 400);
+        }, 3000);
+    }
+}
+
+/**
+ * Inicialización global del motor de novaStarPro con autenticación
+ */
+let app = null;
+const auth = new AuthManager();
+
+// Check authentication status first
+const session = auth.checkAuth();
+
+// Check URL params for Shared Note
+const urlParams = new URLSearchParams(window.location.search);
+const publicNoteId = urlParams.get('publicNote');
+
+if (publicNoteId) {
+    // GUEST MODE
+    console.log('🚀 Starting in Guest Mode');
+    app = new NoteApp(null, null, true); // isGuest = true
+    window.app = app;
+    app.loadGuestNote(publicNoteId);
+} else if (session) {
+    // User is logged in - initialize app with their userId and firebaseUid
+    app = new NoteApp(session.userId, session.firebaseUid);
+    window.app = app;
+
+    // Load notes from cloud after initialization
+    setTimeout(() => {
+        if (app && typeof app.loadFromCloud === 'function') {
+            app.loadFromCloud();
+        }
+    }, 500);
+}
+
+// Handle login success - initialize app for the user
+auth.onLoginSuccess = async (session) => {
+    app = new NoteApp(session.userId, session.firebaseUid);
+    window.app = app;
+
+    // Load and sync notes from cloud
+    setTimeout(() => {
+        if (app && typeof app.loadFromCloud === 'function') {
+            app.loadFromCloud();
+        }
+    }, 500);
+};
+
+// Handle logout - clear app reference
+auth.onLogout = () => {
+    if (app && typeof app.stopRealtimeSync === 'function') {
+        app.stopRealtimeSync();
+    }
+    app = null;
+    window.app = null;
+};
+
+// Make auth available globally
+window.auth = auth;
+
+// Registrar el motor de la App para Google (PWA)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('novaStarPro lista para instalar'))
+            .catch(err => console.log('Error al registrar App:', err));
+    });
+}
