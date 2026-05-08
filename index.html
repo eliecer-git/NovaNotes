@@ -1382,7 +1382,7 @@
     <script type="module">
         // Firebase configuration
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, GithubAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, GithubAuthProvider, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, increment, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1430,6 +1430,11 @@
         };
         window.signOutFirebase = () => signOut(auth);
         window.onFirebaseAuthStateChanged = (callback) => onAuthStateChanged(auth, callback);
+
+        // Email/Password Auth functions
+        window.firebaseCreateUser = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+        window.firebaseSignIn = (email, password) => signInWithEmailAndPassword(auth, email, password);
+        window.firebaseUpdateProfile = (user, data) => updateProfile(user, data);
 
         // Manejar resultado de redirect (cuando vuelve del login externo)
         getRedirectResult(auth).then((result) => {

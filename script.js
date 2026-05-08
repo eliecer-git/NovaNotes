@@ -172,7 +172,7 @@ class AuthManager {
         this.authModal.hidden = true;
     }
 
-    handleLogin() {
+    async handleLogin() {
         const email = this.loginEmail.value.trim().toLowerCase();
         const password = this.loginPassword.value;
 
@@ -182,45 +182,88 @@ class AuthManager {
             return;
         }
 
-        const users = this.getUsers();
-        const user = users.find(u => u.email === email);
+        // Disable button while processing
+        this.loginSubmitBtn.disabled = true;
+        this.loginSubmitBtn.textContent = 'Verificando...';
+        this.loginError.textContent = '';
 
-        if (!user) {
-            // Check if user might exist via Google/GitHub provider
-            this.loginError.textContent = 'No se encontró una cuenta local con ese correo. Si te registraste con Google o GitHub, usa esos botones para iniciar sesión.';
-            // Auto-attempt Google sign-in if Firebase is ready
-            if (typeof window.signInWithGoogle === 'function') {
-                this.loginError.innerHTML = 'No se encontró una cuenta local con ese correo.<br><button style="margin-top:10px;padding:8px 16px;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;" onclick="window.auth.handleGoogleSignIn()">🔍 Buscar con Google</button>';
+        try {
+            // Try Firebase Auth first (cloud-based, persistent)
+            if (typeof window.firebaseSignIn === 'function') {
+                const result = await window.firebaseSignIn(email, password);
+                const user = result.user;
+
+                // Save locally too
+                const users = this.getUsers();
+                let existingUser = users.find(u => u.email === email);
+                if (!existingUser) {
+                    existingUser = {
+                        id: 'email_' + user.uid,
+                        name: user.displayName || email.split('@')[0],
+                        email: email,
+                        provider: 'email',
+                        createdAt: new Date().toISOString()
+                    };
+                    users.push(existingUser);
+                    this.saveUsers(users);
+                }
+
+                const session = {
+                    userId: existingUser.id,
+                    firebaseUid: user.uid,
+                    name: existingUser.name,
+                    email: email,
+                    provider: 'email'
+                };
+                this.saveSession(session);
+                this.hideAuthModal();
+                this.updateUserUI(session);
+                if (this.onLoginSuccess) this.onLoginSuccess(session);
+                return;
             }
-            return;
+
+            // Fallback: localStorage only
+            const users = this.getUsers();
+            const user = users.find(u => u.email === email);
+            if (!user) {
+                this.loginError.textContent = 'No existe una cuenta con ese correo.';
+                return;
+            }
+            if (user.provider === 'google' || user.provider === 'github') {
+                const providerName = user.provider === 'google' ? 'Google' : 'GitHub';
+                this.loginError.innerHTML = `Esta cuenta fue creada con <strong>${providerName}</strong>. Usa el botón "Continuar con ${providerName}" para entrar.`;
+                return;
+            }
+            if (user.passwordHash !== this.hashPassword(password)) {
+                this.loginError.textContent = 'Contraseña incorrecta.';
+                return;
+            }
+            const session = { userId: user.id, name: user.name, email: user.email };
+            this.saveSession(session);
+            this.hideAuthModal();
+            this.updateUserUI(session);
+            if (this.onLoginSuccess) this.onLoginSuccess(session);
+
+        } catch (error) {
+            console.error('Login Error:', error);
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                this.loginError.textContent = 'Correo o contraseña incorrectos.';
+            } else if (error.code === 'auth/wrong-password') {
+                this.loginError.textContent = 'Contraseña incorrecta.';
+            } else if (error.code === 'auth/too-many-requests') {
+                this.loginError.textContent = 'Demasiados intentos. Espera un momento e intenta de nuevo.';
+            } else if (error.code === 'auth/invalid-email') {
+                this.loginError.textContent = 'El correo electrónico no es válido.';
+            } else {
+                this.loginError.textContent = 'Error al iniciar sesión. Intenta de nuevo.';
+            }
+        } finally {
+            this.loginSubmitBtn.disabled = false;
+            this.loginSubmitBtn.textContent = 'Iniciar Sesión';
         }
-
-        // If user exists but was created via Google/GitHub (no password)
-        if (user.provider === 'google' || user.provider === 'github') {
-            const providerName = user.provider === 'google' ? 'Google' : 'GitHub';
-            this.loginError.innerHTML = `Esta cuenta fue creada con <strong>${providerName}</strong>. Usa el botón "Continuar con ${providerName}" para entrar.`;
-            return;
-        }
-
-        if (user.passwordHash !== this.hashPassword(password)) {
-            this.loginError.textContent = 'Contraseña incorrecta.';
-            return;
-        }
-
-        // Success - create session
-        const session = {
-            userId: user.id,
-            name: user.name,
-            email: user.email
-        };
-        this.saveSession(session);
-        this.hideAuthModal();
-        this.updateUserUI(session);
-
-        if (this.onLoginSuccess) this.onLoginSuccess(session);
     }
 
-    handleRegister() {
+    async handleRegister() {
         const name = this.registerName.value.trim();
         const email = this.registerEmail.value.trim().toLowerCase();
         const password = this.registerPassword.value;
@@ -247,35 +290,84 @@ class AuthManager {
             return;
         }
 
-        const users = this.getUsers();
-        if (users.find(u => u.email === email)) {
-            this.registerError.textContent = 'Ya existe una cuenta con ese correo.';
-            return;
+        // Disable button while processing
+        this.registerSubmitBtn.disabled = true;
+        this.registerSubmitBtn.textContent = 'Creando cuenta...';
+        this.registerError.textContent = '';
+
+        try {
+            // Try Firebase Auth first (cloud-based, persistent)
+            if (typeof window.firebaseCreateUser === 'function') {
+                const result = await window.firebaseCreateUser(email, password);
+                const user = result.user;
+
+                // Update display name in Firebase
+                if (typeof window.firebaseUpdateProfile === 'function') {
+                    await window.firebaseUpdateProfile(user, { displayName: name });
+                }
+
+                // Save locally too
+                const newUser = {
+                    id: 'email_' + user.uid,
+                    name: name,
+                    email: email,
+                    provider: 'email',
+                    createdAt: new Date().toISOString()
+                };
+                const users = this.getUsers();
+                users.push(newUser);
+                this.saveUsers(users);
+
+                // Auto-login
+                const session = {
+                    userId: newUser.id,
+                    firebaseUid: user.uid,
+                    name: name,
+                    email: email,
+                    provider: 'email'
+                };
+                this.saveSession(session);
+                this.hideAuthModal();
+                this.updateUserUI(session);
+                if (this.onLoginSuccess) this.onLoginSuccess(session);
+                return;
+            }
+
+            // Fallback: localStorage only
+            const users = this.getUsers();
+            if (users.find(u => u.email === email)) {
+                this.registerError.textContent = 'Ya existe una cuenta con ese correo.';
+                return;
+            }
+            const newUser = {
+                id: 'user_' + Date.now().toString(36),
+                name: name, email: email,
+                passwordHash: this.hashPassword(password),
+                createdAt: new Date().toISOString()
+            };
+            users.push(newUser);
+            this.saveUsers(users);
+            const session = { userId: newUser.id, name: name, email: email };
+            this.saveSession(session);
+            this.hideAuthModal();
+            this.updateUserUI(session);
+            if (this.onLoginSuccess) this.onLoginSuccess(session);
+
+        } catch (error) {
+            console.error('Register Error:', error);
+            if (error.code === 'auth/email-already-in-use') {
+                this.registerError.textContent = 'Ya existe una cuenta con ese correo. Intenta iniciar sesión.';
+            } else if (error.code === 'auth/weak-password') {
+                this.registerError.textContent = 'La contraseña es muy débil. Usa al menos 6 caracteres.';
+            } else if (error.code === 'auth/invalid-email') {
+                this.registerError.textContent = 'El correo electrónico no es válido.';
+            } else {
+                this.registerError.textContent = 'Error al crear la cuenta. Intenta de nuevo.';
+            }
+        } finally {
+            this.registerSubmitBtn.disabled = false;
+            this.registerSubmitBtn.textContent = 'Crear Cuenta';
         }
-
-        // Create new user
-        const newUser = {
-            id: 'user_' + Date.now().toString(36),
-            name: name,
-            email: email,
-            passwordHash: this.hashPassword(password),
-            createdAt: new Date().toISOString()
-        };
-
-        users.push(newUser);
-        this.saveUsers(users);
-
-        // Auto-login after registration
-        const session = {
-            userId: newUser.id,
-            name: newUser.name,
-            email: newUser.email
-        };
-        this.saveSession(session);
-        this.hideAuthModal();
-        this.updateUserUI(session);
-
-        if (this.onLoginSuccess) this.onLoginSuccess(session);
     }
 
     async handleGoogleSignIn() {
