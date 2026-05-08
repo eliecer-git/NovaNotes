@@ -186,7 +186,19 @@ class AuthManager {
         const user = users.find(u => u.email === email);
 
         if (!user) {
-            this.loginError.textContent = 'No existe una cuenta con ese correo.';
+            // Check if user might exist via Google/GitHub provider
+            this.loginError.textContent = 'No se encontró una cuenta local con ese correo. Si te registraste con Google o GitHub, usa esos botones para iniciar sesión.';
+            // Auto-attempt Google sign-in if Firebase is ready
+            if (typeof window.signInWithGoogle === 'function') {
+                this.loginError.innerHTML = 'No se encontró una cuenta local con ese correo.<br><button style="margin-top:10px;padding:8px 16px;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;" onclick="window.auth.handleGoogleSignIn()">🔍 Buscar con Google</button>';
+            }
+            return;
+        }
+
+        // If user exists but was created via Google/GitHub (no password)
+        if (user.provider === 'google' || user.provider === 'github') {
+            const providerName = user.provider === 'google' ? 'Google' : 'GitHub';
+            this.loginError.innerHTML = `Esta cuenta fue creada con <strong>${providerName}</strong>. Usa el botón "Continuar con ${providerName}" para entrar.`;
             return;
         }
 
