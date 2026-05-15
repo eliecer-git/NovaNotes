@@ -187,6 +187,18 @@ class AuthManager {
         this.loginSubmitBtn.textContent = 'Verificando...';
         this.loginError.textContent = '';
 
+        const users = this.getUsers();
+        const localUser = users.find(u => u.email === email);
+
+        // Si sabemos localmente que el usuario usó Google/GitHub, le avisamos antes de intentar Firebase
+        if (localUser && (localUser.provider === 'google' || localUser.provider === 'github')) {
+            const providerName = localUser.provider === 'google' ? 'Google' : 'GitHub';
+            this.loginError.innerHTML = `Esta cuenta fue creada con <strong>${providerName}</strong>. Usa el botón "Continuar con ${providerName}" para entrar.`;
+            this.loginSubmitBtn.disabled = false;
+            this.loginSubmitBtn.textContent = 'Iniciar Sesión';
+            return;
+        }
+
         try {
             // Try Firebase Auth first (cloud-based, persistent)
             if (typeof window.firebaseSignIn === 'function') {
@@ -194,7 +206,6 @@ class AuthManager {
                 const user = result.user;
 
                 // Save locally too
-                const users = this.getUsers();
                 let existingUser = users.find(u => u.email === email);
                 if (!existingUser) {
                     existingUser = {
@@ -221,31 +232,22 @@ class AuthManager {
                 if (this.onLoginSuccess) this.onLoginSuccess(session);
                 return;
             }
-
-            // Fallback: localStorage only
-            const users = this.getUsers();
-            const user = users.find(u => u.email === email);
-            if (!user) {
-                this.loginError.textContent = 'No existe una cuenta con ese correo.';
-                return;
-            }
-            if (user.provider === 'google' || user.provider === 'github') {
-                const providerName = user.provider === 'google' ? 'Google' : 'GitHub';
-                this.loginError.innerHTML = `Esta cuenta fue creada con <strong>${providerName}</strong>. Usa el botón "Continuar con ${providerName}" para entrar.`;
-                return;
-            }
-            if (user.passwordHash !== this.hashPassword(password)) {
-                this.loginError.textContent = 'Contraseña incorrecta.';
-                return;
-            }
-            const session = { userId: user.id, name: user.name, email: user.email };
-            this.saveSession(session);
-            this.hideAuthModal();
-            this.updateUserUI(session);
-            if (this.onLoginSuccess) this.onLoginSuccess(session);
-
         } catch (error) {
-            console.error('Login Error:', error);
+            console.error('Firebase Login Error:', error);
+            // Si el usuario no existe en Firebase pero sí existe localmente (cuenta antigua), lo dejamos entrar localmente
+            if ((error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && localUser) {
+                if (localUser.passwordHash === this.hashPassword(password)) {
+                    // Migración silenciosa a Firebase (Opcional, por ahora solo lo dejamos entrar localmente)
+                    const session = { userId: localUser.id, name: localUser.name, email: localUser.email, provider: 'local' };
+                    this.saveSession(session);
+                    this.hideAuthModal();
+                    this.updateUserUI(session);
+                    if (this.onLoginSuccess) this.onLoginSuccess(session);
+                    return;
+                }
+            }
+
+            // Errores de Firebase Auth
             if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                 this.loginError.textContent = 'Correo o contraseña incorrectos.';
             } else if (error.code === 'auth/wrong-password') {
@@ -257,10 +259,27 @@ class AuthManager {
             } else {
                 this.loginError.textContent = 'Error al iniciar sesión. Intenta de nuevo.';
             }
-        } finally {
+            
             this.loginSubmitBtn.disabled = false;
             this.loginSubmitBtn.textContent = 'Iniciar Sesión';
+            return;
         }
+
+        // Fallback: localStorage only (Si Firebase no está disponible)
+        if (!localUser) {
+            this.loginError.textContent = 'No existe una cuenta con ese correo.';
+        } else if (localUser.passwordHash !== this.hashPassword(password)) {
+            this.loginError.textContent = 'Contraseña incorrecta.';
+        } else {
+            const session = { userId: localUser.id, name: localUser.name, email: localUser.email, provider: 'local' };
+            this.saveSession(session);
+            this.hideAuthModal();
+            this.updateUserUI(session);
+            if (this.onLoginSuccess) this.onLoginSuccess(session);
+        }
+
+        this.loginSubmitBtn.disabled = false;
+        this.loginSubmitBtn.textContent = 'Iniciar Sesión';
     }
 
     async handleRegister() {
